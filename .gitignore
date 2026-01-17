@@ -8,9 +8,12 @@ paper/
 # Environment installations (project-local, not global)
 .env/
 .julia/
+.cache/
 .stata/
-env/pyjuliapkg/
 env/Manifest.toml  # Platform-specific, regenerated on each platform
+env/lock.pid
+env/pyjuliapkg/
+env/.CondaPkg/
 
 # Python cache
 __pycache__/
@@ -18,30 +21,45 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+.CondaPkg/
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
 !examples/*.ipynb
 
-# IDE
+# IDE and editor artifacts
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.#*
+flycheck*
+_region*
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Temporary files
+# Temporary and build files
 *.tmp
 *.bak
 *.log
 !output/logs/
+*.aux
+*.out
+*.toc
 
 # Data (uncomment if you want to exclude large data files)
 # data/
 # !data/*.csv
 # !data/README.md
+
+# Data structure with placeholders (optional - for larger projects)
+# data/raw/*
+# !data/raw/.gitignore
+# !data/raw/README.md
+# data/processed/*
+# !data/processed/.gitignore
+# !data/processed/README.md
