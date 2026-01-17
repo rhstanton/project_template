@@ -84,23 +84,29 @@ publish: publish-figures publish-tables
 publish-figures: $(addprefix $(OUT_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
                  $(addprefix $(OUT_PROV_DIR)/,$(addsuffix .yml,$(PUBLISH_ARTIFACTS)))
 	@mkdir -p $(PAPER_FIG_DIR)
+	@echo "Publishing figures: $(PUBLISH_ARTIFACTS)"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind figures \
 	  --names "$(PUBLISH_ARTIFACTS)" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1
+	@echo "✓ Figures published to $(PAPER_FIG_DIR)"
 
 .PHONY: publish-tables
 publish-tables: $(addprefix $(OUT_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS))) \
                 $(addprefix $(OUT_PROV_DIR)/,$(addsuffix .yml,$(PUBLISH_ARTIFACTS)))
 	@mkdir -p $(PAPER_TBL_DIR)
+	@echo "Publishing tables: $(PUBLISH_ARTIFACTS)"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind tables \
 	  --names "$(PUBLISH_ARTIFACTS)" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1
+	@echo "✓ Tables published to $(PAPER_TBL_DIR)"
+	@echo ""
+	@echo "Publication complete. Updated: $(PAPER_DIR)/provenance.yml"
 
 .PHONY: clean
 clean:
