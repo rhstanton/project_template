@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Julia/Python bridge configuration - prevent juliacall from downloading its own Julia
+set -euo pipefail
+unset CDPATH
+
+# Find repo root (where env/ is located)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+PYTHON_BIN="$REPO_ROOT/.env/bin/python"
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "❌ Python env not found at: '$PYTHON_BIN'"
+  echo "   Run: make environment"
+  exit 1
+fi
+
+# Julia/Python bridge configuration
+export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
+export PYTHON_JULIAPKG_PROJECT="$REPO_ROOT/.julia"
+export JULIA_PROJECT="$REPO_ROOT/env"
+export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
+# Make shared juliapkg project visible alongside env
+export JULIA_LOAD_PATH="$JULIA_PROJECT:$PYTHON_JULIAPKG_PROJECT:@stdlib"
+
+# Disable CondaPkg and use this Python environment
+export JULIA_CONDAPKG_BACKEND=Null
+export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
+
+# Add repo root to PYTHONPATH so scripts can import from scripts/
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+# Prefer the bundled Julia inside the repo
+BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
+if [[ -x "$BUNDLED_JULIA" ]]; then
+  export PYTHON_JULIAPKG_EXE="$BUNDLED_JULIA"
+else
+  # If no bundled Julia yet, strip juliaup from PATH so juliacall installs locally
+  SAFE_PATH=""
+  IFS=':' read -r -a PARTS <<< "${PATH:-}"
+  for P in "${PARTS[@]}"; do
+    if [[ "${P,,}" == *juliaup* ]]; then
+      continue
+    fi
+    SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
+  done
+  export PATH="$SAFE_PATH"
+fi
+
+exec "$PYTHON_BIN" -u "$@"

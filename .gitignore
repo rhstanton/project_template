@@ -1,0 +1,12 @@
+# Build outputs
+output/
+
+# Paper repo is separate (e.g., Overleaf remote)
+paper/
+
+# Environment installations
+.env/
+.julia/
+.stata/
+env/pyjuliapkg/
+env/Manifest.toml

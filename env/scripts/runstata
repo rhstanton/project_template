@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Stata Environment Runner
+# ==============================================================================
+#
+# This script runs Stata do-files with proper environment checking.
+#
+# Usage:
+#   env/scripts/runstata script.do [args...]
+#
+# ==============================================================================
+
+set -euo pipefail
+
+# Unset CDPATH to prevent cd from printing directories
+unset CDPATH
+
+DO_FILE="$1"
+
+if [ -z "$DO_FILE" ]; then
+    echo "Usage: runstata <file.do>"
+    exit 1
+fi
+
+# Get to project root (two levels up from env/scripts/)
+cd "$(dirname "$0")/../.."
+PROJECT_ROOT="$(pwd)"
+
+# Extract base name for log file
+BASE="${DO_FILE%.do}"
+LOG_FILE="output/logs/${BASE##*/}.log"
+
+# Create temporary setup file
+TEMP_DO=$(mktemp /tmp/stata_XXXXXX.do)
+trap "rm -f $TEMP_DO" EXIT
+
+# Write the setup commands
+echo "quietly adopath ++ \"${PROJECT_ROOT}/.stata/ado/plus\"" > "$TEMP_DO"
+echo "quietly adopath ++ \"${PROJECT_ROOT}/env/scripts\"" >> "$TEMP_DO"
+echo "execute ${DO_FILE}" >> "$TEMP_DO"
+
+# Run Stata, hiding "noisy" output
+echo ""
+TERM=dumb stata-mp -q do "$TEMP_DO" 2>&1 | \
+  stdbuf -oL grep -v '^\. do /tmp/stata' | \
+  stdbuf -oL grep -v '^\. quietly adopath' | \
+  stdbuf -oL grep -v '^\. execute ' | \
+  awk 'NF {p=1} p'

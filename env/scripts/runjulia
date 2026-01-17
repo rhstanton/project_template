@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Julia environment runner
+# Note: This project uses Julia via juliacall from Python
+# For pure Julia scripts, this wrapper ensures the correct Julia is used
+
+set -euo pipefail
+unset CDPATH
+
+# Find repo root (where env/ is located)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Julia configuration
+export JULIA_PROJECT="$REPO_ROOT/env"
+export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
+
+# Prefer the bundled Julia inside the repo
+BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
+
+if [[ -x "$BUNDLED_JULIA" ]]; then
+  exec "$BUNDLED_JULIA" "$@"
+else
+  echo "❌ Julia not found at: '$BUNDLED_JULIA'"
+  echo "   Run: make environment"
+  exit 1
+fi
