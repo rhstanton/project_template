@@ -48,6 +48,11 @@ journal-package.zip
 .stata/
 env/Manifest.toml
 env/lock.pid
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
 env/pyjuliapkg/
 env/.CondaPkg/
 
