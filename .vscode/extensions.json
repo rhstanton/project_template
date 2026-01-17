@@ -1,0 +1,26 @@
+{
+    "recommendations": [
+        // Python essentials
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        
+        // Notebooks
+        "ms-toolsai.jupyter",
+        
+        // Git
+        "github.vscode-pull-request-github",
+        "eamodio.gitlens",
+        
+        // Useful utilities
+        "editorconfig.editorconfig",
+        "ms-vscode.makefile-tools",
+        "yzhang.markdown-all-in-one",
+        "gruntfuggly.todo-tree"
+    ],
+    // Disable Julia extension for this workspace (Julia used only as backend via juliacall)
+    "unwantedRecommendations": [
+        "julialang.language-julia"
+    ]
+}

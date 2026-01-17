@@ -1,0 +1,116 @@
+{
+    // Makefile
+    "makefile.configureOnOpen": false,
+
+    // Python interpreter - uses project-local .env
+    "python.defaultInterpreterPath": "${workspaceFolder}/.env/bin/python",
+    "python.terminal.activateEnvironment": false,  // Don't auto-activate (already using .env)
+
+    // Formatting
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+
+    // Black formatter (reads config from pyproject.toml)
+    "black-formatter.args": [],
+    "black-formatter.importStrategy": "fromEnvironment",
+
+    // Ruff linter (reads config from pyproject.toml)
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    "ruff.importStrategy": "fromEnvironment",
+
+    // Mypy type checking (reads config from pyproject.toml)
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "mypy-type-checker.args": [],
+
+    // Python linting
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "python.linting.mypyEnabled": true,
+
+    // Python testing - use tests/ directory
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests",
+        "-v",
+        "--tb=short"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+
+    // Julia settings - completely disable Julia extension features
+    "julia.enableTesting": false,
+    "julia.enableTelemetry": false,
+    "julia.enableCrashReporter": false,
+
+    // File associations
+    "files.associations": {
+        "*.do": "stata",
+        "*.ado": "stata"
+    },
+
+    // Files to exclude from file watcher
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/.env/**": true,
+        "**/.venv/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/.mypy_cache/**": true,
+        "**/.ruff_cache/**": true,
+        "**/.cache/**": true,
+        "**/.julia/**": true,
+        "**/output/**": true,
+        "**/paper/**": true
+    },
+
+    // Editor settings
+    "editor.rulers": [88],  // Black's line length
+    "editor.trimAutoWhitespace": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    // Terminal settings
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+
+    // Notebook settings
+    "notebook.formatOnSave.enabled": true,
+    "notebook.codeActionsOnSave": {
+        "notebook.source.organizeImports": "explicit"
+    },
+
+    // Git settings
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+
+    // Search settings - exclude generated outputs and caches
+    "search.exclude": {
+        "**/.env": true,
+        "**/.julia": true,
+        "**/.cache": true,
+        "**/.stata": true,
+        "**/output": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/paper": true
+    }
+}
