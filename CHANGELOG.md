@@ -10,10 +10,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Nothing yet
+- Journal submission documentation package:
+  - `CITATION.cff`: Structured citation metadata in Citation File Format
+  - `JOURNAL_EXCLUDE`: List of directories to exclude from journal submission
+  - `DATA_AVAILABILITY.md`: Comprehensive data availability statement template
+  - `data/CHECKSUMS.txt`: SHA256 checksums for data verification
+  - `data/DATA_README.md`: Detailed data dictionary with variable descriptions
+  - `docs/journal_editor_readme.md`: One-page quick guide for journal editors with "What Success Looks Like" sections
+  - `docs/paper_output_mapping.md`: Maps paper figures/tables to output files and make targets
+  - `docs/expected_outputs.md`: Verification checklist with file descriptions
+- New Makefile targets for verification and journal submission:
+  - `make verify`: Quick environment smoke test (~1 min)
+  - `make test-outputs`: Verify all expected output files exist
+  - `make system-info`: Log computational environment to output/system_info.yml
+  - `make journal-package`: Create clean replication package (excludes development files)
+  - `make journal-package-tarball`: Create .tar.gz archive for submission
+  - `make journal-package-zip`: Create .zip archive for submission
+  - `make clean-journal`: Remove journal package artifacts
+  - `make test`: Run pytest test suite
+  - `make test-cov`: Run tests with coverage report
+  - `make diff-outputs`: Compare current vs. published outputs
+  - `make pre-submit`: Run pre-submission checklist
+  - `make pre-submit-strict`: Strict mode pre-submission checks
+  - `make replication-report`: Generate HTML replication report
+- `scripts/log_system_info.py`: Utility to capture computational environment (OS, Python, Julia versions, packages)
+- `scripts/compare_outputs.py`: Compare outputs between builds (figures and tables)
+- `scripts/pre_submit_check.py`: Comprehensive pre-publication validation
+- `scripts/generate_replication_report.py`: Auto-generate replication reports for reviewers
+- `tests/` directory with pytest-based test suite:
+  - `tests/test_provenance.py`: Unit tests for provenance tracking
+  - `tests/test_integration.py`: Integration tests for build workflow
+- Runtime estimates throughout documentation
 
 ### Changed
-- Nothing yet
+- **Three-tier help system** (matches fire project UX):
+  - `make` (default): Brief guidance showing essential commands (~20 lines)
+  - `make help`: Detailed command reference organized by category (~80 lines)
+  - `make info`: Comprehensive project information (pipeline, structure, requirements)
+  - Updated `.DEFAULT_GOAL` from `help` to `default` for brief output
+- Updated README.md:
+  - Added runtime estimates in Quick Start section
+  - Enhanced system requirements with time estimates
+  - Improved Makefile targets section with all new verification and journal targets
+  - Added references to journal submission documentation
+  - Added testing and quality assurance features to core features list
+  - Updated help system documentation (make/help/info)
+- Updated env/python.yml:
+  - Added pytest and pytest-cov for testing
+- Updated QUICKSTART.md:
+  - Added "What Success Looks Like" sections showing expected console output for each step
+  - Added `make verify` and `make test-outputs` to workflow
+  - Added note about three-tier help system at top
+- Updated docs/README.md:
+  - Added new "Journal Submission" section
+  - Added references to all 4 new journal-related documentation files
+- Updated Makefile help:
+  - Added "JOURNAL SUBMISSION (AUTHOR-ONLY)" section
+  - Added `system-info` to verification section
+  - Added references to new documentation files
+- Updated .gitignore:
+  - Explicitly includes JOURNAL_EXCLUDE and DATA_AVAILABILITY.md
+  - Ignores journal-package/ directory and archives
+- Enhanced paper/README.md with references to journal documentation
+- Enhanced data/README.md with references to CHECKSUMS.txt and DATA_README.md
 
 ### Fixed
 - Nothing yet

@@ -2,11 +2,20 @@
 
 This directory contains input data for analysis scripts.
 
+## 📚 Documentation
+
+For comprehensive data documentation, see:
+- **[DATA_README.md](DATA_README.md)** - Complete data dictionary with variable descriptions
+- **[CHECKSUMS.txt](CHECKSUMS.txt)** - SHA256 checksums for data verification
+- **[../DATA_AVAILABILITY.md](../DATA_AVAILABILITY.md)** - Data availability statement for journal submission
+
 ## Current Structure
 
 ```
 data/
-└── housing_panel.csv    # Sample housing dataset (tracked in git)
+├── housing_panel.csv    # Sample housing dataset (tracked in git)
+├── CHECKSUMS.txt        # SHA256 checksums for verification
+└── DATA_README.md       # Comprehensive data documentation
 ```
 
 ## For Your Project

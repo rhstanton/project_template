@@ -2,6 +2,8 @@
 
 **Get the reproducible research template up and running in 5 minutes.**
 
+**Need help?** Run `make` for brief guidance, `make help` for all commands, or `make info` for comprehensive project information.
+
 ---
 
 ## TL;DR - Copy-Paste Commands
@@ -18,7 +20,11 @@ make environment
 #   - Julia via juliacall (.julia/)
 #   - Stata packages if Stata installed (.stata/)
 
-# 3. Build all artifacts
+# 3. Verify setup
+make verify
+# Checks environment, packages, data availability
+
+# 4. Build all artifacts
 make all
 # Creates:
 #   - output/figures/price_base.pdf
@@ -27,13 +33,81 @@ make all
 #   - output/tables/remodel_base.tex
 #   - output/provenance/*.yml (build records)
 
-# 4. Publish to paper repo
+# 5. Verify outputs
+make test-outputs
+# Confirms all expected files exist
+
+# 6. Publish to paper repo
 make publish
 # Copies artifacts to paper/ with provenance tracking
 ```
 
 **Total time**: ~5-10 minutes  
 **Total disk**: ~2.5GB (2GB environment + 500MB Julia)
+
+---
+
+## What Success Looks Like
+
+### After `make environment`
+
+You should see:
+```
+📦 Installing Python environment...
+✅ Python environment created at .env/
+
+📦 Installing Julia via juliacall...
+✅ Julia installed at .julia/pyjuliapkg/install/
+
+📦 Installing Julia packages...
+✅ Julia packages installed
+
+🎉 Environment setup complete!
+```
+
+### After `make verify`
+
+You should see:
+```
+✅ Python environment: OK (3.11.x)
+✅ Python packages: pandas, matplotlib, juliacall, pyyaml
+✅ Julia: OK (1.10+)
+✅ Julia packages: PythonCall, DataFrames
+✅ Data files: housing_panel.csv (SHA256 matches)
+✅ Environment verified!
+```
+
+### After `make all`
+
+You should see:
+```
+Building price_base...
+✅ output/figures/price_base.pdf
+✅ output/tables/price_base.tex
+✅ output/provenance/price_base.yml
+
+Building remodel_base...
+✅ output/figures/remodel_base.pdf
+✅ output/tables/remodel_base.tex
+✅ output/provenance/remodel_base.yml
+
+All artifacts built successfully!
+```
+
+### After `make test-outputs`
+
+You should see:
+```
+Checking expected outputs...
+✅ output/figures/price_base.pdf (12.5 KB)
+✅ output/figures/remodel_base.pdf (13.1 KB)
+✅ output/tables/price_base.tex (193 bytes)
+✅ output/tables/remodel_base.tex (201 bytes)
+✅ output/provenance/price_base.yml
+✅ output/provenance/remodel_base.yml
+
+All expected outputs present!
+```
 
 ---
 

@@ -1,0 +1,39 @@
+# Directories to EXCLUDE from Journal Submission Package
+#
+# Use this list when creating archives for journal editors/reviewers.
+# These directories are tracked in git for collaboration but should NOT
+# be included in the replication package.
+
+# Development-only directories
+data-construction/     # Processes proprietary raw data (if applicable)
+notes/                 # Working notes and drafts
+paper/                 # Separate paper repository (managed independently)
+
+# Editor-specific configuration files (not needed for replication)
+.vscode/               # VS Code settings
+.dir-locals.el         # Emacs local variables
+.editorconfig          # EditorConfig settings
+
+# GitHub/development files (not needed for replication)
+.github/               # GitHub Actions workflows and copilot instructions
+
+# Template/development guides (not needed for replication)
+TEMPLATE_USAGE.md      # Template customization guide
+COAUTHOR_SETUP.md      # Internal coauthor setup instructions (if exists)
+CHANGELOG.md           # Internal version history
+
+# Cache directories (generated at runtime)
+.mypy_cache/           # MyPy type checking cache
+.ruff_cache/           # Ruff linting cache
+__pycache__/           # Python bytecode cache
+
+# Build artifacts that may be tracked
+logs/                  # Runtime logs (if any are committed)
+replication-package/   # Previously built packages
+
+# Hidden development files
+.DS_Store              # macOS metadata
+.idea/                 # IntelliJ/PyCharm settings
+
+# Command to create journal package:
+# See: make journal-package

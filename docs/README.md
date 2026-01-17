@@ -42,6 +42,44 @@ Complete guide to the reproducible research template.
   - Environment specs (`env/`)
   - Analysis scripts (root level)
 
+### Testing & Quality Assurance
+- **Automated Testing** - pytest-based test suite
+  - Unit tests for provenance tracking (`tests/test_provenance.py`)
+  - Integration tests for build workflow (`tests/test_integration.py`)
+  - Run with `make test` or `make test-cov` for coverage
+- **Output Comparison** - Track changes between builds
+  - `make diff-outputs` compares current vs. published outputs
+  - Shows differences in figures (checksums) and tables (line-by-line diff)
+- **Pre-Submission Checks** - Comprehensive validation
+  - `make pre-submit` runs all quality checks
+  - Validates git state, data checksums, provenance, documentation
+  - Strict mode available: `make pre-submit-strict`
+- **Replication Reports** - Auto-generated documentation
+  - `make replication-report` creates HTML report for reviewers
+  - Includes system info, provenance, verification commands
+
+### Journal Submission
+- **[journal_editor_readme.md](journal_editor_readme.md)** - One-page quick guide for journal editors and reviewers
+  - Step-by-step replication instructions
+  - "What Success Looks Like" sections with expected output
+  - Common troubleshooting
+  - Contact information template
+
+- **[paper_output_mapping.md](paper_output_mapping.md)** - Map paper figures/tables to output files
+  - Quick reference table for targeted replication
+  - LaTeX integration examples
+  - Make target reference
+
+- **[expected_outputs.md](expected_outputs.md)** - Verification checklist
+  - Complete list of expected outputs
+  - File descriptions and verification commands
+  - Sample output content
+
+- **[../DATA_AVAILABILITY.md](../DATA_AVAILABILITY.md)** - Data availability statement for journal
+  - Data access instructions
+  - Restrictions and IRB information
+  - Verification checksums
+
 ---
 
 ## 🔧 Technical Guides

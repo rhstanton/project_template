@@ -13,9 +13,14 @@ This template provides a complete workflow for building research artifacts (figu
 make environment    # Install Python, Julia, Stata packages
 ```
 
+**Verify setup:**
+```bash
+make verify         # Quick smoke test (~1 minute)
+```
+
 **To build all artifacts:**
 ```bash
-make all           # Build figures + tables + provenance
+make all           # Build figures + tables + provenance (~5 minutes)
 ```
 
 **To publish to paper directory:**
@@ -23,10 +28,17 @@ make all           # Build figures + tables + provenance
 make publish       # Copy outputs to paper/ with provenance
 ```
 
+**To verify outputs:**
+```bash
+make test-outputs  # Check all expected files exist
+```
+
 **To test setup:**
 ```bash
 make examples      # Run example scripts
 ```
+
+**Need help?** See [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editors.
 
 ---
 
@@ -38,6 +50,10 @@ make examples      # Run example scripts
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata
+- **Automated testing**: pytest-based test suite for reliability
+- **Output comparison**: Diff current vs. published outputs
+- **Pre-submission checks**: Comprehensive validation before journal submission
+- **Replication reports**: Auto-generated HTML reports for reviewers
 - **Example workflows**: Sample scripts for all three languages
 
 ### Directory Structure
@@ -229,29 +245,37 @@ See `examples/README.md` for details.
 
 ## ⚙️ System Requirements
 
-- **OS**: Linux or macOS (Windows requires WSL)
-- **RAM**: 8GB minimum
-- **Disk**: 5GB (2GB environment + 3GB cache)
-- **Software**: GNU Make 4.3+, conda/mamba/micromamba
-- **Optional**: Nix (for reproducible dev shell via `flake.nix`)
+- **OS:** Linux or macOS (Windows requires WSL)
+- **RAM:** 8GB minimum (16GB recommended)
+- **Disk:** 5GB (2GB environment + 3GB cache)
+- **Time:** ~15 minutes total (10 min setup + 5 min execution)
+- **Software:** GNU Make 4.3+, conda/mamba (auto-installed if needed)
+- **Optional:** Nix (for reproducible dev shell via `flake.nix`)
 
 ---
 
 ## 🔍 Makefile Targets
 
 ```bash
-make                  # Show help (default)
-make help             # Show detailed commands
-make info             # Show quick start guide
+make                  # Brief guidance (essential commands)
+make help             # Detailed command reference (all targets)
+make info             # Comprehensive project information
 
 make environment      # Setup Python/Julia/Stata (one-time)
+make verify           # Verify environment and data (quick check)
 make all              # Build all artifacts
 make <artifact>       # Build specific artifact
 
+make test-outputs     # Verify all expected outputs exist
 make publish          # Publish all to paper/
 make publish PUBLISH_ARTIFACTS="x y"  # Publish specific
 make publish REQUIRE_CURRENT_HEAD=1   # Strict: require current HEAD
 
+make test             # Run test suite
+make diff-outputs     # Compare current vs published outputs
+make pre-submit       # Run pre-submission checklist
+make replication-report  # Generate replication report
+make journal-package  # Create journal submission package
 make examples         # Run example scripts
 make clean            # Remove all outputs
 ```
@@ -260,13 +284,27 @@ make clean            # Remove all outputs
 
 ## 📖 Documentation
 
-- `README.md` (this file) - Overview and quick start
-- `docs/environment.md` - Detailed environment setup guide
-- `docs/provenance.md` - Provenance tracking explained
-- `docs/publishing.md` - Publishing workflow guide
-- `docs/directory_structure.md` - Project organization
-- `examples/README.md` - Example scripts documentation
-- `.github/copilot-instructions.md` - AI agent guidance
+### Quick Start
+- [QUICKSTART.md](QUICKSTART.md) - Get up and running in 5 minutes
+- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
+
+### Detailed Guides
+- [docs/environment.md](docs/environment.md) - Environment setup and management
+- [docs/provenance.md](docs/provenance.md) - Provenance tracking system
+- [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
+- [docs/directory_structure.md](docs/directory_structure.md) - Project organization
+- [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
+- [docs/platform_compatibility.md](docs/platform_compatibility.md) - System requirements and GPU support
+- [docs/troubleshooting.md](docs/troubleshooting.md) - Common issues and solutions
+
+### For Journal Submission
+- [docs/journal_editor_readme.md](docs/journal_editor_readme.md) - One-page quick guide for reviewers
+- [docs/paper_output_mapping.md](docs/paper_output_mapping.md) - Map paper figures/tables to outputs
+- [docs/expected_outputs.md](docs/expected_outputs.md) - Verification checklist
+- [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md) - Data access documentation
+
+### Examples
+See [examples/](examples/) directory for sample scripts in Python, Julia, and Stata.
 
 ---
 
@@ -323,4 +361,38 @@ MIT License - See `LICENSE` file.
 
 ---
 
-**Last updated**: January 16, 2026
+## 📚 Citation
+
+If you use this template, please cite:
+
+```bibtex
+@software{template2026,
+  title = {Reproducible Research Template},
+  author = {Your Name},
+  year = {2026},
+  url = {https://github.com/yourusername/project_template}
+}
+```
+
+See `CITATION.cff` for structured metadata.
+
+---
+
+## 🎯 For Journal Submission
+
+**Authors preparing replication packages:**
+
+```bash
+make journal-package    # Creates clean replication package
+```
+
+This creates a fresh git repository excluding:
+- Development files (`.github/`, `.vscode/`, etc.)
+- Author-only directories (`data-construction/`, `notes/`, `paper/`)
+- Internal documentation (`TEMPLATE_USAGE.md`, etc.)
+
+See `JOURNAL_EXCLUDE` for complete list and [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editor instructions.
+
+---
+
+**Last updated:** January 17, 2026

@@ -9,6 +9,8 @@
 !/CHANGELOG.md
 !/QUICKSTART.md
 !/TEMPLATE_USAGE.md
+!/JOURNAL_EXCLUDE
+!/DATA_AVAILABILITY.md
 !pyproject.toml
 !README*
 !flake.nix
@@ -31,6 +33,14 @@
 # Directories to exclude completely (separate git repos or large generated content)
 paper/
 
+# Journal package artifacts (created by make journal-package)
+journal-package/
+journal-package.tar.gz
+journal-package.zip
+
+# Build marker (internal make state tracking)
+.make_build_marker
+
 # Environment directories (generated, platform-specific)
 .env/
 .julia/
@@ -43,6 +53,11 @@ env/.CondaPkg/
 
 # Generated outputs
 output/
+
+# Test coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
 
 # Data directories (structured with placeholders for larger projects)
 # Uncomment and customize as needed:

@@ -14,6 +14,9 @@ dependencies:
   # For provenance and environment
   - pyyaml
   - jinja2  # Required for pandas LaTeX export
+  # Testing
+  - pytest
+  - pytest-cov
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14
