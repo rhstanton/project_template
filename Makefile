@@ -28,13 +28,38 @@ PAPER_TBL_DIR := $(PAPER_DIR)/tables
 # All targets
 .PHONY: all
 all: $(ARTIFACTS)
+	@echo ""
+	@echo "=========================================="
+	@echo "✓ All analyses complete!"
+	@echo "=========================================="
+	@echo ""
+	@echo "Results:"
+	@echo "  - Figures: output/figures/"
+	@echo "  - Tables:  output/tables/"
+	@echo "  - Provenance: output/provenance/"
+	@echo ""
+	@echo "Note: If nothing ran, all outputs are already up-to-date."
+	@echo "      To force re-run: make clean && make all"
+	@echo ""
 
 # Environment setup
 .PHONY: environment
 environment:
+	@echo ""
+	@echo "=========================================="
 	@echo "Setting up software environment..."
+	@echo "=========================================="
+	@echo ""
 	$(MAKE) -C env all-env
-	@echo "✓ Environment ready (Python + Julia + Stata packages)"
+	@echo ""
+	@echo "✓ Environment ready!"
+	@echo ""
+	@echo "  Python 3.11:    .env/bin/python"
+	@echo "  Julia:          .julia/pyjuliapkg/install/bin/julia"
+	@echo "  Stata packages: .stata/ado/plus/ (if Stata installed)"
+	@echo ""
+	@echo "Next: make all (to build all artifacts)"
+	@echo ""
 
 # Example targets
 .PHONY: sample-python sample-julia sample-juliacall sample-stata examples
@@ -67,12 +92,14 @@ $(ARTIFACTS): %: $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
   build_%.py $(DATA) scripts/provenance.py $(PYTHON)
 	@mkdir -p $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
+	@echo "Building $*..."
 	@$(PYTHON) build_$*.py \
 	  --data $(DATA) \
 	  --out-fig $(OUT_FIG_DIR)/$*.pdf \
 	  --out-table $(OUT_TBL_DIR)/$*.tex \
 	  --out-meta $(OUT_PROV_DIR)/$*.yml \
 	  2>&1 | tee $(OUT_LOG_DIR)/$*.log
+	@echo "✓ $* complete"
 
 # Publishing
 PUBLISH_ARTIFACTS ?= $(ARTIFACTS)
@@ -80,6 +107,16 @@ REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
 
 .PHONY: publish
 publish: publish-figures publish-tables
+	@echo ""
+	@echo "=========================================="
+	@echo "✓ Publishing complete!"
+	@echo "=========================================="
+	@echo ""
+	@echo "Published artifacts: $(PUBLISH_ARTIFACTS)"
+	@echo "  - paper/figures/"
+	@echo "  - paper/tables/"
+	@echo "  - paper/provenance.yml (updated)"
+	@echo ""
 
 .PHONY: publish-figures
 publish-figures: $(addprefix $(OUT_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
