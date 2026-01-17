@@ -1,12 +1,47 @@
-# Build outputs
+# Build outputs (ephemeral - can be regenerated)
 output/
 
 # Paper repo is separate (e.g., Overleaf remote)
+# NOTE: In production, paper/ should be its own git repo
 paper/
 
-# Environment installations
+# Environment installations (project-local, not global)
 .env/
 .julia/
 .stata/
 env/pyjuliapkg/
-env/Manifest.toml
+env/Manifest.toml  # Platform-specific, regenerated on each platform
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+!examples/*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+!output/logs/
+
+# Data (uncomment if you want to exclude large data files)
+# data/
+# !data/*.csv
+# !data/README.md

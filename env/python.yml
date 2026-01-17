@@ -1,13 +1,19 @@
-name: sample_build_publish
+# Python environment for reproducible research template
+# Includes core scientific packages and provenance tracking
+name: project_template
 channels:
   - conda-forge
 dependencies:
   - python=3.11
   - pip
+  # Core scientific packages
   - numpy
   - pandas
   - matplotlib
+  - scipy
+  # For provenance and environment
   - pyyaml
-  - jinja2
+  - jinja2  # Required for pandas LaTeX export
+  # Julia interoperability
   - pip:
     - juliacall>=0.9.14

@@ -1,6 +1,11 @@
+# Julia environment for reproducible research template
+# This is an ENVIRONMENT not a package - do NOT add name, uuid, version fields
+# See docs/julia_python_integration.md for details
+
 [deps]
-# Julia dependencies for interoperability
+# Python/Julia interoperability
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+# Data manipulation
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 
 [compat]
