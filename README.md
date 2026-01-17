@@ -233,6 +233,7 @@ See `examples/README.md` for details.
 - **RAM**: 8GB minimum
 - **Disk**: 5GB (2GB environment + 3GB cache)
 - **Software**: GNU Make 4.3+, conda/mamba/micromamba
+- **Optional**: Nix (for reproducible dev shell via `flake.nix`)
 
 ---
 

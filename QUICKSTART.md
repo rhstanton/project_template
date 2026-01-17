@@ -105,6 +105,7 @@ Published artifacts to `paper/` directory:
 
 - **Stata** (commercial software, for Stata examples only)
 - **Git** (for version control and provenance tracking)
+- **Nix** (for reproducible dev shell via `nix develop`, see `flake.nix`)
 
 ### System Requirements
 

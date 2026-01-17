@@ -2,6 +2,8 @@
 
 ## Setup
 
+### Standard Setup (Recommended)
+
 Run once to install Python, Julia, and Stata packages:
 
 ```bash
@@ -12,6 +14,23 @@ This creates:
 - `.env/`: Python 3.11 environment with conda/micromamba
 - `.julia/`: Julia depot with packages via juliacall
 - `.stata/`: Stata packages (reghdfe, ftools, estout) if Stata is installed
+
+### Alternative: Nix Development Shell (Optional)
+
+If you have Nix installed, you can use the provided flake for a reproducible environment:
+
+```bash
+nix develop              # Enter default shell (CPU)
+nix develop .#gpu        # GPU-enabled shell (Linux only)
+```
+
+The Nix shell provides:
+- Julia + micromamba + GNU tools
+- Isolated environment (doesn't affect system)
+- Automatic `JULIA_PROJECT` and `JULIA_DEPOT_PATH` configuration
+- Optional CUDA toolkit (`.#gpu` shell)
+
+**Note**: Nix shell provides system tools, but you still need to run `make environment` inside the shell to install Python/Julia packages.
 
 ## Components
 

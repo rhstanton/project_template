@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Julia auto-installed via juliacall (`.julia/pyjuliapkg/`)
 - Stata packages (`.stata/ado/plus/`)
 - Environment wrappers: `runpython`, `runjulia`, `runstata`
+- Optional Nix flake for reproducible dev shell (`flake.nix`)
 
 **Provenance System**:
 - Build records: `output/provenance/<name>.yml` per artifact
