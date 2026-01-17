@@ -1,65 +1,80 @@
-# Build outputs (ephemeral - can be regenerated)
-output/
+# Ignore all files but include directories
+*
+!*/
 
-# Paper repo is separate (e.g., Overleaf remote)
-# NOTE: In production, paper/ should be its own git repo
+# Files to include
+!/.gitignore
+!/LICENSE
+!/CITATION.cff
+!/CHANGELOG.md
+!/QUICKSTART.md
+!/TEMPLATE_USAGE.md
+!pyproject.toml
+!README*
+!flake.nix
+!flake.lock
+!.vscode/
+!*.ado
+!*.do
+!*.ipynb
+!*.json
+!*.jl
+!*.md
+!*.py
+!*.sh
+!*.toml
+!*.txt
+!*.yml
+!run*
+!Makefile
+
+# Directories to exclude completely (separate git repos or large generated content)
 paper/
 
-# Environment installations (project-local, not global)
+# Environment directories (generated, platform-specific)
 .env/
 .julia/
 .cache/
 .stata/
-env/Manifest.toml  # Platform-specific, regenerated on each platform
+env/Manifest.toml
 env/lock.pid
 env/pyjuliapkg/
 env/.CondaPkg/
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-.CondaPkg/
+# Generated outputs
+output/
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-!examples/*.ipynb
-
-# IDE and editor artifacts
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.#*
-flycheck*
-_region*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Temporary and build files
-*.tmp
-*.bak
-*.log
-!output/logs/
-*.aux
-*.out
-*.toc
-
-# Data (uncomment if you want to exclude large data files)
-# data/
-# !data/*.csv
-# !data/README.md
-
-# Data structure with placeholders (optional - for larger projects)
+# Data directories (structured with placeholders for larger projects)
+# Uncomment and customize as needed:
 # data/raw/*
 # !data/raw/.gitignore
 # !data/raw/README.md
 # data/processed/*
 # !data/processed/.gitignore
 # !data/processed/README.md
+
+# Python/Julia artifacts
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.CondaPkg/
+
+# Editor artifacts
+.#*
+flycheck*
+_region*
+*.swp
+*.swo
+*~
+.idea/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Build/temp artifacts
+*.log
+*.aux
+*.out
+*.toc
