@@ -1,144 +1,325 @@
-# Sample project: Build → Publish with per-artifact provenance
+# Reproducible Research Template
 
-This sample demonstrates a workflow that satisfies all of your requirements:
+**A minimal template for reproducible research with provenance tracking and automated builds**
 
-- **Single authoritative build outputs** live under `output/` (not the paper repo)
-- `make all` builds everything, but you can run subsets like `make price_base`
-- Each artifact gets its own **sidecar provenance file**: `output/provenance/<name>.yml`
-- Publishing copies artifacts into `paper/` **only on explicit command** and records exactly what was published in `paper/provenance.yml`
-- The build recipe uses **GNU Make grouped targets** (`&:`) so one script invocation produces the figure + table + provenance exactly once
+This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
 
-## Setup
+---
 
-First-time setup (installs Python + Julia + Stata environments):
+## 🚀 Quick Start
+
+**First time setup (required once, ~10-15 minutes):**
+```bash
+make environment    # Install Python, Julia, Stata packages
+```
+
+**To build all artifacts:**
+```bash
+make all           # Build figures + tables + provenance
+```
+
+**To publish to paper directory:**
+```bash
+make publish       # Copy outputs to paper/ with provenance
+```
+
+**To test setup:**
+```bash
+make examples      # Run example scripts
+```
+
+---
+
+## 📊 What This Template Provides
+
+### Core Features
+
+- **Reproducible builds**: GNU Make orchestration with grouped targets
+- **Provenance tracking**: Full git state + input/output SHA256 hashes
+- **Build/publish separation**: Build in `output/`, publish to `paper/`
+- **Multi-language support**: Python, Julia, Stata
+- **Example workflows**: Sample scripts for all three languages
+
+### Directory Structure
+
+```
+project_template/
+├── build_price_base.py    # Analysis scripts
+├── build_remodel_base.py
+├── data/              # Input datasets
+├── env/               # Environment setup (Python/Julia/Stata)
+├── examples/          # Sample scripts for testing
+├── output/            # Build outputs (can be deleted/rebuilt)
+│   ├── figures/       # Generated PDFs
+│   ├── tables/        # Generated LaTeX tables
+│   ├── provenance/    # Per-artifact build records
+│   └── logs/          # Build logs
+├── paper/             # Published outputs (separate git repo)
+│   ├── figures/       # Published figures
+│   ├── tables/        # Published tables
+│   └── provenance.yml # Aggregated publication provenance
+└── scripts/           # Shared utilities (provenance.py, publish_artifacts.py)
+```
+
+See `docs/directory_structure.md` for complete details.
+
+---
+
+## 🎯 Workflows
+
+### Building Artifacts
+
+Each analysis script follows a standard pattern:
 
 ```bash
-make environment
+make price_base       # Builds one artifact
+make all              # Builds all artifacts
 ```
 
-This will:
-- Install micromamba (if conda/mamba not found)
-- Create a Python 3.11 environment in `.env/`
-- Install Julia via juliacall in `.julia/`
-- Install Stata packages to `.stata/` (if Stata is installed)
-- Install all Python, Julia, and Stata packages
+This produces **three outputs per artifact** (atomically):
+- `output/figures/<name>.pdf` - The figure
+- `output/tables/<name>.tex` - The table  
+- `output/provenance/<name>.yml` - Build metadata
 
-## Quick Start
-
-After setup, test the environment with example scripts:
+### Publishing Results
 
 ```bash
-make examples
+make publish                              # Publish all artifacts
+make publish PUBLISH_ARTIFACTS="price_base"  # Publish specific ones
+make publish REQUIRE_CURRENT_HEAD=1         # Strict: require current HEAD
 ```
 
-## Layout
+Publishing enforces **git safety checks**:
+- Working tree must be clean
+- Branch must not be behind upstream
+- Optionally require artifacts from current HEAD
 
-```
-project/
-  analysis/
-    build_price_base.py
-    build_remodel_base.py
-  data/
-    housing_panel.csv
-  env/
-    python.yml       # Python dependencies
-    Project.toml     # Julia dependencies
-    Manifest.toml    # Julia lockfile (auto-generated)
-    stata-packages.txt  # Stata packages
-    scripts/
-      runpython      # Python wrapper with Julia bridge
-      runstata       # Stata wrapper
-      execute.ado    # Stata helper
-      install_micromamba.sh
-      install_julia.py
-  examples/          # Sample scripts for testing
-    sample_python.py
-    sample_julia.py
-    sample_stata.do
-  .env/              # Python environment (gitignored)
-  .julia/            # Julia depot (gitignored)
-  .stata/            # Stata packages (gitignored)
-  output/
-    figures/        # build outputs (PDF)
-    tables/         # build outputs (TeX)
-    provenance/     # per-artifact build records (YML)
-    logs/
-  paper/
-    figures/        # published PDFs (tracked in paper repo / Overleaf)
-    tables/         # published TeX tables
-    provenance.yml  # what exactly is in paper/ and where it came from
-  scripts/
-    provenance.py
-    publish_artifacts.py
-  Makefile
+See `docs/publishing.md` for details.
+
+### Provenance Chain
+
+**Build provenance** (`output/provenance/<name>.yml`):
+```yaml
+artifact: price_base
+built_at_utc: '2026-01-17T04:04:49+00:00'
+command: [python, build_price_base.py, --data, data/housing_panel.csv]
+git:
+  commit: cbb163e
+  branch: main
+  dirty: false
+inputs:
+  - path: data/housing_panel.csv
+    sha256: 48917387...
+outputs:
+  - path: output/figures/price_base.pdf
+    sha256: 3855687d...
 ```
 
-## Build
+**Publication provenance** (`paper/provenance.yml`):
+- Aggregates all build records
+- Tracks when each artifact was published
+- Records analysis repo git state at publication time
 
-Build everything:
+See `docs/provenance.md` for complete explanation.
+
+---
+
+## 🔧 Adding New Artifacts
+
+1. **Create analysis script** following the pattern in [build_price_base.py](build_price_base.py):
+   ```python
+   from scripts.provenance import write_build_record
+   
+   def main():
+       # ... build figure and table ...
+       
+       write_build_record(
+           artifact="my_artifact",
+           command=sys.argv,
+           inputs=[args.data],
+           outputs=[args.out_fig, args.out_table],
+           output_path=args.out_meta
+       )
+   ```
+
+2. **Add to Makefile**:
+   ```makefile
+   ARTIFACTS := price_base remodel_base my_artifact
+   ```
+
+3. **Build and publish**:
+   ```bash
+   make my_artifact
+   make publish PUBLISH_ARTIFACTS="my_artifact"
+   ```
+
+---
+
+## 🐍 Python Environment
+
+Managed via conda with automatic Julia integration:
 
 ```bash
-make all
+# Environment wrapper with Julia bridge
+env/scripts/runpython script.py
+
+# Direct conda activation (alternative)
+conda activate .env
+python script.py
 ```
 
-Build a subset (one figure + one table + provenance record):
+**Packages** (see `env/python.yml`):
+- pandas, matplotlib, numpy
+- pyyaml (for provenance)
+- juliacall (Python/Julia interop)
+- jinja2 (for pandas LaTeX export)
+
+---
+
+## 📚 Julia Environment
+
+**Pure Julia**:
+```bash
+env/scripts/runjulia script.jl
+```
+
+**Python/Julia interop** (via juliacall):
+```python
+from juliacall import Main as jl
+jl.seval("using DataFrames")
+df = jl.DataFrame(x=[1,2,3], y=[4,5,6])
+```
+
+**Packages** (see `env/Project.toml`):
+- PythonCall (Julia/Python interop)
+- DataFrames
+
+Julia is auto-installed to `.julia/pyjuliapkg/` via juliacall.
+
+---
+
+## 📊 Stata Environment (Optional)
 
 ```bash
-make price_base
-make remodel_base
+env/scripts/runstata script.do
 ```
 
-Outputs:
-- `output/figures/price_base.pdf`
-- `output/tables/price_base.tex`
-- `output/provenance/price_base.yml`
+**Packages** (see `env/stata-packages.txt`):
+- reghdfe, ftools, estout
 
-## Publish
+Installed to `.stata/ado/plus/` (local to project).
 
-Publish everything into `paper/`:
+---
+
+## 🧪 Examples
+
+Test your setup:
 
 ```bash
-make publish
+make examples          # Run all examples
+make sample-python     # Python example
+make sample-julia      # Pure Julia example  
+make sample-juliacall  # Python/Julia interop
+make sample-stata      # Stata example (if installed)
 ```
 
-Publish only one artifact:
+See `examples/README.md` for details.
+
+---
+
+## ⚙️ System Requirements
+
+- **OS**: Linux or macOS (Windows requires WSL)
+- **RAM**: 8GB minimum
+- **Disk**: 5GB (2GB environment + 3GB cache)
+- **Software**: GNU Make 4.3+, conda/mamba/micromamba
+
+---
+
+## 🔍 Makefile Targets
 
 ```bash
-make publish PUBLISH_ARTIFACTS="price_base"
-# or publish-figures / publish-tables separately
-make publish-figures PUBLISH_ARTIFACTS="price_base"
-make publish-tables  PUBLISH_ARTIFACTS="price_base"
+make                  # Show help (default)
+make help             # Show detailed commands
+make info             # Show quick start guide
+
+make environment      # Setup Python/Julia/Stata (one-time)
+make all              # Build all artifacts
+make <artifact>       # Build specific artifact
+
+make publish          # Publish all to paper/
+make publish PUBLISH_ARTIFACTS="x y"  # Publish specific
+make publish REQUIRE_CURRENT_HEAD=1   # Strict: require current HEAD
+
+make examples         # Run example scripts
+make clean            # Remove all outputs
 ```
 
-Publishing updates:
-- `paper/figures/<name>.pdf` and/or `paper/tables/<name>.tex`
-- `paper/provenance.yml` with **per-figure and per-table provenance**, including:
-  - analysis git commit + dirty flag
-  - input data sha256 (here: `data/housing_panel.csv`)
-  - output sha256
+---
 
-### Git safety checks
+## 📖 Documentation
 
-`publish_artifacts.py` defaults to:
-- refuse if analysis working tree is dirty (`--allow-dirty 0`)
-- refuse if your branch is behind upstream (`--require-not-behind 1`)
+- `README.md` (this file) - Overview and quick start
+- `docs/environment.md` - Detailed environment setup guide
+- `docs/provenance.md` - Provenance tracking explained
+- `docs/publishing.md` - Publishing workflow guide
+- `docs/directory_structure.md` - Project organization
+- `examples/README.md` - Example scripts documentation
+- `.github/copilot-instructions.md` - AI agent guidance
 
-These are controlled by the Makefile flags in `publish-figures` and `publish-tables`.
+---
 
-## Notes about `paper/` being its own git repo
+## 🔒 Git Integration
 
-In your real setup:
-- Your main analysis repo should ignore `paper/` (see `.gitignore` suggestion below)
-- `paper/` should be its own git repo with an Overleaf remote
-- Publishing just writes files into `paper/`; you then `cd paper && git add/commit/push`
+Provenance tracking requires git:
 
-## .gitignore suggestion (analysis repo)
-
-Add this to the *analysis* repo:
-
-```
-paper/
-output/
+```bash
+git init
+git add -A
+git commit -m "Initial commit"
+make all              # Builds include git commit hash
+make publish          # Tracks publication from specific commit
 ```
 
-In practice you may prefer to keep `output/logs/` or `output/provenance/` for local debugging, but for journal replication packages you can archive snapshots.
+The `paper/` directory is intended as a **separate git repository** for Overleaf integration.
+
+---
+
+## � Documentation
+
+### Quick Start
+- [QUICKSTART.md](QUICKSTART.md) - Get up and running in 5 minutes
+- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
+
+### Detailed Guides
+- [docs/environment.md](docs/environment.md) - Environment setup and management
+- [docs/provenance.md](docs/provenance.md) - Provenance tracking system
+- [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
+- [docs/directory_structure.md](docs/directory_structure.md) - Project organization
+- [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
+- [docs/platform_compatibility.md](docs/platform_compatibility.md) - System requirements and GPU support
+- [docs/troubleshooting.md](docs/troubleshooting.md) - Common issues and solutions
+
+### Examples
+See [examples/](examples/) directory for sample scripts in Python, Julia, and Stata.
+
+---
+
+## 📞 Troubleshooting
+
+**Quick fixes**:
+- Import errors: Use `env/scripts/runpython` not bare `python`
+- Build failures: `make clean && make all`
+- Environment issues: `make cleanall && make environment`
+
+**Detailed help**: See [docs/troubleshooting.md](docs/troubleshooting.md) for comprehensive solutions.
+
+---
+
+## 📄 License
+
+MIT License - See `LICENSE` file.
+
+---
+
+**Last updated**: January 16, 2026

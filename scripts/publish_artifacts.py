@@ -54,6 +54,25 @@ def enforce_git_policy(repo_root: Path, *, allow_dirty: bool, require_not_behind
     return state
 
 
+def check_artifacts_current(artifact_names: list[str], prov_dir: Path, current_commit: str) -> None:
+    """Verify all artifacts were built from current HEAD commit."""
+    stale = []
+    for name in artifact_names:
+        meta_path = prov_dir / f"{name}.yml"
+        if meta_path.exists():
+            meta = load_yml(meta_path)
+            artifact_commit = meta.get("git_commit", "")
+            if artifact_commit and artifact_commit != current_commit:
+                stale.append((name, artifact_commit[:7], current_commit[:7]))
+    
+    if stale:
+        msg = "Refusing to publish: some artifacts were not built from current HEAD:\n"
+        for name, old, new in stale:
+            msg += f"  {name}: built from {old}, but HEAD is {new}\n"
+        msg += "\nRun: make clean && make all\nOr set --require-current-head 0 to allow."
+        raise SystemExit(msg)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Publish built artifacts (figures or tables) into the paper repo with per-artifact provenance."
@@ -63,6 +82,8 @@ def main() -> None:
     ap.add_argument("--names", type=str, required=True, help="Space-separated artifact base names")
     ap.add_argument("--allow-dirty", type=int, default=0)
     ap.add_argument("--require-not-behind", type=int, default=1)
+    ap.add_argument("--require-current-head", type=int, default=0, 
+                    help="Require all artifacts built from current HEAD (default 0)")
     args = ap.parse_args()
 
     project_root = Path(__file__).resolve().parents[1]
@@ -82,6 +103,12 @@ def main() -> None:
     out_fig_dir = project_root / "output" / "figures"
     out_tbl_dir = project_root / "output" / "tables"
     out_prov_dir = project_root / "output" / "provenance"
+
+    # Check artifacts are from current HEAD if required
+    if args.require_current_head and gitinfo.get("is_git_repo", False):
+        current_commit = gitinfo.get("commit", "")
+        if current_commit:
+            check_artifacts_current(names, out_prov_dir, current_commit)
 
     # Destination
     dst_dir = paper_root / args.kind

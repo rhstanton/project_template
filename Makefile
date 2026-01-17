@@ -65,9 +65,9 @@ $(ARTIFACTS): %: $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 # Grouped targets: one run produces figure + table + provenance.
 # Requires GNU Make >= 4.3.
 $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
-  analysis/build_%.py $(DATA) scripts/provenance.py $(PYTHON)
+  build_%.py $(DATA) scripts/provenance.py $(PYTHON)
 	@mkdir -p $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
-	@$(PYTHON) analysis/build_$*.py \
+	@$(PYTHON) build_$*.py \
 	  --data $(DATA) \
 	  --out-fig $(OUT_FIG_DIR)/$*.pdf \
 	  --out-table $(OUT_TBL_DIR)/$*.tex \
@@ -76,6 +76,7 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 
 # Publishing
 PUBLISH_ARTIFACTS ?= $(ARTIFACTS)
+REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
 
 .PHONY: publish
 publish: publish-figures publish-tables
@@ -90,7 +91,8 @@ publish-figures: $(addprefix $(OUT_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACT
 	  --kind figures \
 	  --names "$(PUBLISH_ARTIFACTS)" \
 	  --allow-dirty 0 \
-	  --require-not-behind 1
+	  --require-not-behind 1 \
+	  --require-current-head $(REQUIRE_CURRENT_HEAD)
 	@echo "✓ Figures published to $(PAPER_FIG_DIR)"
 
 .PHONY: publish-tables
@@ -103,7 +105,8 @@ publish-tables: $(addprefix $(OUT_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS
 	  --kind tables \
 	  --names "$(PUBLISH_ARTIFACTS)" \
 	  --allow-dirty 0 \
-	  --require-not-behind 1
+	  --require-not-behind 1 \
+	  --require-current-head $(REQUIRE_CURRENT_HEAD)
 	@echo "✓ Tables published to $(PAPER_TBL_DIR)"
 	@echo ""
 	@echo "Publication complete. Updated: $(PAPER_DIR)/provenance.yml"
