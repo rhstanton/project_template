@@ -38,7 +38,7 @@ journal-package/
 journal-package.tar.gz
 journal-package.zip
 
-# Build marker (internal make state tracking)
+# Build marker (internal make state)
 .make_build_marker
 
 # Environment directories (generated, platform-specific)
