@@ -130,8 +130,7 @@ publish:
 	@echo "Publishing artifacts to paper/..."
 	@echo "=========================================="
 	@echo ""
-	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
-	         $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) --no-print-directory publish-figures publish-tables
 	@if [ -f .publish_marker ]; then \
 		echo ""; \
 		echo "=========================================="; \
@@ -161,7 +160,19 @@ publish-force:
 	@rm -rf $(PUBLISH_STAMP_DIR)
 	@$(MAKE) publish
 
-# Stamp file for published figures
+# Publish all figures (prints header, then processes individual stamps)
+.PHONY: publish-figures
+publish-figures:
+	@echo "Figures:"
+	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS)))
+
+# Publish all tables (prints header, then processes individual stamps)
+.PHONY: publish-tables
+publish-tables:
+	@echo "Tables:"
+	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
+
+# Individual stamp files (for incremental publishing)
 $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_FIG_DIR)
 	@$(PYTHON) scripts/publish_artifacts.py \
@@ -174,7 +185,6 @@ $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 	@touch $@
 	@touch .publish_marker
 
-# Stamp file for published tables
 $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_TBL_DIR)
 	@$(PYTHON) scripts/publish_artifacts.py \
