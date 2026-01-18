@@ -71,6 +71,13 @@ PYTHON := env/scripts/runpython
 JULIA  := env/scripts/runjulia
 STATA  := env/scripts/runstata
 
+# repro-tools CLI commands (via Python module for portability)
+REPRO_CHECK   := $(PYTHON) -m repro_tools.cli check
+REPRO_PUBLISH := $(PYTHON) -m repro_tools.cli publish
+REPRO_COMPARE := $(PYTHON) -m repro_tools.cli compare
+REPRO_SYSINFO := $(PYTHON) -m repro_tools.cli sysinfo
+REPRO_REPORT  := $(PYTHON) -m repro_tools.cli report
+
 # ==============================================================================
 # Analysis Definitions
 # ==============================================================================
@@ -285,7 +292,7 @@ PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
 publish:
-	@$(PYTHON) scripts/check_git_state.py --allow-dirty $(ALLOW_DIRTY) --require-not-behind $(REQUIRE_NOT_BEHIND) --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ANALYSES)"
+	@$(REPRO_CHECK) --allow-dirty $(ALLOW_DIRTY) --require-not-behind $(REQUIRE_NOT_BEHIND) --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ANALYSES)"
 	@echo ""
 	@echo "=========================================="
 	@echo "Publishing outputs to paper/..."
@@ -352,8 +359,7 @@ publish-files:
 			exit 1; \
 		fi; \
 	done
-	@$(PYTHON) scripts/publish_specific_files.py \
-	  --paper-root $(PAPER_DIR) \
+	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
 	  --files "$(PUBLISH_FILES)" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
@@ -361,24 +367,22 @@ publish-files:
 	@touch .publish_marker
 
 # Individual stamp files (for incremental publishing)
-$(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
+$(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_FIG_DIR)
-	@$(PYTHON) scripts/publish_artifacts.py \
-	  --paper-root $(PAPER_DIR) \
+	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
 	  --kind figures \
-	  --names "$*" \
+	  --analyses "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
 	@touch $@
 	@touch .publish_marker
 
-$(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
+$(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_TBL_DIR)
-	@$(PYTHON) scripts/publish_artifacts.py \
-	  --paper-root $(PAPER_DIR) \
+	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
 	  --kind tables \
-	  --names "$*" \
+	  --analyses "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
@@ -449,8 +453,7 @@ verify:
 .PHONY: system-info
 system-info:
 	@echo "Logging computational environment..."
-	@$(PYTHON) scripts/log_system_info.py \
-	  --output output/system_info.yml \
+	@$(REPRO_SYSINFO) --output output/system_info.yml \
 	  --repo-root $(REPO_ROOT)
 	@echo ""
 	@echo "System information saved to output/system_info.yml"
@@ -476,28 +479,26 @@ test-cov:
 .PHONY: diff-outputs
 diff-outputs:
 	@echo "Comparing current outputs with published outputs..."
-	@$(PYTHON) scripts/compare_outputs.py \
-	  --reference paper \
+	@$(REPRO_COMPARE) --reference paper \
 	  --current-dir output
 	@echo ""
 
 .PHONY: pre-submit
 pre-submit:
 	@echo "Running pre-submission checklist..."
-	@$(PYTHON) scripts/pre_submit_check.py
+	@$(REPRO_CHECK) --pre-submit
 	@echo ""
 
 .PHONY: pre-submit-strict
 pre-submit-strict:
 	@echo "Running pre-submission checklist (strict mode)..."
-	@$(PYTHON) scripts/pre_submit_check.py --strict
+	@$(REPRO_CHECK) --pre-submit --strict
 	@echo ""
 
 .PHONY: replication-report
 replication-report:
 	@echo "Generating replication report..."
-	@$(PYTHON) scripts/generate_replication_report.py \
-	  --format html \
+	@$(REPRO_REPORT) --format html \
 	  --output output/replication_report.html
 	@echo ""
 	@echo "Report generated: output/replication_report.html"
@@ -724,7 +725,7 @@ info:
 	@echo "    ├─ figures/            Published figures"
 	@echo "    ├─ tables/             Published tables"
 	@echo "    └─ provenance.yml      Aggregated publication provenance"
-	@echo "  scripts/                 Shared utilities (provenance, publishing)"
+	@echo "  env/                     Environment setup (Python/Julia/Stata)"
 	@echo "  docs/                    Documentation (10 guides)"
 	@echo "  tests/                   Test suite (pytest)"
 	@echo "  examples/                Sample scripts (Python/Julia/Stata)"
