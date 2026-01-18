@@ -130,7 +130,7 @@ publish:
 	@echo "Publishing artifacts to paper/..."
 	@echo "=========================================="
 	@echo ""
-	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
+	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
 	         $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
 	@if [ -f .publish_marker ]; then \
 		echo ""; \
