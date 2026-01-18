@@ -163,6 +163,12 @@ def main() -> None:
             raise SystemExit(f"Missing source artifact {src}. Build it first.")
 
         copied = copy_if_changed(src, dst)
+        
+        # Print status for each file
+        if copied:
+            print(f"  Published: {dst.relative_to(paper_root)}")
+        else:
+            print(f"  Up-to-date: {dst.relative_to(paper_root)}")
 
         prov["artifacts"].setdefault(name, {})
         prov["artifacts"][name][args.kind] = {

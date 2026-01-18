@@ -132,10 +132,7 @@ publish: $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_
 		echo "✓ Publishing complete!"; \
 		echo "=========================================="; \
 		echo ""; \
-		echo "Published artifacts: $(PUBLISH_ARTIFACTS)"; \
-		echo "  - paper/figures/"; \
-		echo "  - paper/tables/"; \
-		echo "  - paper/provenance.yml (updated)"; \
+		echo "Updated: paper/provenance.yml"; \
 		echo ""; \
 		rm -f .publish_marker; \
 	else \
