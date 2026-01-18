@@ -121,8 +121,9 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 PUBLISH_ARTIFACTS ?= $(ARTIFACTS)
 REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
 
-.PHONY: publish
-publish: publish-figures publish-tables
+.PHONY: publish publish-force
+publish: $(addprefix $(PAPER_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
+         $(addprefix $(PAPER_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS)))
 	@echo ""
 	@echo "=========================================="
 	@echo "✓ Publishing complete!"
@@ -134,35 +135,35 @@ publish: publish-figures publish-tables
 	@echo "  - paper/provenance.yml (updated)"
 	@echo ""
 
-.PHONY: publish-figures
-publish-figures: $(addprefix $(OUT_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
-                 $(addprefix $(OUT_PROV_DIR)/,$(addsuffix .yml,$(PUBLISH_ARTIFACTS)))
+# Force re-publish even if up-to-date
+publish-force:
+	@rm -f $(addprefix $(PAPER_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS)))
+	@rm -f $(addprefix $(PAPER_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) publish
+
+# Pattern rule for publishing figures
+$(PAPER_FIG_DIR)/%.pdf: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PAPER_FIG_DIR)
-	@echo "Publishing figures: $(PUBLISH_ARTIFACTS)"
+	@echo "Publishing figure: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind figures \
-	  --names "$(PUBLISH_ARTIFACTS)" \
+	  --names "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
-	@echo "✓ Figures published to $(PAPER_FIG_DIR)"
 
-.PHONY: publish-tables
-publish-tables: $(addprefix $(OUT_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS))) \
-                $(addprefix $(OUT_PROV_DIR)/,$(addsuffix .yml,$(PUBLISH_ARTIFACTS)))
+# Pattern rule for publishing tables
+$(PAPER_TBL_DIR)/%.tex: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PAPER_TBL_DIR)
-	@echo "Publishing tables: $(PUBLISH_ARTIFACTS)"
+	@echo "Publishing table: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind tables \
-	  --names "$(PUBLISH_ARTIFACTS)" \
+	  --names "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
-	@echo "✓ Tables published to $(PAPER_TBL_DIR)"
-	@echo ""
-	@echo "Publication complete. Updated: $(PAPER_DIR)/provenance.yml"
 
 .PHONY: clean
 clean:
