@@ -66,6 +66,87 @@ For exact reproducibility:
 - Stata: `env/stata-packages.txt` specifies package names and optional versions
 - All are captured in per-artifact provenance via `repro_tools`
 
+## Alternative Environment Managers
+
+### Why Conda/Micromamba (Current Default)?
+
+**Target audience**: Academic researchers
+
+**Advantages**:
+- ✅ **Multi-language**: Handles Python, Julia packages, R, system libraries
+- ✅ **Widely adopted**: Standard in scientific computing
+- ✅ **Large ecosystem**: conda-forge has 20,000+ packages
+- ✅ **Binary packages**: No compilation needed
+- ✅ **Familiar**: Most researchers already know conda
+
+**Limitations**:
+- ⚠️ Slower than modern alternatives
+- ⚠️ Lockfiles less robust than newer tools
+- ⚠️ Environment resolution can be slow
+
+### Considered Alternatives
+
+#### uv (Not Implemented)
+
+**What it is**: Fast Python package installer (Rust-based, ~10-100x faster than pip)
+
+**Why not used**:
+- ❌ **Python-only** - Cannot handle Julia, Stata, or binary dependencies
+- ❌ Missing conda-forge packages
+- ❌ juliacall setup requires conda Python
+- ❌ Breaking change for multi-language workflow
+
+**Use case**: Pure Python projects without Julia/Stata
+
+#### pixi (Future Consideration)
+
+**What it is**: Modern conda-compatible package manager (Rust-based, from Prefix.dev)
+
+**Potential advantages**:
+- ✅ **Multi-language** like conda (Python + Julia + R + system libs)
+- ✅ Much faster than conda/mamba
+- ✅ Better lockfiles (`pixi.lock` with exact hashes)
+- ✅ Drop-in replacement for conda (uses conda-forge)
+- ✅ Built-in task runner (could simplify Makefile)
+
+**Why not yet implemented**:
+- ⚠️ Newer tool (less mature ecosystem)
+- ⚠️ Smaller community than conda
+- ⚠️ Would require converting `env/python.yml` → `pixi.toml`
+- ⚠️ Additional learning curve for users
+
+**Future**: Could add `pixi.toml` as an **optional alternative** to `env/python.yml` while keeping conda as default.
+
+#### Nix (Already Supported as Optional)
+
+**What it is**: Declarative package manager with true reproducibility
+
+**Current support**: `flake.nix` provides optional dev shell
+
+**Use case**:
+- Dev shell with system tools (julia, micromamba, GNU make)
+- True bit-for-bit reproducibility across platforms
+- Optional, not required
+
+**Why optional not required**:
+- ❌ Steep learning curve
+- ❌ Not familiar to most academic researchers  
+- ❌ Many HPC clusters don't allow Nix
+- ❌ Harder to debug when things break
+
+**Recommendation**: Use Nix if you're already familiar with it; stick with conda otherwise.
+
+### Summary
+
+| Tool | Multi-Language | Speed | Academic Adoption | Status |
+|------|---------------|-------|------------------|--------|
+| **conda/micromamba** | ✅ | ⚠️ Slow | ✅ Very High | **Default** |
+| **uv** | ❌ Python-only | ✅ Fast | ⚠️ Growing | Not used |
+| **pixi** | ✅ | ✅ Fast | ⚠️ Low | Future option |
+| **Nix** | ✅ | ⚠️ Moderate | ❌ Very Low | Optional |
+
+**Philosophy**: Prioritize **usability for researchers** over **cutting-edge tooling**. Conda is the lingua franca of scientific computing.
+
 ## Examples
 
 Test the environment with sample scripts:
