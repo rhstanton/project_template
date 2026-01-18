@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **repro-tools git submodule** for portable dependency management:
+  - Added `lib/repro-tools/` as git submodule tracking https://github.com/rhstanton/repro-tools.git
+  - Configured to track `main` branch for automatic updates
+  - Automatic submodule initialization in Makefile (runs on every make invocation)
+  - Editable install (`-e ../lib/repro-tools`) for immediate availability of changes
+  - Comprehensive documentation in `docs/repro_tools_submodule.md`
 - Journal submission documentation package:
   - `CITATION.cff`: Structured citation metadata in Citation File Format
   - `JOURNAL_EXCLUDE`: List of directories to exclude from journal submission
@@ -43,6 +49,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Runtime estimates throughout documentation
 
 ### Changed
+- **repro-tools installation method**:
+  - Changed from absolute path (`-e /home/user/...`) to git submodule (`-e ../lib/repro-tools`)
+  - Makes template portable across machines and users
+  - Maintains editable install for development workflow
+  - Updated `env/python.yml` with portable relative path
+- **Makefile enhancements**:
+  - Added automatic git submodule initialization at top of Makefile
+  - Enhanced `environment` target with submodule initialization messaging
+  - Added repro-tools location to environment setup output
+- **Documentation updates** for git submodule approach:
+  - Updated `README.md` with lib/ directory in structure
+  - Updated `QUICKSTART.md` with submodule initialization step
+  - Updated `docs/directory_structure.md` with lib/ section
+  - Updated `docs/environment.md` with submodule details
+  - Updated `docs/README.md` with link to repro_tools_submodule.md
 - **Three-tier help system** (matches fire project UX):
   - `make` (default): Brief guidance showing essential commands (~20 lines)
   - `make help`: Detailed command reference organized by category (~80 lines)

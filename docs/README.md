@@ -21,6 +21,19 @@ Complete guide to the reproducible research template.
   - Stata package setup
   - Environment wrappers (`runpython`, `runjulia`, `runstata`)
 
+- **[repro_tools_submodule.md](repro_tools_submodule.md)** - Git submodule setup for repro-tools
+  - Why use a git submodule
+  - Automatic initialization
+  - Working with editable installs
+  - Updating to latest version
+  - Troubleshooting
+
+- **[submodule_cheatsheet.md](submodule_cheatsheet.md)** - Quick reference for submodule workflows
+  - Creating new projects from template
+  - Editing repro-tools
+  - Updating to latest
+  - Common scenarios and troubleshooting
+
 ### Build System
 - **[provenance.md](provenance.md)** - Provenance tracking system explained
   - Build provenance (per-artifact records)

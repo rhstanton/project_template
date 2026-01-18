@@ -6,11 +6,31 @@ This template provides a complete workflow for building research artifacts (figu
 
 ---
 
+## � Creating a New Project from This Template
+
+**Option 1: Clone with submodules (recommended):**
+```bash
+git clone --recursive https://github.com/rhstanton/project_template.git my-project
+cd my-project
+make environment
+```
+
+**Option 2: Clone normally (submodules auto-initialize):**
+```bash
+git clone https://github.com/rhstanton/project_template.git my-project
+cd my-project
+make environment  # Automatically initializes git submodules
+```
+
+**⚠️ IMPORTANT:** When creating a new project, do **NOT** manually copy the `lib/repro-tools/` directory. Let git handle it as a submodule. The Makefile automatically initializes it when you run `make environment`.
+
+---
+
 ## 🚀 Quick Start
 
 **First time setup (required once, ~10-15 minutes):**
 ```bash
-make environment    # Install Python, Julia, Stata packages
+make environment    # Install Python, Julia, Stata packages + initialize submodules
 ```
 
 **Verify setup:**
@@ -64,6 +84,7 @@ project_template/
 ├── build_remodel_base.py
 ├── data/              # Input datasets
 ├── env/               # Environment setup (Python/Julia/Stata)
+├── lib/               # Git submodules (repro-tools)
 ├── examples/          # Sample scripts for testing
 ├── output/            # Build outputs (can be deleted/rebuilt)
 │   ├── figures/       # Generated PDFs

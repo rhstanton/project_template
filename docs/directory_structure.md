@@ -9,12 +9,15 @@ project_template/
 ├── .github/               # GitHub metadata
 │   └── copilot-instructions.md
 ├── .gitignore             # Git exclusions
+├── .gitmodules            # Git submodule configuration
 ├── build_price_base.py    # Analysis scripts  
 ├── build_remodel_base.py
 ├── data/                  # Input datasets
 ├── docs/                  # Documentation
 ├── env/                   # Environment setup
 ├── examples/              # Example scripts
+├── lib/                   # Git submodules
+│   └── repro-tools/       # Reproducibility tools (editable install)
 ├── output/                # Build outputs (ephemeral)
 ├── paper/                 # Published outputs (permanent)
 ├── scripts/               # Shared utilities
@@ -134,26 +137,42 @@ git commit -m "Published outputs"
 git push -u overleaf main
 ```
 
+### `lib/`
+
+Git submodules for external dependencies.
+
+```
+lib/
+└── repro-tools/               # Reproducibility tools (git submodule)
+    ├── src/
+    │   └── repro_tools/       # Python package source
+    ├── pyproject.toml
+    └── README.md
+```
+
+**repro-tools**:
+- Installed in editable mode (`pip install -e lib/repro-tools`)
+- Changes immediately available (no reinstall needed)
+- Automatically initialized by `make environment`
+- See [docs/repro_tools_submodule.md](repro_tools_submodule.md) for details
+
+**Git submodule**:
+- Tracked in `.gitmodules`
+- Auto-initialized by Makefile
+- Update with: `git submodule update --remote lib/repro-tools`
+
 ### `scripts/`
 
 Shared Python utilities used by analysis and publishing.
 
+**NOTE:** Most scripts have been moved to the `repro-tools` package in `lib/repro-tools/`.
+This directory may be deprecated in future versions.
+
 ```
 scripts/
-├── provenance.py              # Build provenance tracking
-└── publish_artifacts.py       # Publishing with safety checks
+├── provenance.py              # Build provenance tracking (DEPRECATED - use repro_tools)
+└── publish_artifacts.py       # Publishing with safety checks (DEPRECATED - use repro-tools CLI)
 ```
-
-**provenance.py**:
-- `git_state()`: Get current git info
-- `sha256_file()`: Compute file checksums
-- `write_build_record()`: Write per-artifact YAML
-- `now_utc_iso()`: UTC timestamp helper
-
-**publish_artifacts.py**:
-- Command-line tool for `make publish`
-- Enforces git safety checks
-- Copies files and updates `paper/provenance.yml`
 
 ## Environment Directories
 

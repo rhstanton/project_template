@@ -14,6 +14,9 @@ This creates:
 - `.env/`: Python 3.11 environment with conda/micromamba
 - `.julia/`: Julia depot with packages via juliacall
 - `.stata/`: Stata packages (reghdfe, ftools, estout) if Stata is installed
+- `lib/repro-tools/`: Git submodule with reproducibility tools (auto-initialized)
+
+**Note:** Git submodules are automatically initialized. The first run downloads repro-tools from GitHub.
 
 ### Alternative: Nix Development Shell (Optional)
 
@@ -43,6 +46,9 @@ The Nix shell provides:
 - `env/scripts/execute.ado`: Stata helper for running .do files with logging
 - `env/scripts/install_micromamba.sh`: Auto-installs micromamba if conda not found
 - `env/scripts/install_julia.py`: Triggers Julia installation via juliacall
+- `lib/repro-tools/`: Git submodule with reproducibility tools (installed in editable mode)
+
+**See also:** [docs/repro_tools_submodule.md](repro_tools_submodule.md) for details on the repro-tools git submodule.
 
 ## Python/Julia Integration
 

@@ -6,30 +6,59 @@ How to customize this template for your own research project.
 
 ## Starting a New Project
 
-### Option 1: Clone as Template
+### Option 1: Clone as Template (Recommended)
 
 ```bash
 # Create new repo from template on GitHub
 # (Use "Use this template" button)
 
-# Or clone and reset git history:
-git clone <this-repo-url> my-project
+# Or clone with submodules:
+git clone --recursive <this-repo-url> my-project
 cd my-project
+make environment  # Installs everything
+```
+
+### Option 2: Clone and Reset History
+
+```bash
+# Clone with submodules
+git clone --recursive <this-repo-url> my-project
+cd my-project
+
+# Reset git history (optional)
 rm -rf .git
 git init
 git add .
 git commit -m "Initial commit from template"
+
+# Reinitialize submodule
+git submodule add https://github.com/rhstanton/repro-tools.git lib/repro-tools
+make environment
 ```
 
-### Option 2: Copy Files
+### Option 3: Copy Files (NOT Recommended)
+
+If you must copy files manually:
 
 ```bash
 # Copy template to new location
 cp -r project_template my-project
 cd my-project
-rm -rf .git .env .julia output
+
+# DON'T copy lib/repro-tools contents!
+rm -rf .git .env .julia output lib/repro-tools/*
+
+# Initialize as new git repo
 git init
+git add .
+git commit -m "Initial commit from template"
+
+# Let git clone the submodule
+git submodule add https://github.com/rhstanton/repro-tools.git lib/repro-tools
+make environment
 ```
+
+**IMPORTANT:** Never manually copy the `lib/repro-tools/` directory contents. Always let git handle submodules.
 
 ---
 

@@ -10,12 +10,13 @@
 
 ```bash
 # 1. Clone or create project from template
-git clone <your-repo-url>
+git clone --recursive <your-repo-url>
 cd <your-project>
 
 # 2. Install environment (~5 minutes)
 make environment
 # Installs:
+#   - Git submodules (repro-tools automatically)
 #   - Python 3.11 conda environment (.env/)
 #   - Julia via juliacall (.julia/)
 #   - Stata packages if Stata installed (.stata/)
@@ -53,6 +54,7 @@ make publish
 
 You should see:
 ```
+📦 Initializing git submodules...
 📦 Installing Python environment...
 ✅ Python environment created at .env/
 

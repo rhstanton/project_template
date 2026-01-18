@@ -55,6 +55,9 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
+# Ensure git submodules are initialized (runs once per make invocation)
+$(shell git submodule update --init --recursive 2>/dev/null || true)
+
 # ==============================================================================
 # Environment Variables
 # ==============================================================================
@@ -150,6 +153,9 @@ environment:
 	@echo "Setting up software environment..."
 	@echo "=========================================="
 	@echo ""
+	@echo "📦 Initializing git submodules..."
+	@git submodule update --init --recursive 2>/dev/null || echo "  ⚠️  Warning: git submodule update failed (not critical if already initialized)"
+	@echo ""
 	$(MAKE) -C env all-env
 	@echo ""
 	@echo "✓ Environment ready!"
@@ -157,6 +163,7 @@ environment:
 	@echo "  Python 3.11:    .env/bin/python"
 	@echo "  Julia:          .julia/pyjuliapkg/install/bin/julia"
 	@echo "  Stata packages: .stata/ado/plus/ (if Stata installed)"
+	@echo "  repro-tools:    lib/repro-tools/ (git submodule)"
 	@echo ""
 	@echo "Next: make all (to build all artifacts)"
 	@echo ""

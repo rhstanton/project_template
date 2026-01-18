@@ -20,5 +20,5 @@ dependencies:
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14
-    # Reproducibility tools (local package)
-    - -e ../../../infrastructure/40_lib/python/repro-tools
+    # Reproducibility tools (git submodule in editable mode)
+    - -e ../lib/repro-tools
