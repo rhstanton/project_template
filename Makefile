@@ -2,6 +2,8 @@
 # - `make all` builds all figures+tables into output/
 # - `make price_base` builds only price_base (figure+table+provenance)
 # - `make publish` publishes built artifacts into paper/ and writes paper/provenance.yml
+#
+# Configuration: See config.py for centralized paths and artifact definitions
 
 SHELL := /bin/bash
 
@@ -108,12 +110,8 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
   build_%.py $(DATA) scripts/provenance.py $(PYTHON)
 	@mkdir -p $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
 	@echo "Building $*..."
-	@$(PYTHON) build_$*.py \
-	  --data $(DATA) \
-	  --out-fig $(OUT_FIG_DIR)/$*.pdf \
-	  --out-table $(OUT_TBL_DIR)/$*.tex \
-	  --out-meta $(OUT_PROV_DIR)/$*.yml \
-	  2>&1 | tee $(OUT_LOG_DIR)/$*.log
+	@$(PYTHON) build_$*.py --data $(DATA) --out-fig $(OUT_FIG_DIR)/$*.pdf --out-table $(OUT_TBL_DIR)/$*.tex 2>&1 | tee $(OUT_LOG_DIR)/$*.log
+	@$(PYTHON) scripts/record_provenance.py $*
 	@echo "✓ $* complete"
 	@echo "Built: $*" >> .make_build_marker
 

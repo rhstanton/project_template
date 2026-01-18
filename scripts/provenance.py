@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -126,3 +128,47 @@ def write_build_record(
     with tmp.open("w", encoding="utf-8") as f:
         yaml.safe_dump(record, f, sort_keys=False)
     tmp.replace(out_meta)
+
+
+def auto_build_record(
+    out_meta: Path,
+    inputs: List[Path],
+    outputs: List[Path],
+) -> None:
+    """
+    Simplified wrapper that auto-detects artifact name, command, and repo root.
+    
+    Call this from your build script like:
+        auto_build_record(
+            out_meta=args.out_meta,
+            inputs=[args.data],
+            outputs=[args.out_fig, args.out_table],
+        )
+    """
+    # Get the calling script's file path
+    frame = inspect.currentframe()
+    if frame is None or frame.f_back is None:
+        raise RuntimeError("Cannot determine calling script")
+    
+    caller_file = Path(frame.f_back.f_globals["__file__"]).resolve()
+    
+    # Auto-detect artifact name from filename (e.g., build_remodel_base.py -> remodel_base)
+    artifact_name = caller_file.stem
+    if artifact_name.startswith("build_"):
+        artifact_name = artifact_name[6:]  # Remove "build_" prefix
+    
+    # Auto-detect repo root (parent of calling script)
+    repo_root = caller_file.parent
+    
+    # Use sys.argv for command (exact command that was run)
+    command = sys.argv.copy()
+    
+    # Call the full function
+    write_build_record(
+        out_meta=out_meta,
+        artifact_name=artifact_name,
+        command=command,
+        repo_root=repo_root,
+        inputs=inputs,
+        outputs=outputs,
+    )
