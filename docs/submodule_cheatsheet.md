@@ -7,7 +7,12 @@ Quick reference for working with repro-tools submodule.
 ## TL;DR - Most Common Tasks
 
 ```bash
-# Update repro-tools to latest version
+# Update repro-tools to latest version (Option 1: Using Makefile)
+make update-submodules
+git add lib/repro-tools
+git commit -m "Update repro-tools to latest"
+
+# Update repro-tools to latest version (Option 2: Direct git command)
 git submodule update --remote lib/repro-tools
 git add lib/repro-tools
 git commit -m "Update repro-tools to latest"
@@ -76,10 +81,13 @@ git push
 ## Updating to Latest repro-tools
 
 ```bash
-# Pull latest from main branch
+# Option 1: Using Makefile (recommended - provides helpful output)
+make update-submodules
+
+# Option 2: Direct git command
 git submodule update --remote lib/repro-tools
 
-# Commit the update
+# Then commit the update
 git add lib/repro-tools
 git commit -m "Update repro-tools to latest"
 ```

@@ -699,6 +699,7 @@ help:
 	@echo "  make show-analysis-<name>  Show detailed config for specific analysis"
 	@echo "  make check-deps       Check Python/Julia/data dependencies"
 	@echo "  make dryrun           Show what would be built (without building)"
+	@echo "  make update-submodules  Update repro-tools to latest version"
 	@echo ""
 
 .PHONY: info
@@ -796,7 +797,7 @@ info:
 # ==============================================================================
 # Inspired by housing-analysis/Makefile utility commands
 
-.PHONY: list-analyses list-analyses-verbose show-analysis check-deps dryrun
+.PHONY: list-analyses list-analyses-verbose show-analysis check-deps dryrun update-submodules
 
 # List all available analyses
 list-analyses:
@@ -863,3 +864,22 @@ dryrun:
 	@echo "Dry run - showing what would be built:"
 	@echo ""
 	@$(MAKE) -n all 2>&1 | grep -E '^(Building|Running|======|✓)' || true
+
+# Update git submodules to latest version
+update-submodules:
+	@echo "=========================================="
+	@echo "Updating git submodules to latest..."
+	@echo "=========================================="
+	@echo ""
+	@echo "📦 Fetching latest repro-tools from main branch..."
+	@git submodule update --remote lib/repro-tools
+	@echo ""
+	@echo "✓ Submodule updated!"
+	@echo ""
+	@echo "Current commit:"
+	@git submodule status lib/repro-tools
+	@echo ""
+	@echo "To commit this update:"
+	@echo "  git add lib/repro-tools"
+	@echo "  git commit -m \"Update repro-tools to latest\""
+	@echo ""

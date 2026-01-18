@@ -80,10 +80,13 @@ git push
 To pull the latest changes from repro-tools:
 
 ```bash
-# Option 1: Update submodule to latest commit on main branch
+# Option 1: Using Makefile (recommended - provides helpful output)
+make update-submodules
+
+# Option 2: Direct git command
 git submodule update --remote lib/repro-tools
 
-# Option 2: Go into submodule and pull
+# Or manually pull in the submodule directory
 cd lib/repro-tools
 git pull origin main
 cd ../..
