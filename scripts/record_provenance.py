@@ -11,6 +11,10 @@ from pathlib import Path
 # Add repo root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# Disable auto-provenance since we're recording it explicitly
+import scripts.provenance as prov
+prov._should_record_provenance = False
+
 import config
 from scripts.provenance import write_build_record
 

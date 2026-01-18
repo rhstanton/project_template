@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import atexit
 import hashlib
 import inspect
 import subprocess
@@ -9,6 +10,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
+
+
+# Global flag to track if provenance should be recorded
+_should_record_provenance = True
+_provenance_recorded = False
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -172,3 +178,66 @@ def auto_build_record(
         inputs=inputs,
         outputs=outputs,
     )
+
+
+def auto_provenance_from_config(artifact_name: str) -> None:
+    """
+    Automatically record provenance using config.py definitions.
+    
+    This can be called from build scripts OR from Makefile - it's safe either way.
+    If called multiple times, only the first call records provenance.
+    
+    Usage in build script:
+        from scripts.provenance import auto_provenance_from_config
+        # ... do analysis ...
+        auto_provenance_from_config("price_base")  # or auto-detect from __file__
+    
+    Or call from atexit handler to run automatically at script exit.
+    """
+    global _provenance_recorded
+    
+    if _provenance_recorded or not _should_record_provenance:
+        return
+    
+    try:
+        # Import config here to avoid circular imports
+        import config
+        
+        if artifact_name not in config.ARTIFACTS:
+            print(f"Warning: Unknown artifact '{artifact_name}', skipping provenance", file=sys.stderr)
+            return
+        
+        art_cfg = config.ARTIFACTS[artifact_name]
+        
+        write_build_record(
+            out_meta=art_cfg["outputs"]["provenance"],
+            artifact_name=artifact_name,
+            command=sys.argv if sys.argv[0].endswith(".py") else ["make", artifact_name],
+            repo_root=config.REPO_ROOT,
+            inputs=art_cfg["inputs"],
+            outputs=[art_cfg["outputs"]["figure"], art_cfg["outputs"]["table"]],
+        )
+        
+        _provenance_recorded = True
+        
+    except Exception as e:
+        print(f"Warning: Failed to record provenance: {e}", file=sys.stderr)
+
+
+def enable_auto_provenance(script_file: str) -> None:
+    """
+    Enable automatic provenance recording at script exit.
+    
+    Call this at the top of your build script:
+        from scripts.provenance import enable_auto_provenance
+        enable_auto_provenance(__file__)
+    
+    Provenance will be recorded automatically when the script exits successfully.
+    """
+    script_path = Path(script_file)
+    artifact_name = script_path.stem
+    if artifact_name.startswith("build_"):
+        artifact_name = artifact_name[6:]
+    
+    # Register atexit handler to record provenance when script completes
+    atexit.register(auto_provenance_from_config, artifact_name)

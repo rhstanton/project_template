@@ -113,6 +113,9 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 	@$(PYTHON) build_$*.py --data $(DATA) --out-fig $(OUT_FIG_DIR)/$*.pdf --out-table $(OUT_TBL_DIR)/$*.tex 2>&1 | tee $(OUT_LOG_DIR)/$*.log
 	@$(PYTHON) scripts/record_provenance.py $*
 	@echo "✓ $* complete"
+	@echo "  Created: $(OUT_FIG_DIR)/$*.pdf"
+	@echo "  Created: $(OUT_TBL_DIR)/$*.tex"
+	@echo "  Created: $(OUT_PROV_DIR)/$*.yml"
 	@echo "Built: $*" >> .make_build_marker
 
 # Publishing
