@@ -205,14 +205,14 @@ examples: sample-python sample-julia sample-juliacall
 # price_base analysis
 price_base.script  := build_price_base.py
 price_base.runner  := $(PYTHON)
-price_base.inputs  := $(DATA) scripts/provenance.py
+price_base.inputs  := $(DATA)
 price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf $(OUT_TBL_DIR)/price_base.tex $(OUT_PROV_DIR)/price_base.yml
 price_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/price_base.pdf --out-table $(OUT_TBL_DIR)/price_base.tex
 
 # remodel_base analysis
 remodel_base.script  := build_remodel_base.py
 remodel_base.runner  := $(PYTHON)
-remodel_base.inputs  := $(DATA) scripts/provenance.py
+remodel_base.inputs  := $(DATA)
 remodel_base.outputs := $(OUT_FIG_DIR)/remodel_base.pdf $(OUT_TBL_DIR)/remodel_base.tex $(OUT_PROV_DIR)/remodel_base.yml
 remodel_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/remodel_base.pdf --out-table $(OUT_TBL_DIR)/remodel_base.tex
 
@@ -236,7 +236,6 @@ $($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR)
 	@echo "Outputs: $($(1).outputs)"
 	@echo ""
 	$($(1).runner) $($(1).script) $($(1).args) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
-	@$(PYTHON) scripts/record_provenance.py $(1)
 	@echo ""
 	@echo "✓ $(1) complete"
 	@echo "  Outputs:"
