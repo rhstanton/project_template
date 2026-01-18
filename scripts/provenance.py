@@ -23,7 +23,9 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
 
 def _run_git(args: List[str], cwd: Path) -> Optional[str]:
     try:
-        out = subprocess.check_output(["git", *args], cwd=str(cwd), stderr=subprocess.DEVNULL)
+        out = subprocess.check_output(
+            ["git", *args], cwd=str(cwd), stderr=subprocess.DEVNULL
+        )
         return out.decode("utf-8").strip()
     except Exception:
         return None
@@ -39,16 +41,22 @@ def git_state(repo_root: Path) -> Dict[str, Any]:
     # uncommitted changes
     try:
         subprocess.check_call(["git", "diff", "--quiet"], cwd=str(repo_root))
-        subprocess.check_call(["git", "diff", "--cached", "--quiet"], cwd=str(repo_root))
+        subprocess.check_call(
+            ["git", "diff", "--cached", "--quiet"], cwd=str(repo_root)
+        )
     except Exception:
         dirty = True
 
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_root)
-    upstream = _run_git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], cwd=repo_root)
+    upstream = _run_git(
+        ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], cwd=repo_root
+    )
 
     ahead = behind = None
     if upstream:
-        lr = _run_git(["rev-list", "--left-right", "--count", f"HEAD...{upstream}"], cwd=repo_root)
+        lr = _run_git(
+            ["rev-list", "--left-right", "--count", f"HEAD...{upstream}"], cwd=repo_root
+        )
         if lr and "\t" in lr:
             left, right = lr.split("\t")
             # left = commits only in HEAD (ahead), right = commits only in upstream (behind)

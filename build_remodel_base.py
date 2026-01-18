@@ -49,7 +49,7 @@ def main() -> None:
     fig.savefig(args.out_fig)
     plt.close(fig)
 
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parent
     write_build_record(
         out_meta=args.out_meta,
         artifact_name="remodel_base",
