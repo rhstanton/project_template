@@ -301,7 +301,7 @@ make price_base
 ### Provenance Missing Data
 
 **If provenance files incomplete:**
-- Check that `scripts/provenance.py` is working
+- Check that `repro_tools` is installed and working
 - Ensure git repository initialized
 - Verify data files exist when analysis runs
 

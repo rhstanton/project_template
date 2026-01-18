@@ -36,9 +36,9 @@ class TestBuildWorkflow:
         assert data_file.exists(), "housing_panel.csv not found"
     
     def test_provenance_module_imports(self):
-        """Provenance module should import without errors."""
+        """repro_tools module should import without errors."""
         result = subprocess.run(
-            [sys.executable, "-c", "from scripts import provenance"],
+            [sys.executable, "-c", "from repro_tools import git_state, sha256_file, write_build_record"],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,

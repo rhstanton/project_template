@@ -159,7 +159,7 @@ make publish --allow-dirty 1
 Or set in Makefile:
 ```makefile
 publish-figures: ...
-    $(PYTHON) scripts/publish_artifacts.py \
+    $(REPRO_PUBLISH) \
       --allow-dirty 1 \
       ...
 ```

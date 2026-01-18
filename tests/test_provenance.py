@@ -8,15 +8,12 @@ import pytest
 import yaml
 import sys
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from scripts.provenance import (
+from repro_tools import (
     git_state,
     sha256_file,
-    now_utc_iso,
     write_build_record,
 )
+from repro_tools.core import now_utc_iso
 
 
 class TestGitState:
@@ -24,12 +21,12 @@ class TestGitState:
     
     def test_git_state_returns_dict(self):
         """Git state should return a dictionary."""
-        state = git_state()
+        state = git_state(Path.cwd())
         assert isinstance(state, dict)
     
     def test_git_state_has_required_keys(self):
         """Git state should have expected keys."""
-        state = git_state()
+        state = git_state(Path.cwd())
         assert "is_git_repo" in state
         
         if state["is_git_repo"]:
@@ -119,13 +116,14 @@ class TestBuildRecord:
             # Create metadata file
             metadata_file = tmpdir / "metadata.yml"
             
-            # Write build record
+            # Write build record with new API
             write_build_record(
-                metadata_path=metadata_file,
+                out_meta=metadata_file,
+                artifact_name="test_artifact",
+                command=["python", "test.py"],
+                repo_root=tmpdir,
                 inputs=[input_file],
                 outputs=[output_file],
-                script=__file__,
-                cmd="test command",
             )
             
             assert metadata_file.exists()
@@ -144,11 +142,12 @@ class TestBuildRecord:
             metadata_file = tmpdir / "metadata.yml"
             
             write_build_record(
-                metadata_path=metadata_file,
+                out_meta=metadata_file,
+                artifact_name="test_artifact",
+                command=["python", "test.py"],
+                repo_root=tmpdir,
                 inputs=[input_file],
                 outputs=[output_file],
-                script=__file__,
-                cmd="test command",
             )
             
             # Should parse as valid YAML
@@ -171,17 +170,19 @@ class TestBuildRecord:
             metadata_file = tmpdir / "metadata.yml"
             
             write_build_record(
-                metadata_path=metadata_file,
+                out_meta=metadata_file,
+                artifact_name="test_artifact",
+                command=["python", "test.py"],
+                repo_root=tmpdir,
                 inputs=[input_file],
                 outputs=[output_file],
-                script=__file__,
-                cmd="test command",
             )
             
             with open(metadata_file) as f:
                 data = yaml.safe_load(f)
             
             # Check required fields
+            assert "artifact" in data
             assert "built_at_utc" in data
             assert "command" in data
             assert "git" in data

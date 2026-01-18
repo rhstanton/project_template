@@ -58,7 +58,7 @@ For exact reproducibility:
 - Python: `env/python.yml` pins major versions; consider `conda-lock` for full lockfile
 - Julia: `env/Manifest.toml` provides exact version locking
 - Stata: `env/stata-packages.txt` specifies package names and optional versions
-- All are captured in per-artifact provenance via `scripts/provenance.py`
+- All are captured in per-artifact provenance via `repro_tools`
 
 ## Examples
 

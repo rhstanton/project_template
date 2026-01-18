@@ -121,10 +121,10 @@ published_at_utc: '2026-01-17T04:12:30+00:00'
 
 ### In Analysis Scripts
 
-Use `scripts/provenance.py`:
+Use the repro_tools package:
 
 ```python
-from scripts.provenance import write_build_record
+from repro_tools import write_build_record
 
 write_build_record(
     artifact="my_artifact",
@@ -142,7 +142,7 @@ This function:
 
 ### In Publishing
 
-The `scripts/publish_artifacts.py` script:
+The publishing system (via repro_tools):
 1. Reads build provenance from `output/provenance/<name>.yml`
 2. Copies artifacts to `paper/`
 3. Embeds build records in `paper/provenance.yml`

@@ -11,7 +11,7 @@ The Makefile now uses a flexible macro-based system for defining analyses, remov
 ```makefile
 # Old system - INFLEXIBLE
 $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
-  build_%.py $(DATA) scripts/provenance.py
+  build_%.py $(DATA)
     $(PYTHON) build_$*.py --data $(DATA) \
       --out-fig $(OUT_FIG_DIR)/$*.pdf \
       --out-table $(OUT_TBL_DIR)/$*.tex
@@ -33,7 +33,7 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 # Define analysis configuration explicitly
 price_base.script  := build_price_base.py
 price_base.runner  := $(PYTHON)
-price_base.inputs  := $(DATA) scripts/provenance.py
+price_base.inputs  := $(DATA)
 price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf \
                       $(OUT_TBL_DIR)/price_base.tex \
                       $(OUT_PROV_DIR)/price_base.yml

@@ -35,7 +35,7 @@ Analysis scripts that generate figures and tables, located in the project root.
 Each script:
 - Takes `--data`, `--out-fig`, `--out-table`, `--out-meta` arguments
 - Produces one figure + one table + one provenance record
-- Uses `scripts/provenance.write_build_record()` for metadata
+- Uses `repro_tools.write_build_record()` for metadata
 
 **Contents**:
 ```
@@ -340,7 +340,7 @@ env/scripts/runpython analysis/build_price_base.py \
 
 **Publish command**:
 ```bash
-env/scripts/runpython scripts/publish_artifacts.py \
+$(REPRO_PUBLISH) \
   --paper-root paper \
   --kind figures \
   --names "price_base remodel_base"
