@@ -425,10 +425,10 @@ verify:
 	fi
 	@echo ""
 	@echo "2. Checking key packages..."
-	@.env/bin/python -c "import pandas; print('   pandas', pandas.__version__, '✓')" || echo "   ✗ pandas missing"
-	@.env/bin/python -c "import matplotlib; print('   matplotlib', matplotlib.__version__, '✓')" || echo "   ✗ matplotlib missing"
-	@.env/bin/python -c "import yaml; print('   pyyaml ✓')" || echo "   ✗ pyyaml missing"
-	@.env/bin/python -c "import juliacall; print('   juliacall ✓')" || echo "   ✗ juliacall missing"
+	@$(PYTHON) -c "import pandas; print('   pandas', pandas.__version__, '✓')" || echo "   ✗ pandas missing"
+	@$(PYTHON) -c "import matplotlib; print('   matplotlib', matplotlib.__version__, '✓')" || echo "   ✗ matplotlib missing"
+	@$(PYTHON) -c "import yaml; print('   pyyaml ✓')" || echo "   ✗ pyyaml missing"
+	@$(PYTHON) -c "import juliacall; print('   juliacall ✓')" || echo "   ✗ juliacall missing"
 	@echo ""
 	@echo "3. Checking data availability..."
 	@if [ -f $(DATA) ]; then \
