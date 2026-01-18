@@ -30,7 +30,7 @@
 !run*
 !Makefile
 
-# Directories to exclude completely (separate git repos or large generated content)
+# Directories to exclude completely
 paper/
 
 # Journal package artifacts (created by make journal-package)
