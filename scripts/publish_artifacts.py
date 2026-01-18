@@ -73,6 +73,26 @@ def check_artifacts_current(artifact_names: list[str], prov_dir: Path, current_c
         raise SystemExit(msg)
 
 
+def check_artifacts_clean(artifact_names: list[str], prov_dir: Path, allow_dirty: bool) -> None:
+    """Verify artifacts were built from a clean working tree."""
+    dirty_artifacts = []
+    for name in artifact_names:
+        meta_path = prov_dir / f"{name}.yml"
+        if meta_path.exists():
+            meta = load_yml(meta_path)
+            git_info = meta.get("git", {})
+            if git_info.get("dirty", False):
+                dirty_artifacts.append(name)
+    
+    if dirty_artifacts and not allow_dirty:
+        msg = "Refusing to publish: some artifacts were built from a dirty working tree:\n"
+        for name in dirty_artifacts:
+            msg += f"  {name}\n"
+        msg += "\nRebuild from a clean tree: git commit/stash, then make clean && make all\n"
+        msg += "Or set --allow-dirty 1 to allow."
+        raise SystemExit(msg)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Publish built artifacts (figures or tables) into the paper repo with per-artifact provenance."
@@ -104,6 +124,9 @@ def main() -> None:
     out_tbl_dir = project_root / "output" / "tables"
     out_prov_dir = project_root / "output" / "provenance"
 
+    # Check artifacts were built from a clean tree
+    check_artifacts_clean(names, out_prov_dir, bool(args.allow_dirty))
+    
     # Check artifacts are from current HEAD if required
     if args.require_current_head and gitinfo.get("is_git_repo", False):
         current_commit = gitinfo.get("commit", "")
