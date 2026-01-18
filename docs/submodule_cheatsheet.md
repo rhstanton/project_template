@@ -4,6 +4,21 @@ Quick reference for working with repro-tools submodule.
 
 ---
 
+## TL;DR - Most Common Tasks
+
+```bash
+# Update repro-tools to latest version
+git submodule update --remote lib/repro-tools
+git add lib/repro-tools
+git commit -m "Update repro-tools to latest"
+
+# Check if submodule is up to date
+git submodule status
+cd lib/repro-tools && git status && git log HEAD..origin/main --oneline
+```
+
+---
+
 ## Creating a New Project from Template
 
 ### ✅ DO THIS (Option 1 - Recommended)
