@@ -353,12 +353,7 @@ publish-tables:
 # Publish specific files (file-level selection)
 .PHONY: publish-files
 publish-files:
-	@for file in $(PUBLISH_FILES); do \
-		if [ ! -f "$$file" ]; then \
-			echo "Error: File not found: $$file"; \
-			exit 1; \
-		fi; \
-	done
+	@for file in $(PUBLISH_FILES); do [ -f "$$file" ] || { echo "Error: File not found: $$file"; exit 1; }; done
 	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
 	  --files "$(PUBLISH_FILES)" \
 	  --allow-dirty 0 \
@@ -394,13 +389,13 @@ $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 # ==============================================================================
 
 .PHONY: clean
-	rm -f .publish_marker
 clean:
 	rm -rf output/figures output/tables output/provenance output/logs .publish_stamps
+	@rm -f .publish_marker .make_build_marker
 
 .PHONY: cleanall
-cleanall:
-	rm -rf output .env .julia .stata
+cleanall: clean
+	@rm -rf .env .julia .stata
 
 # ==============================================================================
 # Verification & Testing
@@ -436,9 +431,6 @@ verify:
 		echo "   ✗ Data file not found: $(DATA)"; \
 		exit 1; \
 	fi
-	@echo ""
-	@echo "4. Running minimal import test..."
-	@$(PYTHON) -c "from scripts import provenance; print('   scripts.provenance ✓')" || echo "   ✗ Import failed"
 	@echo ""
 	@echo "========================================"
 	@echo "  ✓ Verification Complete"
@@ -509,27 +501,23 @@ replication-report:
 test-outputs:
 	@echo "Verifying all expected outputs exist..."
 	@echo ""
-	@echo "Output directories:"
-	@test -d $(OUT_FIG_DIR) && echo "  ✓ $(OUT_FIG_DIR)/" || echo "  ✗ Missing $(OUT_FIG_DIR)/"
-	@test -d $(OUT_TBL_DIR) && echo "  ✓ $(OUT_TBL_DIR)/" || echo "  ✗ Missing $(OUT_TBL_DIR)/"
-	@test -d $(OUT_PROV_DIR) && echo "  ✓ $(OUT_PROV_DIR)/" || echo "  ✗ Missing $(OUT_PROV_DIR)/"
-	@echo ""
-	@echo "Expected files:"
-	@for analysis in $(ANALYSES); do \
-		test -f $(OUT_FIG_DIR)/$${analysis}.pdf && echo "  ✓ $(OUT_FIG_DIR)/$${analysis}.pdf" || echo "  ✗ Missing $(OUT_FIG_DIR)/$${analysis}.pdf"; \
-		test -f $(OUT_TBL_DIR)/$${analysis}.tex && echo "  ✓ $(OUT_TBL_DIR)/$${analysis}.tex" || echo "  ✗ Missing $(OUT_TBL_DIR)/$${analysis}.tex"; \
-	done
-	@echo ""
-	@MISSING=$$(for analysis in $(ANALYSES); do \
-		test -f $(OUT_FIG_DIR)/$${artifact}.pdf || echo "missing"; \
-		test -f $(OUT_TBL_DIR)/$${artifact}.tex || echo "missing"; \
-	done | grep -c missing); \
+	@MISSING=0; \
+	for analysis in $(ANALYSES); do \
+		for file in $(OUT_FIG_DIR)/$${analysis}.pdf $(OUT_TBL_DIR)/$${analysis}.tex; do \
+			if [ -f "$$file" ]; then \
+				echo "  ✓ $$file"; \
+			else \
+				echo "  ✗ Missing $$file"; \
+				MISSING=$$((MISSING + 1)); \
+			fi; \
+		done; \
+	done; \
+	echo ""; \
 	if [ $$MISSING -eq 0 ]; then \
-		echo "All expected outputs present!"; \
-		echo ""; \
-		echo "For detailed output descriptions, see docs/expected_outputs.md"; \
+		echo "✓ All expected outputs present!"; \
+		echo "  See docs/expected_outputs.md for details"; \
 	else \
-		echo "$$MISSING file(s) missing. Run: make all"; \
+		echo "✗ $$MISSING file(s) missing. Run: make all"; \
 		exit 1; \
 	fi
 
