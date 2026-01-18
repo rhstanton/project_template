@@ -125,7 +125,7 @@ PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
 publish:
-	@$(PYTHON) scripts/check_git_state.py --allow-dirty 0 --require-not-behind 1
+	@$(PYTHON) scripts/check_git_state.py --allow-dirty 0 --require-not-behind 1 --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ARTIFACTS)"
 	@echo ""
 	@echo "=========================================="
 	@echo "Publishing artifacts to paper/..."

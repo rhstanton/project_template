@@ -109,11 +109,7 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
     paper_root = args.paper_root.resolve()
 
-    gitinfo = enforce_git_policy(
-        project_root,
-        allow_dirty=bool(args.allow_dirty),
-        require_not_behind=bool(args.require_not_behind),
-    )
+    gitinfo = git_state(project_root)
 
     names = [n for n in args.names.split() if n.strip()]
     if not names:
@@ -124,14 +120,8 @@ def main() -> None:
     out_tbl_dir = project_root / "output" / "tables"
     out_prov_dir = project_root / "output" / "provenance"
 
-    # Check artifacts were built from a clean tree
-    check_artifacts_clean(names, out_prov_dir, bool(args.allow_dirty))
-    
-    # Check artifacts are from current HEAD if required
-    if args.require_current_head and gitinfo.get("is_git_repo", False):
-        current_commit = gitinfo.get("commit", "")
-        if current_commit:
-            check_artifacts_current(names, out_prov_dir, current_commit)
+    # Note: Git safety checks (dirty tree, behind upstream, current HEAD) 
+    # are now done early in check_git_state.py before any headers are printed
 
     # Destination
     dst_dir = paper_root / args.kind
