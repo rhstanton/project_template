@@ -125,16 +125,31 @@ PUBLISH_STAMP_DIR := .publish_stamps
 .PHONY: publish publish-force
 publish: $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
          $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
-	@echo ""
-	@echo "=========================================="
-	@echo "✓ Publishing complete!"
-	@echo "=========================================="
-	@echo ""
-	@echo "Published artifacts: $(PUBLISH_ARTIFACTS)"
-	@echo "  - paper/figures/"
-	@echo "  - paper/tables/"
-	@echo "  - paper/provenance.yml (updated)"
-	@echo ""
+	@if [ -f .publish_marker ]; then \
+		echo ""; \
+		echo "=========================================="; \
+		echo "✓ Publishing complete!"; \
+		echo "=========================================="; \
+		echo ""; \
+		echo "Published artifacts: $(PUBLISH_ARTIFACTS)"; \
+		echo "  - paper/figures/"; \
+		echo "  - paper/tables/"; \
+		echo "  - paper/provenance.yml (updated)"; \
+		echo ""; \
+		rm -f .publish_marker; \
+	else \
+		echo ""; \
+		echo "=========================================="; \
+		echo "✓ Nothing to publish - all up-to-date"; \
+		echo "=========================================="; \
+		echo ""; \
+		echo "Artifacts: $(PUBLISH_ARTIFACTS)"; \
+		echo "  - paper/figures/"; \
+		echo "  - paper/tables/"; \
+		echo ""; \
+		echo "To force re-publish: make publish-force"; \
+		echo ""; \
+	fi
 
 # Force re-publish even if up-to-date
 publish-force:
@@ -153,6 +168,7 @@ $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
 	@touch $@
+	@touch .publish_marker
 
 # Stamp file for published tables
 $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
@@ -164,10 +180,12 @@ $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml 
 	  --names "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
-	  --require-current-head $(REQUIRE_CURRENT_HEAD)
+	  --requi
+	@touch .publish_markerre-current-head $(REQUIRE_CURRENT_HEAD)
 	@touch $@
 
 .PHONY: clean
+	rm -f .publish_marker
 clean:
 	rm -rf output/figures output/tables output/provenance output/logs .publish_stamps
 
