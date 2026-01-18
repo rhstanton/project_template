@@ -179,9 +179,9 @@ $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml 
 	  --names "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
-	  --requi
-	@touch .publish_markerre-current-head $(REQUIRE_CURRENT_HEAD)
+	  --require-current-head $(REQUIRE_CURRENT_HEAD)
 	@touch $@
+	@touch .publish_marker
 
 .PHONY: clean
 	rm -f .publish_marker
