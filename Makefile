@@ -124,8 +124,14 @@ REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
 PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
-publish: $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
-         $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
+publish:
+	@echo ""
+	@echo "=========================================="
+	@echo "Publishing artifacts to paper/..."
+	@echo "=========================================="
+	@echo ""
+	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
+	         $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
 	@if [ -f .publish_marker ]; then \
 		echo ""; \
 		echo "=========================================="; \
