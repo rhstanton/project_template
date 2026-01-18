@@ -144,6 +144,9 @@ def main() -> None:
     prov.setdefault("analysis_git", gitinfo)
     prov.setdefault("artifacts", {})
 
+    # Print subheading for this category
+    print(f"{args.kind.capitalize()}:")
+    
     for name in names:
         meta_path = out_prov_dir / f"{name}.yml"
         if not meta_path.exists():
