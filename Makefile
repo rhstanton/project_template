@@ -417,7 +417,7 @@ verify:
 	@echo ""
 	@echo "1. Checking Python environment..."
 	@if [ -f .env/bin/python ]; then \
-		.env/bin/python --version | sed 's/^/   /' && echo "   ✓"; \
+		$(PYTHON) --version | sed 's/^/   /' && echo "   ✓"; \
 	else \
 		echo "   ✗ Python environment not found"; \
 		echo "   Run: make environment"; \

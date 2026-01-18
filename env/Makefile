@@ -47,7 +47,7 @@ conda-check:
 # Install Julia via Python (triggers juliacall auto-install)
 julia-install-via-python:
 	@echo ">> Installing Julia via juliacall..."
-	@JULIA_ENABLE_CUDA=$(JULIA_ENABLE_CUDA) $(PY_PREFIX)/bin/python scripts/install_julia.py
+	@cd $(REPO_ROOT) && JULIA_ENABLE_CUDA=$(JULIA_ENABLE_CUDA) env/scripts/runpython env/scripts/install_julia.py
 
 all-env: conda-check python-env julia-install-via-python stata-env
 
@@ -92,14 +92,14 @@ python-env:
 
 python-check:
 	@echo ">> checking Python can import juliacall from $(PY_PREFIX)"
-	"$(CONDA)" run -p "$(PY_PREFIX)" python - <<'PY'
-	import sys
-	print("PY:", sys.executable)
-	try:
-		import juliacall; print("OK: juliacall", getattr(juliacall, "__version__", ""))
-	except Exception as e:
-		print("FAIL: juliacall import ->", e); raise SystemExit(1)
-	PY
+	@cd $(REPO_ROOT) && env/scripts/runpython - <<'PY'
+import sys
+print("PY:", sys.executable)
+try:
+	import juliacall; print("OK: juliacall", getattr(juliacall, "__version__", ""))
+except Exception as e:
+	print("FAIL: juliacall import ->", e); raise SystemExit(1)
+PY
 
 python-clean:
 	@echo ">> removing $(PY_PREFIX)"
