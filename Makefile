@@ -875,17 +875,25 @@ update-submodules:
 	@echo "=========================================="
 	@echo ""
 	@echo "📦 Fetching latest repro-tools from main branch..."
-	@git submodule update --remote lib/repro-tools
-	@echo ""
-	@echo "✓ Submodule updated!"
-	@echo ""
-	@echo "Current commit:"
-	@git submodule status lib/repro-tools
-	@echo ""
-	@echo "To commit this update:"
-	@echo "  git add lib/repro-tools"
-	@echo "  git commit -m \"Update repro-tools to latest\""
-	@echo ""
+	@BEFORE=$$(git submodule status lib/repro-tools | awk '{print $$1}'); \
+	git submodule update --remote lib/repro-tools; \
+	AFTER=$$(git submodule status lib/repro-tools | awk '{print $$1}'); \
+	echo ""; \
+	if [ "$$BEFORE" = "$$AFTER" ]; then \
+		echo "✓ Already up to date!"; \
+		echo ""; \
+		echo "Current commit:"; \
+		git submodule status lib/repro-tools; \
+	else \
+		echo "✓ Submodule updated!"; \
+		echo ""; \
+		echo "Updated from $$BEFORE to $$AFTER"; \
+		echo ""; \
+		echo "To track this update in your project:"; \
+		echo "  git add lib/repro-tools"; \
+		echo "  git commit -m \"Update repro-tools to latest\""; \
+	fi; \
+	echo ""
 
 .PHONY: update-environment
 update-environment: update-submodules
@@ -900,8 +908,4 @@ update-environment: update-submodules
 	$(MAKE) -C env julia-install-via-python
 	@echo ""
 	@echo "✓ Environment updated!"
-	@echo ""
-	@echo "Note: Submodule update needs to be committed:"
-	@echo "  git add lib/repro-tools"
-	@echo "  git commit -m \"Update repro-tools to latest\""
 	@echo ""

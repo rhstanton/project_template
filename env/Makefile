@@ -82,9 +82,9 @@ python-env:
 	echo ">> Creating environment from $(PY_YML) -> $(PY_PREFIX)"; \
 	if [ "$$CONDA_TOOL" = "micromamba" ]; then \
 		if [ -d "$(PY_PREFIX)" ]; then \
-			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
+			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "'pip' as an additional package manager" || true; \
 		else \
-			$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
+			$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "'pip' as an additional package manager" || true; \
 		fi; \
 	else \
 		$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
