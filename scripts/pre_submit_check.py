@@ -248,7 +248,8 @@ class PreSubmitChecker:
         if makefile.exists():
             with open(makefile) as f:
                 for line in f:
-                    if line.startswith("ARTIFACTS"):
+                    # Look for ANALYSES or ARTIFACTS (backward compatibility)
+                    if line.startswith("ANALYSES") or line.startswith("ARTIFACTS"):
                         artifacts = line.split("=", 1)[1].strip().split()
                         break
         

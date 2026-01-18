@@ -21,25 +21,25 @@ from scripts.provenance import write_build_record
 
 def main() -> None:
     if len(sys.argv) != 2:
-        print("Usage: record_provenance.py <artifact_name>")
+        print("Usage: record_provenance.py <analysis_name>")
         sys.exit(1)
     
-    artifact_name = sys.argv[1]
+    analysis_name = sys.argv[1]
     
-    if artifact_name not in config.ARTIFACTS:
-        print(f"Error: Unknown artifact '{artifact_name}'")
-        print(f"Known artifacts: {', '.join(config.ARTIFACTS.keys())}")
+    if analysis_name not in config.ANALYSES:
+        print(f"Error: Unknown analysis '{analysis_name}'")
+        print(f"Known analyses: {', '.join(config.ANALYSES.keys())}")
         sys.exit(1)
     
-    art_cfg = config.ARTIFACTS[artifact_name]
+    analysis_cfg = config.ANALYSES[analysis_name]
     
     write_build_record(
-        out_meta=art_cfg["outputs"]["provenance"],
-        artifact_name=artifact_name,
-        command=["make", artifact_name],
+        out_meta=analysis_cfg["outputs"]["provenance"],
+        artifact_name=analysis_name,
+        command=["make", analysis_name],
         repo_root=config.REPO_ROOT,
-        inputs=art_cfg["inputs"],
-        outputs=[art_cfg["outputs"]["figure"], art_cfg["outputs"]["table"]],
+        inputs=analysis_cfg["inputs"],
+        outputs=[analysis_cfg["outputs"]["figure"], analysis_cfg["outputs"]["table"]],
     )
 
 

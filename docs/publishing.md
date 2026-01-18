@@ -18,18 +18,75 @@ This separation allows:
 
 ## Basic Usage
 
-### Publish All Artifacts
+The publishing system supports two modes:
+
+1. **Analysis-level selection**: Publish all outputs from specific analyses
+2. **File-level selection**: Publish only specific output files
+
+### Publish All Analyses
 
 ```bash
 make publish
 ```
 
-This publishes all artifacts defined in `ARTIFACTS` variable in the Makefile.
+This publishes all outputs from all analyses defined in `ANALYSES` variable.
 
-### Publish Specific Artifacts
+### Publish Specific Analyses
 
 ```bash
-make publish PUBLISH_ARTIFACTS="price_base remodel_base"
+make publish PUBLISH_ANALYSES="price_base remodel_base"
+```
+
+This publishes ALL outputs (figures, tables, etc.) from the specified analyses.
+
+**Use case**: You've updated `price_base` analysis but `remodel_base` outputs are already in the paper.
+
+### Publish Specific Files (Fine-Grained Control)
+
+```bash
+make publish PUBLISH_FILES="output/figures/price_base.pdf output/tables/custom_table.tex"
+```
+
+This publishes only the specified files, regardless of which analysis they came from.
+
+**Use cases**:
+- Analysis generates 5 figures but you only want 2 in the paper
+- You have supplementary materials in separate subdirectories
+- Custom aggregated tables that combine data from multiple analyses
+
+**Note**: File paths should be relative to project root or absolute.
+
+**Provenance tracking**: File-level publishing uses a separate `files:` section in `paper/provenance.yml` and removes any previous `artifacts:` section (from analysis-level publishes) since the two publishing modes are mutually exclusive. Each file entry includes its source path, analysis name, and full build record.
+
+### Examples of Mixed Publishing
+
+```bash
+# ERROR: Cannot use both modes simultaneously
+make publish PUBLISH_ANALYSES="price_base" PUBLISH_FILES="output/figures/remodel_base.pdf"
+# This will fail - must choose one mode
+
+# CORRECT: Use file-level for everything
+make publish PUBLISH_FILES="output/figures/price_base.pdf output/tables/price_base.tex output/figures/remodel_base.pdf"
+```
+
+**Important**: `PUBLISH_ANALYSES` and `PUBLISH_FILES` are mutually exclusive. Choose one mode per invocation.
+
+**Publishing mode switching**: If you switch from analysis-level to file-level publishing (or vice versa), the provenance file structure changes:
+- Analysis-level uses `artifacts:` section
+- File-level uses `files:` section  
+- Switching modes clears the previous section to avoid stale data
+
+**Important**: Publishing never deletes files from `paper/`, it only adds or updates them. If you switch publishing modes or stop publishing certain outputs, you may have orphaned files in `paper/` that are no longer tracked in provenance.
+
+**To clean up orphaned files**:
+```bash
+# Check for orphaned files
+ls -1 paper/figures/ paper/tables/
+grep "^  " paper/provenance.yml  # See what's tracked
+
+# Clean republish (be careful!)
+rm -rf paper/figures/* paper/tables/*
+make publish PUBLISH_ANALYSES="price_base remodel_base"  # Whichever you want
 ```
 
 ### Strict Publishing (Require Current HEAD)
@@ -38,7 +95,7 @@ make publish PUBLISH_ARTIFACTS="price_base remodel_base"
 make publish REQUIRE_CURRENT_HEAD=1
 ```
 
-This ensures all artifacts were built from the current git commit, preventing accidental publication of stale outputs.
+This ensures all artifacts were built from the current git commit, preventing accidental publication of stale outputs. Works with both modes.
 
 ### Force Re-publish (Override Up-to-date Check)
 
@@ -47,6 +104,7 @@ make publish-force
 ```
 
 This clears the publish tracking and forces all artifacts to be re-published, even if they haven't changed. Useful if you manually modified files in `paper/` and want to restore from `output/`.
+
 
 ## Git Safety Checks
 
@@ -280,7 +338,27 @@ make publish PUBLISH_ARTIFACTS="price_base" REQUIRE_CURRENT_HEAD=1
 
 ## Common Scenarios
 
-### Scenario 1: Incremental Updates
+### Scenario 1: Publish Subset of Outputs
+
+Analysis generates many files but paper only uses some:
+
+```bash
+# Build analysis that creates 5 figures
+make detailed_analysis
+ls output/figures/
+# → detailed_analysis_fig1.pdf
+# → detailed_analysis_fig2.pdf
+# → detailed_analysis_fig3.pdf
+# → detailed_analysis_fig4.pdf
+# → detailed_analysis_fig5.pdf
+
+# Publish only figures 1 and 3 to paper
+make publish PUBLISH_FILES="output/figures/detailed_analysis_fig1.pdf output/figures/detailed_analysis_fig3.pdf"
+```
+
+The file-level selection allows you to be selective about what goes into the final paper.
+
+### Scenario 2: Incremental Updates
 
 Build `price_base`, then later build `remodel_base`:
 
@@ -295,7 +373,7 @@ make publish
 
 `paper/provenance.yml` will show different `git.commit` for each artifact. This is allowed by default but not recommended for final publication.
 
-### Scenario 2: Atomic Publication
+### Scenario 3: Atomic Publication
 
 Build everything together:
 
@@ -307,14 +385,14 @@ make publish REQUIRE_CURRENT_HEAD=1
 
 All artifacts from same commit, enforced by `REQUIRE_CURRENT_HEAD=1`.
 
-### Scenario 3: Updating One Artifact
+### Scenario 4: Updating One Analysis
 
 ```bash
 # Edit analysis/build_price_base.py
 git commit -am "Fix price_base calculation"
 
 make price_base
-make publish PUBLISH_ARTIFACTS="price_base"
+make publish PUBLISH_ANALYSES="price_base"
 ```
 
 Only `price_base` is republished. Other artifacts remain from their original commits.

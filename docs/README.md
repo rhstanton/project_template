@@ -35,6 +35,18 @@ Complete guide to the reproducible research template.
   - Publishing specific artifacts
   - Troubleshooting publish failures
 
+- **[flexible_analyses.md](flexible_analyses.md)** - Flexible analysis definitions (NEW!)
+  - Macro-based system for defining analyses
+  - No rigid naming conventions
+  - Multiple outputs per analysis
+  - Examples and migration guide
+
+- **[makefile_improvements.md](makefile_improvements.md)** - Recent Makefile improvements
+  - Comparison with housing-analysis/Makefile
+  - What was incorporated and why
+  - New utility targets
+  - Environment variables (JULIA_NUM_THREADS)
+
 ### Project Organization
 - **[directory_structure.md](directory_structure.md)** - Complete directory layout
   - Build outputs (`output/`)

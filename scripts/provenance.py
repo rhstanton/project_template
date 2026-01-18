@@ -203,19 +203,19 @@ def auto_provenance_from_config(artifact_name: str) -> None:
         # Import config here to avoid circular imports
         import config
         
-        if artifact_name not in config.ARTIFACTS:
-            print(f"Warning: Unknown artifact '{artifact_name}', skipping provenance", file=sys.stderr)
+        if artifact_name not in config.ANALYSES:
+            print(f"Warning: Unknown analysis '{artifact_name}', skipping provenance", file=sys.stderr)
             return
         
-        art_cfg = config.ARTIFACTS[artifact_name]
+        analysis_cfg = config.ANALYSES[artifact_name]
         
         write_build_record(
-            out_meta=art_cfg["outputs"]["provenance"],
+            out_meta=analysis_cfg["outputs"]["provenance"],
             artifact_name=artifact_name,
             command=sys.argv if sys.argv[0].endswith(".py") else ["make", artifact_name],
             repo_root=config.REPO_ROOT,
-            inputs=art_cfg["inputs"],
-            outputs=[art_cfg["outputs"]["figure"], art_cfg["outputs"]["table"]],
+            inputs=analysis_cfg["inputs"],
+            outputs=[analysis_cfg["outputs"]["figure"], analysis_cfg["outputs"]["table"]],
         )
         
         _provenance_recorded = True

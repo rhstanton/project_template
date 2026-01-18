@@ -1,6 +1,12 @@
 """
 config.py
-Centralized configuration for all build artifacts.
+Centralized configuration for all analyses.
+
+Think of each entry as an "analysis" or "run" that produces multiple artifacts.
+For example, "price_base" is an analysis that generates:
+  - A figure (price_base.pdf)
+  - A table (price_base.tex)  
+  - Provenance metadata (price_base.yml)
 """
 from pathlib import Path
 
@@ -22,10 +28,12 @@ DATA_FILES = {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ARTIFACT CONFIGURATIONS
+# ANALYSIS CONFIGURATIONS
 # ═══════════════════════════════════════════════════════════════════════════
+# Each analysis is a "run" that generates multiple output artifacts.
+# Don't think of these as single artifacts - they're analytical workflows.
 
-ARTIFACTS = {
+ANALYSES = {
     "price_base": {
         "script": "build_price_base.py",
         "inputs": [DATA_FILES["housing"]],

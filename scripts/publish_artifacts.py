@@ -132,7 +132,13 @@ def main() -> None:
     prov.setdefault("paper_provenance_version", 1)
     prov.setdefault("last_updated_utc", now_utc_iso())
     prov.setdefault("analysis_git", gitinfo)
+    
+    # Analysis-level publishing uses 'artifacts' section; clear 'files' section
+    # since we're publishing full analyses, not individual files
     prov.setdefault("artifacts", {})
+    if "files" in prov:
+        # Remove stale file-level tracking when switching to analysis-level
+        del prov["files"]
 
     for name in names:
         meta_path = out_prov_dir / f"{name}.yml"

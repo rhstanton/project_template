@@ -1,19 +1,91 @@
-# Top-level Makefile
-# - `make all` builds all figures+tables into output/
-# - `make price_base` builds only price_base (figure+table+provenance)
-# - `make publish` publishes built artifacts into paper/ and writes paper/provenance.yml
+# ==============================================================================
+# Reproducible Research Template - Makefile
+# ==============================================================================
 #
-# Configuration: See config.py for centralized paths and artifact definitions
+# This Makefile orchestrates all research analyses and artifact generation.
+#
+# QUICK START:
+#   make all              # Run all analyses
+#   make price_base       # Run single analysis
+#   make publish          # Publish results to paper/
+#   make help             # Show all commands
+#
+# ==============================================================================
+# FILE STRUCTURE
+# ==============================================================================
+#
+#   QUICK NAVIGATION - Jump to line number in your editor (Ctrl+G / Cmd+L):
+#
+#     30: Shell & Environment Variables (JULIA_NUM_THREADS, paths)
+#     60: Analysis Definitions (ANALYSES, DATA, directories)
+#     88: Main Build Targets (all, environment)
+#    143: Example Scripts (sample-python, sample-julia, etc.)
+#    168: Build Rules (macro-based analysis build system)
+#    249: Publishing (publish, publish-force, file/analysis-level)
+#    375: Cleanup (clean, cleanall)
+#    388: Verification & Testing (verify, test, diff-outputs)
+#    522: Journal Submission (journal-package, archives)
+#    600: Help & Info (default, help, info targets)
+#    785: Utility Commands (list-analyses, show-analysis-*, check-deps)
+#
+#   OVERVIEW:
+#   1. CONFIGURATION (lines 30-80)
+#      - Shell options, paths, environment variables, analysis definitions
+#
+#   2. BUILD RULES (lines 110-180)
+#      - Pattern rules for building analyses (figures, tables, provenance)
+#
+#   3. PUBLISHING (lines 190-260)
+#      - Publishing artifacts to paper/ with provenance tracking
+#
+#   4. TESTING & VERIFICATION (lines 270-350)
+#      - Environment verification, output comparison, pre-submission checks
+#
+#   5. UTILITY COMMANDS (lines 360+)
+#      - Help, info, list-analyses, show-analysis-*, clean, etc.
+#
+# ==============================================================================
+# Configuration: See config.py for centralized paths and analysis definitions
+# ==============================================================================
 
+# Delete partial outputs on error
+.DELETE_ON_ERROR:
+
+# Default shell with safer options
 SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
+
+# ==============================================================================
+# Environment Variables
+# ==============================================================================
+
+# Julia threading (auto-detect CPU cores, or set explicitly)
+export JULIA_NUM_THREADS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
+
+# ==============================================================================
+# Executable Scripts
+# ==============================================================================
 
 # Environment script paths
 PYTHON := env/scripts/runpython
 JULIA  := env/scripts/runjulia
 STATA  := env/scripts/runstata
 
-ARTIFACTS := price_base remodel_base
+# ==============================================================================
+# Analysis Definitions
+# ==============================================================================
+# Each analysis is a "run" that may generate multiple artifacts.
+# Think of price_base as an analysis/run, not a single artifact.
+
+# All analyses to run
+ANALYSES := price_base remodel_base
+
+# Input data files
 DATA := data/housing_panel.csv
+
+# ==============================================================================
+# Directory Paths
+# ==============================================================================
 
 OUT_FIG_DIR := output/figures
 OUT_TBL_DIR := output/tables
@@ -27,11 +99,15 @@ PAPER_TBL_DIR := $(PAPER_DIR)/tables
 # Default target
 .DEFAULT_GOAL := default
 
+# ==============================================================================
+# Main Build Targets
+# ==============================================================================
+
 # All targets
 .PHONY: all
 all:
 	@rm -f .make_build_marker
-	@$(MAKE) --no-print-directory $(ARTIFACTS)
+	@$(MAKE) --no-print-directory $(ANALYSES)
 	@if [ -f .make_build_marker ]; then \
 		echo ""; \
 		echo "=========================================="; \
@@ -78,7 +154,10 @@ environment:
 	@echo "Next: make all (to build all artifacts)"
 	@echo ""
 
-# Example targets
+# ==============================================================================
+# Example Scripts
+# ==============================================================================
+
 .PHONY: sample-python sample-julia sample-juliacall sample-stata examples
 
 sample-python: | $(OUT_LOG_DIR)
@@ -100,38 +179,130 @@ sample-stata: | $(OUT_LOG_DIR)
 examples: sample-python sample-julia sample-juliacall
 	@echo "✓ All examples complete (Stata skipped - run 'make sample-stata' if Stata is installed)"
 
-# Build subsets: allow `make price_base`, etc.
-.PHONY: $(ARTIFACTS)
-$(ARTIFACTS): %: $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
+# ==============================================================================
+# Build Rules
+# ==============================================================================
+# Uses a macro/template system for flexibility:
+# - Each analysis explicitly defines its script, inputs, and outputs
+# - No rigid naming conventions required
+# - Can have different numbers or types of outputs per analysis
+# - Easier to add new analyses with non-standard configurations
+#
+# Inspired by housing-analysis/Makefile but simplified for template use.
+# ==============================================================================
 
-# Grouped targets: one run produces figure + table + provenance.
-# Requires GNU Make >= 4.3.
-$(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
-  build_%.py $(DATA) scripts/provenance.py $(PYTHON)
-	@mkdir -p $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
-	@echo "Building $*..."
-	@$(PYTHON) build_$*.py --data $(DATA) --out-fig $(OUT_FIG_DIR)/$*.pdf --out-table $(OUT_TBL_DIR)/$*.tex 2>&1 | tee $(OUT_LOG_DIR)/$*.log
-	@$(PYTHON) scripts/record_provenance.py $*
-	@echo "✓ $* complete"
-	@echo "  Created: $(OUT_FIG_DIR)/$*.pdf"
-	@echo "  Created: $(OUT_TBL_DIR)/$*.tex"
-	@echo "  Created: $(OUT_PROV_DIR)/$*.yml"
-	@echo "Built: $*" >> .make_build_marker
+# ------------------------------------------------------------------------------
+# Analysis Definitions
+# ------------------------------------------------------------------------------
+# Define configuration for each analysis using simple Make variables.
+# Format:
+#   <analysis>.script  = path to script
+#   <analysis>.runner  = command to run it (default: PYTHON)
+#   <analysis>.inputs  = input files
+#   <analysis>.outputs = output files (space-separated)
+#   <analysis>.args    = command-line arguments
 
+# price_base analysis
+price_base.script  := build_price_base.py
+price_base.runner  := $(PYTHON)
+price_base.inputs  := $(DATA) scripts/provenance.py
+price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf $(OUT_TBL_DIR)/price_base.tex $(OUT_PROV_DIR)/price_base.yml
+price_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/price_base.pdf --out-table $(OUT_TBL_DIR)/price_base.tex
+
+# remodel_base analysis
+remodel_base.script  := build_remodel_base.py
+remodel_base.runner  := $(PYTHON)
+remodel_base.inputs  := $(DATA) scripts/provenance.py
+remodel_base.outputs := $(OUT_FIG_DIR)/remodel_base.pdf $(OUT_TBL_DIR)/remodel_base.tex $(OUT_PROV_DIR)/remodel_base.yml
+remodel_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/remodel_base.pdf --out-table $(OUT_TBL_DIR)/remodel_base.tex
+
+# ------------------------------------------------------------------------------
+# Rule Generator Macro
+# ------------------------------------------------------------------------------
+# Takes an analysis name and generates Make rules for it.
+# Uses grouped targets (&:) so all outputs are built by one command.
+#
+# Usage: $(call make-analysis-rule,<analysis_name>)
+
+define make-analysis-rule
+
+# Grouped target: all outputs built together
+$($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
+	@echo "========================================"
+	@echo "Running analysis: $(1)"
+	@echo "========================================"
+	@echo "Script:  $($(1).script)"
+	@echo "Runner:  $($(1).runner)"
+	@echo "Outputs: $($(1).outputs)"
+	@echo ""
+	$($(1).runner) $($(1).script) $($(1).args) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
+	@$(PYTHON) scripts/record_provenance.py $(1)
+	@echo ""
+	@echo "✓ $(1) complete"
+	@echo "  Outputs:"
+	@$(foreach out,$($(1).outputs),echo "    - $(out)";)
+	@echo "Built: $(1)" >> .make_build_marker
+
+# Phony target for convenient invocation (e.g., "make price_base")
+.PHONY: $(1)
+$(1): $($(1).outputs)
+
+endef
+
+# ------------------------------------------------------------------------------
+# Generate Rules for All Analyses
+# ------------------------------------------------------------------------------
+# Apply the template to each analysis defined in ANALYSES variable
+
+$(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
+
+# Ensure output directories exist
+$(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR):
+	@mkdir -p $@
+
+# ==============================================================================
 # Publishing
-PUBLISH_ARTIFACTS ?= $(ARTIFACTS)
+# ==============================================================================
+# Publishes build outputs from output/ to paper/ with provenance tracking.
+# Git safety checks prevent publishing from dirty tree or outdated branch.
+#
+# Two modes of selective publishing:
+#   1. Analysis-level: PUBLISH_ANALYSES="price_base remodel_base" 
+#      Publishes ALL outputs from specified analyses
+#   2. File-level: PUBLISH_FILES="output/figures/price_base.pdf output/tables/custom.tex"
+#      Publishes only specified files (for fine-grained control)
+#
+# Examples:
+#   make publish                                    # Publish all analyses
+#   make publish PUBLISH_ANALYSES="price_base"     # Publish all outputs from price_base
+#   make publish PUBLISH_FILES="output/figures/price_base.pdf"  # Publish only one figure
+
+PUBLISH_ANALYSES ?= $(ANALYSES)
+PUBLISH_FILES ?=  # Optional: space-separated paths like "output/figures/x.pdf output/tables/y.tex"
 REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
+ALLOW_DIRTY ?= 0  # Set to 1 to allow publishing from dirty working tree (not recommended)
+REQUIRE_NOT_BEHIND ?= 1  # Set to 0 to allow publishing when behind upstream
 PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
 publish:
-	@$(PYTHON) scripts/check_git_state.py --allow-dirty 0 --require-not-behind 1 --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ARTIFACTS)"
+	@$(PYTHON) scripts/check_git_state.py --allow-dirty $(ALLOW_DIRTY) --require-not-behind $(REQUIRE_NOT_BEHIND) --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ANALYSES)"
 	@echo ""
 	@echo "=========================================="
-	@echo "Publishing artifacts to paper/..."
+	@echo "Publishing outputs to paper/..."
 	@echo "=========================================="
+	@echo ""
+ifdef PUBLISH_FILES
+	@echo "Publishing mode: File-level selection"
+	@echo "Files: $(PUBLISH_FILES)"
+	@echo ""
+	@$(MAKE) --no-print-directory publish-files
+else
+	@echo "Publishing mode: Analysis-level selection"
+	@echo "Analyses: $(PUBLISH_ANALYSES)"
 	@echo ""
 	@$(MAKE) --no-print-directory publish-figures publish-tables
+endif
 	@if [ -f .publish_marker ]; then \
 		echo ""; \
 		echo "=========================================="; \
@@ -147,7 +318,7 @@ publish:
 		echo "✓ Nothing to publish - all up-to-date"; \
 		echo "=========================================="; \
 		echo ""; \
-		echo "Published artifacts: $(PUBLISH_ARTIFACTS)"; \
+		echo "Published analyses: $(PUBLISH_ANALYSES)"; \
 		echo "  - paper/figures/"; \
 		echo "  - paper/tables/"; \
 		echo "  - paper/provenance.yml"; \
@@ -165,13 +336,30 @@ publish-force:
 .PHONY: publish-figures
 publish-figures:
 	@echo "Figures:"
-	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ANALYSES)))
 
 # Publish all tables (prints header, then processes individual stamps)
 .PHONY: publish-tables
 publish-tables:
 	@echo "Tables:"
-	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ANALYSES)))
+
+# Publish specific files (file-level selection)
+.PHONY: publish-files
+publish-files:
+	@for file in $(PUBLISH_FILES); do \
+		if [ ! -f "$$file" ]; then \
+			echo "Error: File not found: $$file"; \
+			exit 1; \
+		fi; \
+	done
+	@$(PYTHON) scripts/publish_specific_files.py \
+	  --paper-root $(PAPER_DIR) \
+	  --files "$(PUBLISH_FILES)" \
+	  --allow-dirty 0 \
+	  --require-not-behind 1 \
+	  --require-current-head $(REQUIRE_CURRENT_HEAD)
+	@touch .publish_marker
 
 # Individual stamp files (for incremental publishing)
 $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
@@ -198,6 +386,10 @@ $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml 
 	@touch $@
 	@touch .publish_marker
 
+# ==============================================================================
+# Cleanup Targets
+# ==============================================================================
+
 .PHONY: clean
 	rm -f .publish_marker
 clean:
@@ -206,6 +398,10 @@ clean:
 .PHONY: cleanall
 cleanall:
 	rm -rf output .env .julia .stata
+
+# ==============================================================================
+# Verification & Testing
+# ==============================================================================
 
 .PHONY: verify
 verify:
@@ -319,12 +515,12 @@ test-outputs:
 	@test -d $(OUT_PROV_DIR) && echo "  ✓ $(OUT_PROV_DIR)/" || echo "  ✗ Missing $(OUT_PROV_DIR)/"
 	@echo ""
 	@echo "Expected files:"
-	@for artifact in $(ARTIFACTS); do \
-		test -f $(OUT_FIG_DIR)/$${artifact}.pdf && echo "  ✓ $(OUT_FIG_DIR)/$${artifact}.pdf" || echo "  ✗ Missing $(OUT_FIG_DIR)/$${artifact}.pdf"; \
-		test -f $(OUT_TBL_DIR)/$${artifact}.tex && echo "  ✓ $(OUT_TBL_DIR)/$${artifact}.tex" || echo "  ✗ Missing $(OUT_TBL_DIR)/$${artifact}.tex"; \
+	@for analysis in $(ANALYSES); do \
+		test -f $(OUT_FIG_DIR)/$${analysis}.pdf && echo "  ✓ $(OUT_FIG_DIR)/$${analysis}.pdf" || echo "  ✗ Missing $(OUT_FIG_DIR)/$${analysis}.pdf"; \
+		test -f $(OUT_TBL_DIR)/$${analysis}.tex && echo "  ✓ $(OUT_TBL_DIR)/$${analysis}.tex" || echo "  ✗ Missing $(OUT_TBL_DIR)/$${analysis}.tex"; \
 	done
 	@echo ""
-	@MISSING=$$(for artifact in $(ARTIFACTS); do \
+	@MISSING=$$(for analysis in $(ANALYSES); do \
 		test -f $(OUT_FIG_DIR)/$${artifact}.pdf || echo "missing"; \
 		test -f $(OUT_TBL_DIR)/$${artifact}.tex || echo "missing"; \
 	done | grep -c missing); \
@@ -436,6 +632,8 @@ default:
 	@echo "HELP:"
 	@echo "  make help             Show all available commands"
 	@echo "  make info             Show comprehensive project information"
+	@echo "  make list-analyses    List all available analyses"
+	@echo "  make show-analysis-<name>  Show config for specific analysis"
 	@echo ""
 	@echo "DOCUMENTATION:"
 	@echo "  README.md             Project overview and quick start"
@@ -472,9 +670,11 @@ help:
 	@echo "  make diff-outputs     Compare current vs published outputs"
 	@echo ""
 	@echo "PUBLISH:"
-	@echo "  make publish          Publish all artifacts to paper/"
-	@echo "  make publish PUBLISH_ARTIFACTS='price_base'  # Publish specific"
-	@echo "  make publish REQUIRE_CURRENT_HEAD=1  # Strict mode"
+	@echo "  make publish          Publish all analyses to paper/"
+	@echo "  make publish PUBLISH_ANALYSES='price_base'  # Publish specific analyses"
+	@echo "  make publish PUBLISH_FILES='output/figures/x.pdf output/tables/y.tex'  # Publish specific files"
+	@echo "  make publish REQUIRE_CURRENT_HEAD=1  # Strict mode (require current HEAD)"
+	@echo "  make publish-force    Force re-publish even if up-to-date"
 	@echo ""
 	@echo "TESTING & QUALITY:"
 	@echo "  make test             Run pytest test suite"
@@ -498,6 +698,12 @@ help:
 	@echo "  make                  Show brief guidance"
 	@echo "  make help             Show this detailed command reference"
 	@echo "  make info             Show comprehensive project information"
+	@echo ""
+	@echo "UTILITY COMMANDS:"
+	@echo "  make list-analyses    List all available analyses"
+	@echo "  make show-analysis-<name>  Show detailed config for specific analysis"
+	@echo "  make check-deps       Check Python/Julia/data dependencies"
+	@echo "  make dryrun           Show what would be built (without building)"
 	@echo ""
 
 .PHONY: info
@@ -590,3 +796,75 @@ info:
 	@echo "  Tests:      make test (run test suite)"
 	@echo "  Examples:   make examples (test environment)"
 	@echo ""
+# ==============================================================================
+# Utility Targets
+# ==============================================================================
+# Inspired by housing-analysis/Makefile utility commands
+
+.PHONY: list-analyses list-analyses-verbose show-analysis check-deps dryrun
+
+# List all available analyses
+list-analyses:
+	@echo "Available analyses:"
+	@$(foreach analysis,$(ANALYSES), \
+		echo "  - $(analysis)"; \
+	)
+
+# List analyses with more detail
+list-analyses-verbose:
+	@echo "Available analyses (with configuration):"
+	@$(foreach analysis,$(ANALYSES), \
+		echo "  - $(analysis)"; \
+		echo "      Script:  $($(analysis).script)"; \
+		echo "      Runner:  $($(analysis).runner)"; \
+		echo "      Outputs: $(words $($(analysis).outputs)) files"; \
+		echo ""; \
+	)
+
+# Show detailed configuration for a specific analysis
+# Usage: make show-analysis-price_base
+show-analysis-%:
+	@echo "========================================"
+	@echo "Analysis: $*"
+	@echo "========================================"
+	@echo "Script:  $($*.script)"
+	@echo "Runner:  $($*.runner)"
+	@echo ""
+	@echo "Inputs:"
+	@$(foreach input,$($*.inputs),echo "  - $(input)";)
+	@echo ""
+	@echo "Outputs:"
+	@$(foreach output,$($*.outputs),echo "  - $(output)";)
+	@echo ""
+	@echo "Arguments:"
+	@echo "  $($*.args)" | sed 's/--/\n  --/g'
+	@echo ""
+	@echo "To build:"
+	@echo "  make $*"
+	@echo ""
+	@echo "To view logs:"
+	@echo "  cat $(OUT_LOG_DIR)/$*.log"
+	@echo "========================================"
+
+# Check that all dependencies are available
+check-deps:
+	@echo "Checking dependencies..."
+	@echo -n "  Python: "
+	@$(PYTHON) --version 2>&1 || echo "❌ ERROR: Python not available (run: make environment)"
+	@echo -n "  Julia:  "
+	@$(JULIA) --version 2>&1 | xargs echo || echo "❌ ERROR: Julia not available (run: make environment)"
+	@echo -n "  Data files: "
+	@if [ -f $(DATA) ]; then \
+		echo "✓ $(DATA)"; \
+	else \
+		echo "❌ ERROR: Data file not found: $(DATA)"; \
+	fi
+	@echo ""
+	@echo "Julia thread count: $(JULIA_NUM_THREADS)"
+	@echo ""
+
+# Show what would be built without actually building
+dryrun:
+	@echo "Dry run - showing what would be built:"
+	@echo ""
+	@$(MAKE) -n all 2>&1 | grep -E '^(Building|Running|======|✓)' || true
