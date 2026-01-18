@@ -158,7 +158,6 @@ publish-force:
 # Stamp file for published figures
 $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_FIG_DIR)
-	@echo "Publishing figure: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind figures \
@@ -172,7 +171,6 @@ $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 # Stamp file for published tables
 $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_TBL_DIR)
-	@echo "Publishing table: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
 	  --kind tables \

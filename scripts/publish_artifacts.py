@@ -164,11 +164,10 @@ def main() -> None:
 
         copied = copy_if_changed(src, dst)
         
-        # Print status for each file
-        if copied:
-            print(f"  Published: {dst.relative_to(paper_root)}")
-        else:
-            print(f"  Up-to-date: {dst.relative_to(paper_root)}")
+        # Print status for each file (single line, aligned)
+        status = "Published" if copied else "Up-to-date"
+        rel_path = dst.relative_to(paper_root)
+        print(f"  {name:15s}  {status:11s}  {rel_path}")
 
         prov["artifacts"].setdefault(name, {})
         prov["artifacts"][name][args.kind] = {
