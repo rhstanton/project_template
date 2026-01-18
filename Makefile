@@ -164,13 +164,13 @@ publish-force:
 .PHONY: publish-figures
 publish-figures:
 	@echo "Figures:"
-	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS)))
 
 # Publish all tables (prints header, then processes individual stamps)
 .PHONY: publish-tables
 publish-tables:
 	@echo "Tables:"
-	@$(MAKE) --no-print-directory $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
+	@$(MAKE) --no-print-directory -s $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
 
 # Individual stamp files (for incremental publishing)
 $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
