@@ -42,9 +42,40 @@ This ensures all artifacts were built from the current git commit, preventing ac
 
 Publishing enforces several git safety checks to ensure reproducibility.
 
-### 1. Clean Working Tree
+### 1. Artifacts Built from Clean Tree
 
-**Default**: Refuses to publish if working tree is dirty
+**Default**: Refuses to publish if artifacts were built from a dirty working tree
+
+This check reads the provenance files and verifies that `git.dirty` was `false` when each artifact was built.
+
+```bash
+# If you built with uncommitted changes:
+make all  # While tree was dirty
+git commit -am "Commit changes"
+make publish
+# Error: Refusing to publish: some artifacts were built from a dirty working tree:
+#   price_base
+#   remodel_base
+# 
+# Rebuild from a clean tree: git commit/stash, then make clean && make all
+# Or set --allow-dirty 1 to allow.
+```
+
+**Solution**: Commit changes first, then rebuild:
+```bash
+git commit -am "Commit changes"
+make clean && make all
+make publish
+```
+
+**Override** (not recommended):
+```bash
+make publish ALLOW_DIRTY=1  # Via Makefile variable
+```
+
+### 2. Current Working Tree Clean
+
+**Default**: Refuses to publish if current working tree is dirty
 
 ```bash
 # If you have uncommitted changes:
@@ -65,7 +96,7 @@ publish-figures: ...
       ...
 ```
 
-### 2. Not Behind Upstream
+### 3. Not Behind Upstream
 
 **Default**: Refuses if branch is behind remote
 
@@ -82,7 +113,7 @@ make publish --require-not-behind 0
 
 Or edit Makefile to change default.
 
-### 3. Current HEAD (Optional)
+### 4. Current HEAD (Optional)
 
 **Default**: Allows artifacts from any commit (flexible for incremental work)
 

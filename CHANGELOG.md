@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `make help`: Detailed command reference organized by category (~80 lines)
   - `make info`: Comprehensive project information (pipeline, structure, requirements)
   - Updated `.DEFAULT_GOAL` from `help` to `default` for brief output
+
+### Fixed
+- **Publishing safety**: Publishing now checks if artifacts were built from a dirty working tree (not just if current tree is dirty). Prevents scenario where you build with dirty tree, commit, then publish stale outputs. Controlled by `--allow-dirty` flag.
+- **Git provenance tracking**: Fixed `repo_root` calculation in build scripts - was using `.parents[1]` (parent of project dir) instead of `.parent` (project root), causing git state to not be recorded in provenance files
 - Updated README.md:
   - Added runtime estimates in Quick Start section
   - Enhanced system requirements with time estimates
