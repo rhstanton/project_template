@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from scripts.provenance import enable_auto_provenance
+from repro_tools import enable_auto_provenance
 
 # Enable automatic provenance recording at script exit
 enable_auto_provenance(__file__)
