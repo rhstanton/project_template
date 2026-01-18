@@ -120,10 +120,11 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 # Publishing
 PUBLISH_ARTIFACTS ?= $(ARTIFACTS)
 REQUIRE_CURRENT_HEAD ?= 0  # Set to 1 to ensure all artifacts from current HEAD
+PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
-publish: $(addprefix $(PAPER_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
-         $(addprefix $(PAPER_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS)))
+publish: $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_ARTIFACTS))) \
+         $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .tables.stamp,$(PUBLISH_ARTIFACTS)))
 	@echo ""
 	@echo "=========================================="
 	@echo "✓ Publishing complete!"
@@ -137,13 +138,12 @@ publish: $(addprefix $(PAPER_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS))) \
 
 # Force re-publish even if up-to-date
 publish-force:
-	@rm -f $(addprefix $(PAPER_FIG_DIR)/,$(addsuffix .pdf,$(PUBLISH_ARTIFACTS)))
-	@rm -f $(addprefix $(PAPER_TBL_DIR)/,$(addsuffix .tex,$(PUBLISH_ARTIFACTS)))
+	@rm -rf $(PUBLISH_STAMP_DIR)
 	@$(MAKE) publish
 
-# Pattern rule for publishing figures
-$(PAPER_FIG_DIR)/%.pdf: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
-	@mkdir -p $(PAPER_FIG_DIR)
+# Stamp file for published figures
+$(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
+	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_FIG_DIR)
 	@echo "Publishing figure: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
@@ -152,10 +152,11 @@ $(PAPER_FIG_DIR)/%.pdf: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml scripts/publi
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
+	@touch $@
 
-# Pattern rule for publishing tables
-$(PAPER_TBL_DIR)/%.tex: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
-	@mkdir -p $(PAPER_TBL_DIR)
+# Stamp file for published tables
+$(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publish_artifacts.py
+	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_TBL_DIR)
 	@echo "Publishing table: $*"
 	@$(PYTHON) scripts/publish_artifacts.py \
 	  --paper-root $(PAPER_DIR) \
@@ -164,10 +165,11 @@ $(PAPER_TBL_DIR)/%.tex: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml scripts/publi
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
+	@touch $@
 
 .PHONY: clean
 clean:
-	rm -rf output/figures output/tables output/provenance output/logs
+	rm -rf output/figures output/tables output/provenance output/logs .publish_stamps
 
 .PHONY: cleanall
 cleanall:
