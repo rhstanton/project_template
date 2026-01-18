@@ -67,7 +67,24 @@ make examples      # Run example scripts
 
 ---
 
-## 📊 What This Template Provides
+## � VS Code Users: No Command Line Required!
+
+**Prefer working in VS Code?** Everything works through the UI:
+
+1. **Install extensions** (VS Code will prompt you)
+2. **Press `Ctrl+Shift+P`** → type "task" → browse available tasks
+3. **Press `Ctrl+Shift+B`** to build everything
+4. **Press `F5`** to debug Python scripts
+
+**Full guide:** [GETTING_STARTED_VSCODE.md](GETTING_STARTED_VSCODE.md)  
+**Cheat sheet:** [.vscode/QUICK_REFERENCE.md](.vscode/QUICK_REFERENCE.md)  
+**Details:** [docs/vscode_integration.md](docs/vscode_integration.md)
+
+All Make commands are available as VS Code tasks - you can work entirely in the GUI!
+
+---
+
+## �📊 What This Template Provides
 
 ### Core Features
 
@@ -75,6 +92,7 @@ make examples      # Run example scripts
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata
+- **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
 - **Automated testing**: pytest-based test suite for reliability
 - **Output comparison**: Diff current vs. published outputs
 - **Pre-submission checks**: Comprehensive validation before journal submission
@@ -318,6 +336,7 @@ make clean            # Remove all outputs
 - [docs/environment.md](docs/environment.md) - Environment setup and management
 - [docs/provenance.md](docs/provenance.md) - Provenance tracking system
 - [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
+- [docs/vscode_integration.md](docs/vscode_integration.md) - Working entirely in VS Code
 - [docs/directory_structure.md](docs/directory_structure.md) - Project organization
 - [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
 - [docs/platform_compatibility.md](docs/platform_compatibility.md) - System requirements and GPU support

@@ -1,0 +1,107 @@
+{
+    // VS Code Debug Configurations for reproducible research
+    //
+    // Start debugging:
+    //   - F5 (start debugging with selected configuration)
+    //   - F9 (toggle breakpoint)
+    //   - Ctrl+Shift+D (open Debug panel)
+    //
+    // All configurations include proper environment variables for Julia bridge
+    //
+    // See docs/vscode_integration.md for complete guide
+    //
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "JULIA_CONDAPKG_BACKEND": "Null",
+                "JULIA_PYTHONCALL_EXE": "${workspaceFolder}/.env/bin/python",
+                "JULIA_PROJECT": "${workspaceFolder}/env",
+                "JULIA_DEPOT_PATH": "${workspaceFolder}/.julia"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Debug build_price_base",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/build_price_base.py",
+            "args": [
+                "--data", "${workspaceFolder}/data/housing_panel.csv",
+                "--out-fig", "${workspaceFolder}/output/figures/price_base.pdf",
+                "--out-table", "${workspaceFolder}/output/tables/price_base.tex",
+                "--out-meta", "${workspaceFolder}/output/provenance/price_base.yml"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "JULIA_CONDAPKG_BACKEND": "Null",
+                "JULIA_PYTHONCALL_EXE": "${workspaceFolder}/.env/bin/python",
+                "JULIA_PROJECT": "${workspaceFolder}/env",
+                "JULIA_DEPOT_PATH": "${workspaceFolder}/.julia"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Debug build_remodel_base",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/build_remodel_base.py",
+            "args": [
+                "--data", "${workspaceFolder}/data/housing_panel.csv",
+                "--out-fig", "${workspaceFolder}/output/figures/remodel_base.pdf",
+                "--out-table", "${workspaceFolder}/output/tables/remodel_base.tex",
+                "--out-meta", "${workspaceFolder}/output/provenance/remodel_base.yml"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "JULIA_CONDAPKG_BACKEND": "Null",
+                "JULIA_PYTHONCALL_EXE": "${workspaceFolder}/.env/bin/python",
+                "JULIA_PROJECT": "${workspaceFolder}/env",
+                "JULIA_DEPOT_PATH": "${workspaceFolder}/.julia"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Run Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests",
+                "-v",
+                "--tb=short"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Run Tests with Coverage",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests",
+                "-v",
+                "--cov=.",
+                "--cov-report=html",
+                "--cov-report=term"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false
+        }
+    ]
+}

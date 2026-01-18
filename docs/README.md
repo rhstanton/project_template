@@ -48,6 +48,13 @@ Complete guide to the reproducible research template.
   - Publishing specific artifacts
   - Troubleshooting publish failures
 
+- **[vscode_integration.md](vscode_integration.md)** - VS Code integration guide (NEW!)
+  - Complete VS Code workflow without command line
+  - Tasks for all Make targets
+  - Debug configurations for Python scripts
+  - Testing integration
+  - Keyboard shortcuts and tips
+
 - **[flexible_analyses.md](flexible_analyses.md)** - Flexible analysis definitions (NEW!)
   - Macro-based system for defining analyses
   - No rigid naming conventions

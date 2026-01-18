@@ -1,4 +1,13 @@
 {
+    // VS Code Tasks for reproducible research workflow
+    // 
+    // Run tasks via:
+    //   - Ctrl+Shift+P → "Tasks: Run Task"
+    //   - Ctrl+Shift+B (default build task)
+    //   - Terminal menu → "Run Task..."
+    //
+    // See docs/vscode_integration.md for complete guide
+    //
     "version": "2.0.0",
     "tasks": [
         {
@@ -70,6 +79,111 @@
             "type": "shell",
             "command": "make",
             "args": ["clean"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Verify environment",
+            "type": "shell",
+            "command": "make",
+            "args": ["verify"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["test"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run tests with coverage",
+            "type": "shell",
+            "command": "make",
+            "args": ["test-cov"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Test outputs",
+            "type": "shell",
+            "command": "make",
+            "args": ["test-outputs"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Compare outputs (diff)",
+            "type": "shell",
+            "command": "make",
+            "args": ["diff-outputs"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Pre-submission check",
+            "type": "shell",
+            "command": "make",
+            "args": ["pre-submit"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate replication report",
+            "type": "shell",
+            "command": "make",
+            "args": ["replication-report"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Log system info",
+            "type": "shell",
+            "command": "make",
+            "args": ["system-info"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Python script with environment",
+            "type": "shell",
+            "command": "${workspaceFolder}/env/scripts/runpython",
+            "args": ["${file}"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Julia script with environment",
+            "type": "shell",
+            "command": "${workspaceFolder}/env/scripts/runjulia",
+            "args": ["${file}"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
