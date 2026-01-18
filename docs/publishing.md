@@ -14,6 +14,8 @@ This separation allows:
 - Explicit, traceable publication events
 - Different git histories for analysis vs. paper repos
 
+**Publishing is idempotent**: Running `make publish` multiple times only re-publishes artifacts whose source files have changed. If everything is up-to-date, it reports "Nothing to publish - all up-to-date".
+
 ## Basic Usage
 
 ### Publish All Artifacts
@@ -37,6 +39,14 @@ make publish REQUIRE_CURRENT_HEAD=1
 ```
 
 This ensures all artifacts were built from the current git commit, preventing accidental publication of stale outputs.
+
+### Force Re-publish (Override Up-to-date Check)
+
+```bash
+make publish-force
+```
+
+This clears the publish tracking and forces all artifacts to be re-published, even if they haven't changed. Useful if you manually modified files in `paper/` and want to restore from `output/`.
 
 ## Git Safety Checks
 

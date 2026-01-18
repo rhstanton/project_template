@@ -143,9 +143,10 @@ publish: $(addprefix $(PUBLISH_STAMP_DIR)/,$(addsuffix .figures.stamp,$(PUBLISH_
 		echo "✓ Nothing to publish - all up-to-date"; \
 		echo "=========================================="; \
 		echo ""; \
-		echo "Artifacts: $(PUBLISH_ARTIFACTS)"; \
+		echo "Published artifacts: $(PUBLISH_ARTIFACTS)"; \
 		echo "  - paper/figures/"; \
 		echo "  - paper/tables/"; \
+		echo "  - paper/provenance.yml"; \
 		echo ""; \
 		echo "To force re-publish: make publish-force"; \
 		echo ""; \

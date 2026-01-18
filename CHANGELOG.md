@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Publishing safety**: Publishing now checks if artifacts were built from a dirty working tree (not just if current tree is dirty). Prevents scenario where you build with dirty tree, commit, then publish stale outputs. Controlled by `--allow-dirty` flag.
 - **Git provenance tracking**: Fixed `repo_root` calculation in build scripts - was using `.parents[1]` (parent of project dir) instead of `.parent` (project root), causing git state to not be recorded in provenance files
+- **Idempotent publishing**: `make publish` now uses stamp files to track published artifacts. Only re-publishes when source files change. Shows "Nothing to publish - all up-to-date" when everything current. Added `make publish-force` to override.
 - Updated README.md:
   - Added runtime estimates in Quick Start section
   - Enhanced system requirements with time estimates
