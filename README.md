@@ -24,7 +24,10 @@ make environment  # Automatically initializes git submodules
 
 **⚠️ IMPORTANT:** When creating a new project, do **NOT** manually copy the `lib/repro-tools/` directory. Let git handle it as a submodule. The Makefile automatically initializes it when you run `make environment`.
 
-**Updating repro-tools:** To get the latest version: `make update-submodules` (see [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md))
+**Updating repro-tools:** 
+- Quick update: `make update-submodules` (updates submodule only)
+- Full update: `make update-environment` (updates submodule + reinstalls environment)
+- See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for details
 
 ---
 

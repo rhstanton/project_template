@@ -79,11 +79,38 @@ git push
 
 To pull the latest changes from repro-tools:
 
-```bash
-# Option 1: Using Makefile (recommended - provides helpful output)
-make update-submodules
+#### Option 1: Quick Update (Submodule Only)
 
-# Option 2: Direct git command
+```bash
+make update-submodules
+```
+
+This:
+1. Fetches the latest commit from repro-tools main branch
+2. Updates the submodule pointer
+3. Shows the current commit
+4. Reminds you to commit
+
+**Use when:** You want to see what's new without reinstalling.
+
+#### Option 2: Full Update (Submodule + Environment)
+
+```bash
+make update-environment
+```
+
+This:
+1. Runs `make update-submodules`
+2. Reinstalls Python environment with updated repro-tools
+3. Reinstalls Julia packages
+4. Reminds you to commit
+
+**Use when:** You want to use the latest features (recommended).
+
+#### Option 3: Manual Update
+
+```bash
+# Direct git command
 git submodule update --remote lib/repro-tools
 
 # Or manually pull in the submodule directory

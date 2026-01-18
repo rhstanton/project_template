@@ -697,9 +697,10 @@ help:
 	@echo "UTILITY COMMANDS:"
 	@echo "  make list-analyses    List all available analyses"
 	@echo "  make show-analysis-<name>  Show detailed config for specific analysis"
-	@echo "  make check-deps       Check Python/Julia/data dependencies"
-	@echo "  make dryrun           Show what would be built (without building)"
-	@echo "  make update-submodules  Update repro-tools to latest version"
+	@echo "  make check-deps         Check Python/Julia/data dependencies"
+	@echo "  make dryrun             Show what would be built (without building)"
+	@echo "  make update-submodules  Update repro-tools (submodule only)"
+	@echo "  make update-environment Update repro-tools AND reinstall environment"
 	@echo ""
 
 .PHONY: info
@@ -880,6 +881,25 @@ update-submodules:
 	@git submodule status lib/repro-tools
 	@echo ""
 	@echo "To commit this update:"
+	@echo "  git add lib/repro-tools"
+	@echo "  git commit -m \"Update repro-tools to latest\""
+	@echo ""
+
+.PHONY: update-environment
+update-environment: update-submodules
+	@echo "=========================================="
+	@echo "Reinstalling environment with updates..."
+	@echo "=========================================="
+	@echo ""
+	@echo "📦 Reinstalling Python environment with updated repro-tools..."
+	$(MAKE) -C env python-env
+	@echo ""
+	@echo "📦 Reinstalling Julia packages..."
+	$(MAKE) -C env julia-install-via-python
+	@echo ""
+	@echo "✓ Environment updated!"
+	@echo ""
+	@echo "Note: Submodule update needs to be committed:"
 	@echo "  git add lib/repro-tools"
 	@echo "  git commit -m \"Update repro-tools to latest\""
 	@echo ""
