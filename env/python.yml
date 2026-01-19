@@ -14,9 +14,13 @@ dependencies:
   # For provenance and environment
   - pyyaml
   - jinja2  # Required for pandas LaTeX export
+  - tomli  # For parsing TOML files (used in tests)
   # Testing
   - pytest
   - pytest-cov
+  # Code quality
+  - ruff  # Linter and formatter
+  - mypy  # Type checker
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14

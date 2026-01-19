@@ -20,26 +20,26 @@ print()
 # Calculate environment directory FIRST (before importing juliacall)
 env_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 repo_root = os.path.dirname(env_dir)
-julia_depot = os.path.join(repo_root, '.julia')
+julia_depot = os.path.join(repo_root, ".julia")
 
 # Configure Julia to use project-local depot (not ~/.julia)
-os.environ['JULIA_DEPOT_PATH'] = julia_depot
+os.environ["JULIA_DEPOT_PATH"] = julia_depot
 
 # Configure Julia to use our project for packages
-os.environ['JULIA_PROJECT'] = env_dir
+os.environ["JULIA_PROJECT"] = env_dir
 
 # Tell juliacall to install Julia binary in .julia/ directory
-os.environ['PYTHON_JULIAPKG_PROJECT'] = julia_depot
+os.environ["PYTHON_JULIAPKG_PROJECT"] = julia_depot
 
 # Configure PythonCall to use system Python (not CondaPkg)
 # This prevents CondaPkg from creating a redundant Python environment
-os.environ['JULIA_CONDAPKG_BACKEND'] = 'Null'
-os.environ['JULIA_PYTHONCALL_EXE'] = sys.executable
+os.environ["JULIA_CONDAPKG_BACKEND"] = "Null"
+os.environ["JULIA_PYTHONCALL_EXE"] = sys.executable
 
 # Prefer the bundled Julia in .julia/pyjuliapkg/install/bin/julia
 bundled_julia = os.path.join(julia_depot, "pyjuliapkg", "install", "bin", "julia")
 if os.path.isfile(bundled_julia):
-    os.environ['PYTHON_JULIAPKG_EXE'] = bundled_julia
+    os.environ["PYTHON_JULIAPKG_EXE"] = bundled_julia
     print(f"Using bundled Julia at {bundled_julia}")
 else:
     # Drop juliaup from PATH so juliacall installs into pyjuliapkg instead of
@@ -48,7 +48,9 @@ else:
     filtered = [p for p in path_parts if "juliaup" not in p.lower()]
     if filtered != path_parts:
         os.environ["PATH"] = os.pathsep.join(filtered)
-        print("No bundled Julia found; removing juliaup from PATH to force local install")
+        print(
+            "No bundled Julia found; removing juliaup from PATH to force local install"
+        )
 
 # Let juliacall download Julia to project-local location
 # This ensures zero prerequisites - no need for system Julia or juliaup!
@@ -86,11 +88,15 @@ try:
     try:
         julia_cmd = jl.seval("Base.julia_cmd()")
         # Extract executable from Cmd object
-        julia_exe = julia_cmd.exec[0] if hasattr(julia_cmd, 'exec') else str(julia_cmd).split()[0]
+        julia_exe = (
+            julia_cmd.exec[0]
+            if hasattr(julia_cmd, "exec")
+            else str(julia_cmd).split()[0]
+        )
     except:
         # Method 2: Use Sys.BINDIR
         julia_exe = jl.seval('joinpath(Sys.BINDIR, "julia")')
-    
+
     print(f"Julia executable: {julia_exe}")
     print()
 
@@ -100,14 +106,14 @@ try:
 
     # Build Julia command
     julia_env = os.environ.copy()
-    julia_env['JULIA_CONDAPKG_BACKEND'] = 'Null'
-    julia_env['JULIA_PYTHONCALL_EXE'] = sys.executable
+    julia_env["JULIA_CONDAPKG_BACKEND"] = "Null"
+    julia_env["JULIA_PYTHONCALL_EXE"] = sys.executable
     load_path = [
         env_dir,
         os.environ.get("PYTHON_JULIAPKG_PROJECT", julia_depot),
         "@stdlib",
     ]
-    julia_env['JULIA_LOAD_PATH'] = ":".join(load_path)
+    julia_env["JULIA_LOAD_PATH"] = ":".join(load_path)
 
     cmd = [
         julia_exe,
@@ -127,7 +133,7 @@ try:
         println("Verifying key packages...")
         using PythonCall
         println("  ✓ PythonCall")
-        """
+        """,
     ]
 
     def run_julia_install():

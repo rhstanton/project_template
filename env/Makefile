@@ -14,6 +14,7 @@ CONDA  ?= conda
 MICROMAMBA ?= micromamba
 
 ENV_DIR := $(strip $(CURDIR))
+REPO_ROOT := $(abspath $(ENV_DIR)/..)
 PY_YML  := $(strip $(ENV_DIR))/python.yml
 PY_PREFIX := $(abspath $(ENV_DIR)/../.env)
 
@@ -92,14 +93,7 @@ python-env:
 
 python-check:
 	@echo ">> checking Python can import juliacall from $(PY_PREFIX)"
-	@cd $(REPO_ROOT) && env/scripts/runpython - <<'PY'
-import sys
-print("PY:", sys.executable)
-try:
-	import juliacall; print("OK: juliacall", getattr(juliacall, "__version__", ""))
-except Exception as e:
-	print("FAIL: juliacall import ->", e); raise SystemExit(1)
-PY
+	@cd $(REPO_ROOT) && $(REPO_ROOT)/env/scripts/runpython -c 'import sys; print("PY:", sys.executable); import juliacall; print("OK: juliacall", getattr(juliacall, "__version__", ""))'
 
 python-clean:
 	@echo ">> removing $(PY_PREFIX)"

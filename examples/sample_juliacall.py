@@ -9,10 +9,10 @@ print()
 
 try:
     from juliacall import Main as jl
-    
+
     print(f"Julia version: {jl.seval('VERSION')}")
     print()
-    
+
     # Simple Julia computation
     jl.seval("""
     println("Running Julia code from Python...")
@@ -25,15 +25,15 @@ try:
     println("Sum: ", sum(x))
     println()
     """)
-    
+
     # Python can call Julia functions
     result = jl.seval("sum([1, 2, 3, 4, 5])")
     print(f"Sum computed in Julia, returned to Python: {result}")
     print()
-    
+
     print("✓ Julia example completed successfully")
     print("=" * 60)
-    
+
 except ImportError as e:
     print(f"✗ juliacall not available: {e}")
     print()

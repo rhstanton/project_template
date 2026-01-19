@@ -529,6 +529,69 @@ test-outputs:
 	fi
 
 # ==============================================================================
+# Code Quality & Formatting
+# ==============================================================================
+
+.PHONY: lint
+lint:
+	@echo "Running ruff linter..."
+	@$(PYTHON) -m ruff check . || { \
+		echo ""; \
+		echo "Linting failed. To see details:"; \
+		echo "  $(PYTHON) -m ruff check ."; \
+		echo ""; \
+		echo "To auto-fix issues:"; \
+		echo "  make format"; \
+		exit 1; \
+	}
+	@echo "✓ Linting passed"
+
+.PHONY: format
+format:
+	@echo "Running code formatter (ruff)..."
+	@$(PYTHON) -m ruff format .
+	@echo ""
+	@echo "Running import sorting and auto-fixes..."
+	@$(PYTHON) -m ruff check --fix . || true
+	@echo ""
+	@echo "✓ Code formatted"
+
+.PHONY: format-check
+format-check:
+	@echo "Checking code formatting (no changes)..."
+	@$(PYTHON) -m ruff format --check . || { \
+		echo ""; \
+		echo "Formatting issues found. To fix:"; \
+		echo "  make format"; \
+		exit 1; \
+	}
+	@echo "✓ Formatting check passed"
+
+.PHONY: type-check
+type-check:
+	@echo "Running type checker (mypy)..."
+	@$(PYTHON) -m mypy build_*.py config.py || { \
+		echo ""; \
+		echo "Type checking failed. Run for details:"; \
+		echo "  $(PYTHON) -m mypy build_*.py config.py"; \
+		exit 1; \
+	}
+	@echo "✓ Type checking passed"
+
+.PHONY: check
+check: lint format-check type-check test
+	@echo ""
+	@echo "================================================"
+	@echo "  ✓ All quality checks passed!"
+	@echo "================================================"
+	@echo ""
+	@echo "  ✓ Linting (ruff)"
+	@echo "  ✓ Formatting (ruff format)"
+	@echo "  ✓ Type checking (mypy)"
+	@echo "  ✓ Tests (pytest)"
+	@echo ""
+
+# ==============================================================================
 # JOURNAL SUBMISSION PACKAGE
 # ==============================================================================
 # BEGIN AUTHOR-ONLY
@@ -622,6 +685,7 @@ default:
 	@echo "  make all                Run all analyses (~5 min)"
 	@echo "  make verify             Quick environment check (~1 min)"
 	@echo "  make test               Run test suite"
+	@echo "  make check              Run all quality checks (lint + format + type + test)"
 	@echo "  make publish            Publish to paper/"
 	@echo "  make clean              Remove outputs"
 	@echo ""
@@ -682,6 +746,11 @@ help:
 	@echo "TESTING & QUALITY:"
 	@echo "  make test             Run pytest test suite"
 	@echo "  make test-cov         Run tests with coverage report"
+	@echo "  make lint             Run code linter (ruff)"
+	@echo "  make format           Auto-format code (ruff format + fixes)"
+	@echo "  make format-check     Check formatting without changes"
+	@echo "  make type-check       Run type checker (mypy)"
+	@echo "  make check            Run all quality checks (lint + format + type + test)"
 	@echo "  make diff-outputs     Compare current vs published outputs"
 	@echo "  make pre-submit       Run pre-submission checklist"
 	@echo "  make pre-submit-strict  Strict pre-submission checks"

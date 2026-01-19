@@ -46,6 +46,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/` directory with pytest-based test suite:
   - `tests/test_provenance.py`: Unit tests for provenance tracking
   - `tests/test_integration.py`: Integration tests for build workflow
+  - `tests/test_environment.py`: Environment setup and update tests (28 tests)
+  - `tests/test_publishing.py`: Publishing workflow and safety check tests (25 tests)
+- Code quality infrastructure:
+  - `make lint`: Run ruff linter on all Python files
+  - `make format`: Auto-format code with ruff (imports, trailing whitespace, etc.)
+  - `make format-check`: Check formatting without modifying files
+  - `make type-check`: Run mypy type checker on build scripts
+  - `make check`: Comprehensive quality check (lint + format-check + type-check + test)
+  - Added ruff and mypy to `env/python.yml` dependencies
+  - Configured in `pyproject.toml` with project-specific rules
 - Runtime estimates throughout documentation
 
 ### Changed

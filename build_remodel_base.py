@@ -5,7 +5,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
 from repro_tools import enable_auto_provenance
 
 # Enable automatic provenance recording at script exit
@@ -33,7 +32,13 @@ def main() -> None:
         .reset_index()
     )
     # pandas creates multi-index cols for agg on series; flatten them
-    tbl.columns = ["index", "region", "mean_remodel_rate", "min_remodel_rate", "max_remodel_rate"]
+    tbl.columns = [
+        "index",
+        "region",
+        "mean_remodel_rate",
+        "min_remodel_rate",
+        "max_remodel_rate",
+    ]
     tbl = tbl.drop(columns=["index"])  # Remove the extra index column
 
     tex = tbl.to_latex(index=False, float_format="%.3f")

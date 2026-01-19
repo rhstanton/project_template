@@ -87,7 +87,7 @@ Scripts are invoked via environment wrappers (not bare `python`/`julia`/`stata`)
 
 ### Python 3.11 (conda)
 - **Location**: `.env/` (local to repo, not global)
-- **Packages**: pandas, matplotlib, juliacall, pyyaml, jinja2 (see `env/python.yml`)
+- **Packages**: pandas, matplotlib, juliacall, pyyaml, jinja2, pytest, ruff, mypy (see `env/python.yml`)
 - **Auto-install**: `make environment` installs micromamba if conda/mamba not found
 - **Usage**: `env/scripts/runpython script.py`
 
@@ -191,6 +191,8 @@ Each example has a Makefile target for testing: `make -C examples python`, `make
 6. **Never edit paper/ directly** - always `make publish` to maintain provenance
 7. **Grouped targets require Make 4.3+** - check version before expecting `make all` to work
 8. **PYTHONPATH must include repo root** for `scripts` module imports (set by `runpython` wrapper)
+9. **Code quality checks before commit** - run `make check` to ensure lint, format, type-check, and tests pass
+10. **Auto-format with ruff** - run `make format` to fix most style issues automatically
 - **Packages**: estout, etc. (see `env/stata-packages.txt`)
 - **Location**: `.stata/ado/plus/` (local to repo)
 - **Usage**: `env/scripts/runstata script.do`

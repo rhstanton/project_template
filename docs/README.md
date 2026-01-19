@@ -75,10 +75,18 @@ Complete guide to the reproducible research template.
   - Analysis scripts (root level)
 
 ### Testing & Quality Assurance
-- **Automated Testing** - pytest-based test suite
+- **Automated Testing** - pytest-based test suite (70+ tests)
   - Unit tests for provenance tracking (`tests/test_provenance.py`)
   - Integration tests for build workflow (`tests/test_integration.py`)
+  - Environment setup tests (`tests/test_environment.py`)
+  - Publishing workflow tests (`tests/test_publishing.py`)
   - Run with `make test` or `make test-cov` for coverage
+- **Code Quality Tools** - Integrated linting and formatting
+  - `make lint`: Ruff linter for code quality
+  - `make format`: Auto-format with ruff (imports, whitespace, etc.)
+  - `make format-check`: Check formatting without changes
+  - `make type-check`: Mypy type checking for build scripts
+  - `make check`: All quality checks (lint + format + type + test)
 - **Output Comparison** - Track changes between builds
   - `make diff-outputs` compares current vs. published outputs
   - Shows differences in figures (checksums) and tables (line-by-line diff)
@@ -131,6 +139,14 @@ Complete guide to the reproducible research template.
   - Cross-platform file sharing
   - Environment variables reference
   - Julia precompilation issues
+
+### Development Workflow
+- **Code Quality** - Linting, formatting, and type checking
+  - Integrated ruff linter for code quality enforcement
+  - Auto-formatting with `make format`
+  - Type checking with mypy for build scripts
+  - Comprehensive `make check` runs all quality tools
+  - Configured via `pyproject.toml`
 
 ### Problem Solving
 - **[troubleshooting.md](troubleshooting.md)** - Solutions to common issues

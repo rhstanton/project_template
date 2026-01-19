@@ -15,6 +15,13 @@ make test-cov
 
 # Run specific test file
 pytest tests/test_provenance.py -v
+pytest tests/test_integration.py -v
+pytest tests/test_environment.py -v
+pytest tests/test_publishing.py -v
+
+# Run specific test class
+pytest tests/test_environment.py::TestPythonEnvironment -v
+pytest tests/test_publishing.py::TestGitSafetyChecks -v
 
 # Run specific test
 pytest tests/test_provenance.py::TestSHA256::test_sha256_file_consistent -v
@@ -63,11 +70,96 @@ End-to-end workflow tests:
   - Output file existence
   - Provenance-output consistency
 
+### `test_environment.py` - Environment Tests
+
+Tests for environment setup and configuration:
+
+- **TestPythonEnvironment**: Python installation
+  - Environment directory existence
+  - Python version verification (3.11)
+  - Required packages (pandas, matplotlib, pyyaml, juliacall)
+  - repro_tools installation
+  - python.yml validation
+
+- **TestJuliaEnvironment**: Julia setup via juliacall
+  - Julia depot existence
+  - Julia binary availability
+  - Julia version check (1.10+)
+  - Project.toml validation
+  - Required packages (PythonCall, DataFrames)
+  - CondaPkg disabled verification
+
+- **TestEnvironmentWrappers**: Environment wrapper scripts
+  - runpython/runjulia/runstata existence and executability
+  - PYTHONPATH configuration
+  - repro_tools import capability
+
+- **TestSubmodules**: Git submodule setup
+  - repro-tools submodule existence
+  - Submodule content verification
+  - .gitmodules file validation
+
+- **TestEnvironmentUpdate**: Update scenarios
+  - Python environment update capability
+  - Makefile update targets
+  
+- **TestEnvironmentIsolation**: Local environment verification
+  - Python environment is local to repo
+  - Julia depot is local
+  - Stata packages are local
+
+- **TestEnvironmentReproducibility**: Version pinning
+  - Python version pinning
+  - Julia compat section validation
+
+### `test_publishing.py` - Publishing Tests
+
+Tests for publishing functionality and safety:
+
+- **TestPublishingBasics**: Basic setup
+  - Paper directory structure
+  - Publishing script availability
+
+- **TestProvenanceYAML**: paper/provenance.yml validation
+  - File existence and validity
+  - Required fields
+  - Git section validation
+
+- **TestPublishedArtifacts**: Published file verification
+  - Published files exist
+  - SHA256 checksums match
+
+- **TestGitSafetyChecks**: Safety variables
+  - ALLOW_DIRTY, REQUIRE_NOT_BEHIND, REQUIRE_CURRENT_HEAD
+
+- **TestPublishingScenarios**: Different scenarios
+  - Clean working tree
+  - Dirty tree detection
+  - Build record captures dirty state
+
+- **TestPublishingModes**: Publishing modes
+  - PUBLISH_ANALYSES support
+  - PUBLISH_FILES support
+  - Provenance structure for each mode
+
+- **TestPublishingIdempotency**: Idempotent publishing
+  - Publish stamp tracking
+  - publish-force target
+
+- **TestPublishingDocumentation**: Documentation
+  - docs/publishing.md existence
+  - Coverage of safety checks and scenarios
+
+- **TestPublishingIntegration**: End-to-end publishing
+  - Artifact identification
+  - Build-publish consistency
+
 ## Test Requirements
 
 Tests require:
 - Python 3.11+
 - pytest and pytest-cov (installed via `make environment`)
+- tomli (for parsing TOML files)
 - Working repository with git initialized
 - Sample data files in `data/`
 

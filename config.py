@@ -5,9 +5,10 @@ Centralized configuration for all analyses.
 Think of each entry as an "analysis" or "run" that produces multiple artifacts.
 For example, "price_base" is an analysis that generates:
   - A figure (price_base.pdf)
-  - A table (price_base.tex)  
+  - A table (price_base.tex)
   - Provenance metadata (price_base.yml)
 """
+
 from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════════════════

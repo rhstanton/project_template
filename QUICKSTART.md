@@ -72,7 +72,7 @@ You should see:
 You should see:
 ```
 ✅ Python environment: OK (3.11.x)
-✅ Python packages: pandas, matplotlib, juliacall, pyyaml
+✅ Python packages: pandas, matplotlib, juliacall, pyyaml, pytest, ruff, mypy
 ✅ Julia: OK (1.10+)
 ✅ Julia packages: PythonCall, DataFrames
 ✅ Data files: housing_panel.csv (SHA256 matches)
@@ -121,7 +121,7 @@ Installed complete multi-language environment:
 
 - **Python 3.11** via conda (~2GB in `.env/`)
 - **Julia 1.10-1.12** via juliacall (~500MB in `.julia/pyjuliapkg/`)
-- **Python packages**: pandas, matplotlib, juliacall, pyyaml, jinja2
+- **Python packages**: pandas, matplotlib, juliacall, pyyaml, jinja2, pytest, ruff, mypy
 - **Julia packages**: PythonCall, DataFrames
 - **Stata packages** (if Stata installed): estout, etc.
 
