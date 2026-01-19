@@ -66,6 +66,26 @@ $(shell git submodule update --init --recursive 2>/dev/null || true)
 export JULIA_NUM_THREADS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
 
 # ==============================================================================
+# Command-Line Overrides
+# ==============================================================================
+# EXTRA_ARGS: Global arguments appended to all analysis commands
+# <analysis>_EXTRA_ARGS: Analysis-specific arguments
+#
+# Examples:
+#   make price_base EXTRA_ARGS="--ylabel='Custom Label'"
+#   make remodel_base EXTRA_ARGS="--table-agg=sum"
+#   make price_base price_base_EXTRA_ARGS="--title='My Title'"
+#
+# Priority (lowest to highest):
+#   1. Docopt defaults in run_analysis.py
+#   2. config.DEFAULTS in shared/config.py
+#   3. config.STUDIES[study] in shared/config.py
+#   4. EXTRA_ARGS (global, affects all analyses)
+#   5. <analysis>_EXTRA_ARGS (analysis-specific, highest priority)
+
+EXTRA_ARGS ?=
+
+# ==============================================================================
 # Executable Scripts
 # ==============================================================================
 
@@ -217,18 +237,18 @@ examples: sample-python sample-julia sample-juliacall
 #   <analysis>.args    = command-line arguments
 
 # price_base analysis
-price_base.script  := build_price_base.py
+price_base.script  := run_analysis.py
 price_base.runner  := $(PYTHON)
 price_base.inputs  := $(DATA)
 price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf $(OUT_TBL_DIR)/price_base.tex $(OUT_PROV_DIR)/price_base.yml
-price_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/price_base.pdf --out-table $(OUT_TBL_DIR)/price_base.tex
+price_base.args    := price_base
 
 # remodel_base analysis
-remodel_base.script  := build_remodel_base.py
+remodel_base.script  := run_analysis.py
 remodel_base.runner  := $(PYTHON)
 remodel_base.inputs  := $(DATA)
 remodel_base.outputs := $(OUT_FIG_DIR)/remodel_base.pdf $(OUT_TBL_DIR)/remodel_base.tex $(OUT_PROV_DIR)/remodel_base.yml
-remodel_base.args    := --data $(DATA) --out-fig $(OUT_FIG_DIR)/remodel_base.pdf --out-table $(OUT_TBL_DIR)/remodel_base.tex
+remodel_base.args    := remodel_base
 
 # ------------------------------------------------------------------------------
 # Rule Generator Macro
@@ -249,7 +269,7 @@ $($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR)
 	@echo "Runner:  $($(1).runner)"
 	@echo "Outputs: $($(1).outputs)"
 	@echo ""
-	$($(1).runner) $($(1).script) $($(1).args) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
+	$($(1).runner) $($(1).script) $($(1).args) $(EXTRA_ARGS) $($(1)_EXTRA_ARGS) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
 	@echo ""
 	@echo "✓ $(1) complete"
 	@echo "  Outputs:"

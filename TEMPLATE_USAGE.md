@@ -153,70 +153,60 @@ data/*
 !data/sample_*.csv
 ```
 
-### 4. Create Analysis Scripts
+### 4. Add Study Configurations
 
-**Pattern to follow** (based on `build_price_base.py`):
+The template uses a **unified analysis script** (`run_analysis.py`) that reads study parameters from `shared/config.py`.
+
+**Add a new study to `shared/config.py`**:
+
+```python
+STUDIES = {
+    "price_base": { ... },
+    "remodel_base": { ... },
+    "your_analysis": {
+        "data": DATA_FILES["your_data"],
+        "xlabel": "Year",
+        "ylabel": "Your metric",
+        "title": "Your analysis title",
+        "groupby": "category",
+        "yvar": "your_variable",
+        "xvar": "year",
+        "table_agg": "mean",  # or "sum", "median", etc.
+        "figure": OUTPUT_DIR / "figures" / "your_analysis.pdf",
+        "table": OUTPUT_DIR / "tables" / "your_analysis.tex",
+    },
+}
+```
+
+**That's it!** No need to create a separate Python script. The `run_analysis.py` script handles all studies using the configuration from `config.py`.
+
+**For custom analysis logic**: If you need analysis that doesn't fit the standard pattern (different plot types, multiple figures, etc.), you can still create a custom `build_your_custom_analysis.py` script following this pattern:
 
 ```python
 #!/usr/bin/env python
-"""
-build_your_analysis.py
-
-Brief description of what this analysis does.
-"""
-import argparse
-import sys
+"""Custom analysis with non-standard outputs."""
+from pathlib import Path
 import pandas as pd
-import matplotlib.pyplot as plt
-from scripts.provenance import write_build_record
-
-def load_data(data_path):
-    """Load and prepare data."""
-    df = pd.read_csv(data_path)
-    # Your data cleaning/prep
-    return df
-
-def create_figure(df, output_path):
-    """Generate figure."""
-    fig, ax = plt.subplots(figsize=(10, 6))
-    # Your plotting code
-    fig.savefig(output_path, bbox_inches="tight")
-    plt.close(fig)
-
-def create_table(df, output_path):
-    """Generate LaTeX table."""
-    # Your table generation code
-    result_df.to_latex(output_path, index=False, escape=False)
+from docopt import docopt
+from repro_tools import auto_build_record
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", required=True, help="Input data CSV")
-    parser.add_argument("--out-fig", required=True, help="Output figure PDF")
-    parser.add_argument("--out-table", required=True, help="Output table TEX")
-    parser.add_argument("--out-meta", required=True, help="Output metadata YAML")
-    args = parser.parse_args()
+    args = docopt(__doc__)
     
-    # Load and process
-    df = load_data(args.data)
+    # Your custom analysis logic here
+    # ...
     
-    # Generate outputs
-    create_figure(df, args.out_fig)
-    create_table(df, args.out_table)
-    
-    # Write provenance
-    write_build_record(
-        metadata_path=args.out_meta,
-        inputs=[args.data],
-        outputs=[args.out_fig, args.out_table],
-        script=__file__,
-        cmd=" ".join(sys.argv)
+    # Generate provenance
+    auto_build_record(
+        artifact_name="your_custom_analysis",
+        out_meta=prov_file,
+        inputs=[input_files],
+        outputs=[output_files],
     )
 
 if __name__ == "__main__":
     main()
 ```
-
-**Save as**: `build_your_analysis.py` (in project root)
 
 ### 5. Update Makefile
 
@@ -227,22 +217,39 @@ ARTIFACTS := price_base remodel_base your_analysis another_analysis
 ```
 
 **Add custom data files** (if needed):
+### 5. Update Makefile
+
+**Add to ANALYSES variable**:
+```makefile
+# Line 6 in Makefile:
+ANALYSES := price_base remodel_base your_analysis
+```
+
+**Add pattern definition**:
+```makefile
+# Add after other analysis definitions:
+your_analysis.script  := run_analysis.py
+your_analysis.runner  := $(PYTHON)
+your_analysis.inputs  := $(DATA)  # or $(YOUR_DATA) if different
+your_analysis.outputs := $(OUT_FIG_DIR)/your_analysis.pdf $(OUT_TBL_DIR)/your_analysis.tex $(OUT_PROV_DIR)/your_analysis.yml
+your_analysis.args    := your_analysis
+```
+
+**Add custom data files** (if needed):
 ```makefile
 # After DATA definition (~line 13):
 DATA := data/housing_panel.csv
 YOUR_DATA := data/your_data.csv
 ```
 
-**Add custom targets** (if needed):
+**Custom targets for non-standard analyses** (if needed):
+If you created a custom `build_*.py` script that doesn't follow the standard pattern:
 ```makefile
-# Custom pattern for special cases:
-output/figures/special_%.pdf output/tables/special_%.tex output/provenance/special_%.yml &: \
-    build_special_%.py $(YOUR_DATA)
-	$(PYTHON) $< \
-		--data $(YOUR_DATA) \
-		--out-fig output/figures/special_$*.pdf \
-		--out-table output/tables/special_$*.tex \
-		--out-meta output/provenance/special_$*.yml
+custom_analysis.script  := build_custom_analysis.py
+custom_analysis.runner  := $(PYTHON)
+custom_analysis.inputs  := $(YOUR_DATA)
+custom_analysis.outputs := $(OUT_FIG_DIR)/custom.pdf $(OUT_TBL_DIR)/custom.tex $(OUT_PROV_DIR)/custom.yml
+custom_analysis.args    := --data $(YOUR_DATA) --custom-arg value
 ```
 
 ### 6. Configure Publishing

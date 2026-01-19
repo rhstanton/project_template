@@ -10,6 +10,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **3-level defaults system** for flexible configuration:
+  - **Level 1 (Docopt)**: Default values in docstring `[default: mean]` syntax
+  - **Level 2 (DEFAULTS)**: Global defaults in `shared/config.py` DEFAULTS dictionary
+  - **Level 3 (STUDIES)**: Study-specific overrides in `shared/config.py` STUDIES dictionary
+  - **Level 4 (Command-line)**: Highest priority via EXTRA_ARGS or direct flags
+  - Created `build_config()` function in `run_analysis.py` to merge priorities
+  - DRY configuration pattern: studies only specify differences from DEFAULTS
+  - Added EXTRA_ARGS support to Makefile (global and per-analysis)
+  - Extended `run_analysis.py` with 10 override flags (--data, --yvar, --xlabel, --ylabel, --title, --groupby, --xvar, --table-agg, --figure, --table)
+  - Pattern inspired by fire/housing-analysis EXTRA_ARGS workflow
+  - Documentation: `docs/defaults_system.md` (400+ line comprehensive guide)
+  - Tests: 11 new tests in `tests/test_defaults.py` validating all priority levels
+
+- **Unified analysis script pattern** (following fire/housing-analysis):
+  - `run_analysis.py`: Single executable that handles multiple studies via configuration
+  - `config.STUDIES`: Study configurations define all parameters (data, variables, outputs)
+  - `--list` option to display available studies
+  - `--version` option for version tracking
+  - Simplified Makefile pattern definitions (just study name as argument)
+- **docopt CLI parsing** for self-documenting command-line interfaces:
+  - Added docopt to `env/python.yml` dependencies
+  - Clean help text with Usage, Options, and Arguments sections
+- **Enhanced CLI utilities** (ported from fire/housing-analysis):
+  - `shared/cli.py`: CLI utilities module
+    - `friendly_docopt()`: Enhanced error messages with suggestions for typos (e.g., "--lists" suggests "--list")
+    - `print_config()`: Pretty-printed configuration display with formatted headers
+    - `print_header()`: Extract and display script name/description from docstring
+    - `ConfigBuilder`: Structured configuration builder with validation
+    - `setup_environment()`: Auto-detect execution environment (Jupyter, IPython, Emacs, terminal)
+    - `filter_ipython_args()`: Clean up IPython-specific arguments
+    - Parse utilities: `parse_csv_list()`, `parse_int_or_auto()`, `parse_float_or_auto()`, `parse_string_or_auto()`
+  - `shared/config_validator.py`: Configuration validation module
+    - `validate_config()`: Validate study configuration before execution
+      - Check required keys (data, xlabel, ylabel, yvar, xvar, figure, table)
+      - Verify input data files exist
+      - Validate output directories can be created
+      - Check variable names are strings
+      - Validate aggregation functions
+    - `print_validation_errors()`: User-friendly error display with formatted output
+  - `shared/__init__.py`: Package initialization with exports
+
+### Changed
+- **Refactored from multiple scripts to unified approach**:
+  - Removed `build_price_base.py` and `build_remodel_base.py`
+  - All analyses now use single `run_analysis.py` script
+  - Study parameters stored in `config.STUDIES` dictionary
+  - Makefile simplified: `price_base.args := price_base` instead of full command-line args
+- **config.py structure**:
+  - Moved `config.py` → `shared/config.py` to match fire/housing-analysis organization
+  - Fixed `REPO_ROOT` path calculation (now uses `.parent.parent` since config is in subdirectory)
+  - Renamed `ANALYSES` → `STUDIES` to match fire/housing-analysis naming
+  - Studies now define analysis parameters instead of file paths
+  - Includes xlabel, ylabel, title, groupby, yvar, xvar, table_agg parameters
+- **VS Code integration**:
+  - Updated debug configurations to use `run_analysis.py` with study name argument
+  - Changed from script-specific configs to study-specific configs
+- **Enhanced run_analysis.py**:
+  - Uses `friendly_docopt()` instead of plain `docopt` for better error messages
+  - Calls `setup_environment()` to detect and adapt to execution context
+  - Validates configuration with `validate_config()` before running analysis
+  - Displays configuration with `print_config()` for transparency
+  - Improved error messages for unknown studies and invalid options
+- **Documentation updates**:
+  - README.md: Updated to reflect unified script pattern
+  - TEMPLATE_USAGE.md: Shows how to add studies to config.py instead of creating new scripts
+  - `.github/copilot-instructions.md`: Updated with unified script pattern
+  - VS Code launch configs: Updated to use run_analysis.py
+
+### Fixed
+- **Test suite fixes**:
+  - Fixed PyYAML import test: changed "pyyaml" to "yaml" (package imports as 'yaml')
+  - Fixed git dirty state test: added initial commit to temp repo and modified tracked file
+  - All 69 tests passing, 1 skipped
+
+### Removed
+- Individual build scripts (`build_price_base.py`, `build_remodel_base.py`)
+  - Replaced by unified `run_analysis.py` with config.py-based study definitions
+
+---
+
+## [1.0.0] - 2026-01-16
+
+### Added
 - **repro-tools git submodule** for portable dependency management:
   - Added `lib/repro-tools/` as git submodule tracking https://github.com/rhstanton/repro-tools.git
   - Configured to track `main` branch for automatic updates

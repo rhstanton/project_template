@@ -28,15 +28,12 @@
             "justMyCode": false
         },
         {
-            "name": "Python: Debug build_price_base",
+            "name": "Python: Debug price_base analysis",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/build_price_base.py",
+            "program": "${workspaceFolder}/run_analysis.py",
             "args": [
-                "--data", "${workspaceFolder}/data/housing_panel.csv",
-                "--out-fig", "${workspaceFolder}/output/figures/price_base.pdf",
-                "--out-table", "${workspaceFolder}/output/tables/price_base.tex",
-                "--out-meta", "${workspaceFolder}/output/provenance/price_base.yml"
+                "price_base"
             ],
             "console": "integratedTerminal",
             "env": {
@@ -49,15 +46,12 @@
             "justMyCode": false
         },
         {
-            "name": "Python: Debug build_remodel_base",
+            "name": "Python: Debug remodel_base analysis",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/build_remodel_base.py",
+            "program": "${workspaceFolder}/run_analysis.py",
             "args": [
-                "--data", "${workspaceFolder}/data/housing_panel.csv",
-                "--out-fig", "${workspaceFolder}/output/figures/remodel_base.pdf",
-                "--out-table", "${workspaceFolder}/output/tables/remodel_base.tex",
-                "--out-meta", "${workspaceFolder}/output/provenance/remodel_base.yml"
+                "remodel_base"
             ],
             "console": "integratedTerminal",
             "env": {

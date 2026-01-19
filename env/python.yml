@@ -15,6 +15,7 @@ dependencies:
   - pyyaml
   - jinja2  # Required for pandas LaTeX export
   - tomli  # For parsing TOML files (used in tests)
+  - docopt  # CLI argument parsing with inline documentation
   # Testing
   - pytest
   - pytest-cov

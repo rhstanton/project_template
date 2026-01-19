@@ -48,14 +48,21 @@ Complete guide to the reproducible research template.
   - Publishing specific artifacts
   - Troubleshooting publish failures
 
-- **[vscode_integration.md](vscode_integration.md)** - VS Code integration guide (NEW!)
+- **[defaults_system.md](defaults_system.md)** - 3-level defaults system (NEW!)
+  - Docopt defaults (lowest priority)
+  - config.DEFAULTS (global defaults)
+  - config.STUDIES[study] (study-specific)
+  - Command-line EXTRA_ARGS (highest priority)
+  - Examples and best practices
+
+- **[vscode_integration.md](vscode_integration.md)** - VS Code integration guide
   - Complete VS Code workflow without command line
   - Tasks for all Make targets
   - Debug configurations for Python scripts
   - Testing integration
   - Keyboard shortcuts and tips
 
-- **[flexible_analyses.md](flexible_analyses.md)** - Flexible analysis definitions (NEW!)
+- **[flexible_analyses.md](flexible_analyses.md)** - Flexible analysis definitions
   - Macro-based system for defining analyses
   - No rigid naming conventions
   - Multiple outputs per analysis
@@ -73,6 +80,15 @@ Complete guide to the reproducible research template.
   - Published artifacts (`paper/`)
   - Environment specs (`env/`)
   - Analysis scripts (root level)
+  - Shared utilities (`shared/`)
+
+### CLI and Validation
+- **[shared/README.md](../shared/README.md)** - CLI utilities and validation
+  - `friendly_docopt()` - Enhanced error messages with typo suggestions
+  - `setup_environment()` - Auto-detect Jupyter, IPython, terminal
+  - `validate_config()` - Pre-flight configuration validation
+  - `print_config()` - Pretty-printed configuration display
+  - Patterns ported from fire/housing-analysis
 
 ### Testing & Quality Assurance
 - **Automated Testing** - pytest-based test suite (70+ tests)

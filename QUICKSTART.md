@@ -334,9 +334,52 @@ make -C examples stata
 
 ## Adding Your Own Analysis
 
-### 1. Create Analysis Script
+### 1. Add Study Configuration
 
-Create `build_your_analysis.py`:
+Add to `shared/config.py`:
+
+```python
+STUDIES = {
+    "price_base": { ... },
+    "remodel_base": { ... },
+    "your_analysis": {
+        "data": DATA_FILES["your_data"],
+        "xlabel": "Year",
+        "ylabel": "Your metric",
+        "title": "Your analysis",
+        "groupby": "category",
+        "yvar": "your_variable",
+        "xvar": "year",
+        "table_agg": "mean",
+        "figure": OUTPUT_DIR / "figures" / "your_analysis.pdf",
+        "table": OUTPUT_DIR / "tables" / "your_analysis.tex",
+    },
+}
+```
+
+### 2. Add to Makefile
+
+Add pattern definition:
+```makefile
+your_analysis.script  := run_analysis.py
+your_analysis.runner  := $(PYTHON)
+your_analysis.inputs  := $(DATA)
+your_analysis.outputs := $(OUT_FIG_DIR)/your_analysis.pdf $(OUT_TBL_DIR)/your_analysis.tex $(OUT_PROV_DIR)/your_analysis.yml
+your_analysis.args    := your_analysis
+```
+
+### 3. Build and Publish
+
+```bash
+make your_analysis
+make publish PUBLISH_ANALYSES="your_analysis"
+```
+
+---
+
+## Alternative: Custom Analysis Script
+
+If you need custom logic not covered by the standard pattern, create `build_your_analysis.py`:
 
 ```python
 #!/usr/bin/env python

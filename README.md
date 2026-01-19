@@ -104,8 +104,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 
 ```
 project_template/
-├── build_price_base.py    # Analysis scripts
-├── build_remodel_base.py
+├── run_analysis.py    # Unified analysis script (handles all studies)
 ├── data/              # Input datasets
 ├── env/               # Environment setup (Python/Julia/Stata)
 ├── lib/               # Git submodules (repro-tools)
@@ -119,7 +118,11 @@ project_template/
 │   ├── figures/       # Published figures
 │   ├── tables/        # Published tables
 │   └── provenance.yml # Aggregated publication provenance
-└── scripts/           # Shared utilities (provenance.py, publish_artifacts.py)
+├── scripts/           # Shared utilities (provenance.py, publish_artifacts.py)
+└── shared/            # Configuration, CLI and validation utilities
+    ├── config.py      # Study configurations (STUDIES dictionary)
+    ├── cli.py         # Enhanced command-line interface tools
+    └── config_validator.py  # Configuration validation
 ```
 
 See `docs/directory_structure.md` for complete details.
@@ -163,7 +166,7 @@ See `docs/publishing.md` for details.
 ```yaml
 artifact: price_base
 built_at_utc: '2026-01-17T04:04:49+00:00'
-command: [python, build_price_base.py, --data, data/housing_panel.csv]
+command: [run_analysis.py, price_base]
 git:
   commit: cbb163e
   branch: main
@@ -185,27 +188,40 @@ See `docs/provenance.md` for complete explanation.
 
 ---
 
-## 🔧 Adding New Artifacts
+## 🔧 Adding New Analyses
 
-1. **Create analysis script** following the pattern in [build_price_base.py](build_price_base.py):
+Adding a new analysis is simple - just add configuration to `config.py`:
+
+1. **Add to config.py STUDIES**:
    ```python
-   from scripts.provenance import write_build_record
-   
-   def main():
-       # ... build figure and table ...
-       
-       write_build_record(
-           artifact="my_artifact",
-           command=sys.argv,
-           inputs=[args.data],
-           outputs=[args.out_fig, args.out_table],
-           output_path=args.out_meta
-       )
+   STUDIES = {
+       "price_base": { ... },
+       "remodel_base": { ... },
+       "my_new_study": {
+           "data": DATA_FILES["housing"],
+           "xlabel": "Year",
+           "ylabel": "My metric",
+           "title": "My analysis title",
+           "groupby": "region",
+           "yvar": "my_variable",
+           "xvar": "year",
+           "table_agg": "mean",
+           "figure": OUTPUT_DIR / "figures" / "my_new_study.pdf",
+           "table": OUTPUT_DIR / "tables" / "my_new_study.tex",
+       },
+   }
    ```
 
-2. **Add to Makefile**:
+2. **Add to Makefile ANALYSES** and create pattern definition:
    ```makefile
-   ARTIFACTS := price_base remodel_base my_artifact
+   ANALYSES := price_base remodel_base my_new_study
+   
+   # Add pattern definition:
+   my_new_study.script  := run_analysis.py
+   my_new_study.runner  := $(PYTHON)
+   my_new_study.inputs  := $(DATA)
+   my_new_study.outputs := $(OUT_FIG_DIR)/my_new_study.pdf $(OUT_TBL_DIR)/my_new_study.tex $(OUT_PROV_DIR)/my_new_study.yml
+   my_new_study.args    := my_new_study
    ```
 
 3. **Build and publish**:

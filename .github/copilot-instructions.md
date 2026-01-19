@@ -11,12 +11,17 @@ This is a **reproducible research workflow** template with strict separation of 
 
 ### Key directories
 
-- **Root directory**: Analysis scripts that generate one figure + one table each (e.g., `build_price_base.py`, `build_remodel_base.py`)
+- **Root directory**: Unified analysis script (`run_analysis.py`) that generates figures + tables for multiple studies
+  - Study configurations stored in `shared/config.py` in the `STUDIES` dictionary
   - Scripts are in the root for simplicity (not in `analysis/` subdirectory)
 - `data/`: Input data (CSV files)
 - `output/`: All build outputs including `output/provenance/*.yml` (per-artifact build records)
 - `paper/`: Destination for published artifacts; separate git repo with `paper/provenance.yml` tracking what was published
 - `scripts/`: Shared utilities (`provenance.py` for build records, `publish_artifacts.py` for publishing)
+- `shared/`: Configuration, CLI, and validation utilities
+  - `config.py` - Study configurations (STUDIES dictionary) and shared parameters
+  - `cli.py` - Enhanced command-line tools (friendly_docopt, print_config, setup_environment)
+  - `config_validator.py` - Configuration validation before execution
 - `env/`: Environment specs and wrappers
   - `python.yml` - Conda environment specification
   - `Project.toml` - Julia package environment
@@ -62,22 +67,37 @@ Updates `paper/provenance.yml` with per-artifact records including git commit, i
 
 ### Analysis script pattern
 
-Every `build_*.py` script follows this structure:
-- Takes args: `--data`, `--out-fig`, `--out-table`, `--out-meta`
-- Produces figure (PDF) + table (LaTeX) from input data
-- Calls `write_build_record()` from `scripts/provenance.py` to generate `output/provenance/*.yml`
+The unified `run_analysis.py` script handles all studies:
+- Takes study name as argument: `run_analysis.py price_base`
+- Gets parameters from `config.STUDIES` dictionary
+- Produces figure (PDF) + table (LaTeX) from study configuration
+- Calls `auto_build_record()` from `repro_tools` to generate `output/provenance/*.yml`
 
-Example: [build_price_base.py](build_price_base.py)~67-76.
+Example study configuration in `config.py`:
+```python
+STUDIES = {
+    "price_base": {
+        "data": DATA_FILES["housing"],
+        "xlabel": "Year",
+        "ylabel": "Price index",
+        "title": "Price index over time",
+        "groupby": "region",
+        "yvar": "price_index",
+        "xvar": "year",
+        "table_agg": "mean",
+        "figure": OUTPUT_DIR / "figures" / "price_base.pdf",
+        "table": OUTPUT_DIR / "tables" / "price_base.tex",
+    },
+}
+```
 
 Pattern rule for all artifacts:
 ```makefile
-output/figures/%.pdf output/tables/%.tex output/provenance/%.yml &: \
-    build_%.py $(DATA)
-	$(PYTHON) $< \
-		--data $(DATA) \
-		--out-fig output/figures/$*.pdf \
-		--out-table output/tables/$*.tex \
-		--out-meta output/provenance/$*.yml
+price_base.script  := run_analysis.py
+price_base.runner  := $(PYTHON)
+price_base.inputs  := $(DATA)
+price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf $(OUT_TBL_DIR)/price_base.tex $(OUT_PROV_DIR)/price_base.yml
+price_base.args    := price_base
 ```
 Environment wrappers
 
@@ -249,7 +269,30 @@ Scripts are invoked via `env/scripts/runpython` (not bare `python`) to allow env
 
 ## Adding New Artifacts
 
-1. Create `build_<name>.py` following the pattern in [build_price_base.py](build_price_base.py)
-2. Add `<name>` to the `ARTIFACTS` variable in [Makefile](Makefile) (line 6)
-3. Build with `make <name>`
-4. Publish with `make publish PUBLISH_ARTIFACTS="<name>"`
+1. Add study configuration to `config.py` in the **root directory**:
+   ```python
+   STUDIES = {
+       "price_base": { ... },
+       "remodel_base": { ... },
+       "my_new_study": {
+           "data": DATA_FILES["housing"],
+           "xlabel": "Year",
+           "ylabel": "My metric",
+           # ... other parameters
+           "figure": OUTPUT_DIR / "figures" / "my_new_study.pdf",
+           "table": OUTPUT_DIR / "tables" / "my_new_study.tex",
+       },
+   }
+   ```
+
+2. Add `<name>` to the `ANALYSES` variable in [Makefile](Makefile) (line ~6)
+3. Add pattern definition in Makefile:
+   ```makefile
+   my_new_study.script  := run_analysis.py
+   my_new_study.runner  := $(PYTHON)
+   my_new_study.inputs  := $(DATA)
+   my_new_study.outputs := $(OUT_FIG_DIR)/my_new_study.pdf $(OUT_TBL_DIR)/my_new_study.tex $(OUT_PROV_DIR)/my_new_study.yml
+   my_new_study.args    := my_new_study
+   ```
+4. Build with `make <name>`
+5. Publish with `make publish PUBLISH_ARTIFACTS="<name>"`
