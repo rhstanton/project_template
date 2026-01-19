@@ -199,6 +199,15 @@ class TestPublishingScenarios:
             (tmpdir / "paper" / "figures").mkdir(parents=True)
             (tmpdir / "paper" / "tables").mkdir(parents=True)
 
+            # Make initial commit so git state can be captured
+            (tmpdir / "README.md").write_text("Test repo")
+            subprocess.run(["git", "add", "."], cwd=tmpdir, check=True)
+            subprocess.run(
+                ["git", "commit", "-m", "Initial commit"],
+                cwd=tmpdir,
+                check=True,
+            )
+
             yield tmpdir
 
     def test_publish_with_clean_tree(self, temp_repo):
@@ -261,9 +270,9 @@ class TestPublishingScenarios:
         """Build record should capture if tree was dirty during build."""
         from repro_tools import write_build_record
 
-        # Create uncommitted file
-        dirty_file = temp_repo / "uncommitted.txt"
-        dirty_file.write_text("dirty")
+        # Modify a tracked file to make the tree dirty
+        readme = temp_repo / "README.md"
+        readme.write_text("Modified content")
 
         # Create build record
         test_output = temp_repo / "output" / "test.txt"

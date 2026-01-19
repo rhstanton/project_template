@@ -38,6 +38,7 @@ exclude = '''
   | output
   | paper
   | env/pyjuliapkg
+  | lib
 )/
 '''
 
@@ -59,6 +60,7 @@ exclude = [
     "output/",
     "paper/",
     "env/pyjuliapkg/",
+    "lib/",  # Exclude git submodules
 ]
 
 [tool.ruff.lint]

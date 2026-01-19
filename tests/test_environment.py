@@ -58,7 +58,7 @@ class TestPythonEnvironment:
         required_packages = [
             "pandas",
             "matplotlib",
-            "pyyaml",
+            "yaml",  # pyyaml package imports as 'yaml'
             "jinja2",
             "juliacall",
         ]
