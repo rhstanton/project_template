@@ -1,6 +1,8 @@
 # Shared Utilities
 
-This directory contains shared utilities for configuration, CLI parsing, and validation, ported from the fire/housing-analysis production project.
+This directory contains **project-specific** configuration and validation utilities.
+
+**Note:** Generic CLI utilities (friendly_docopt, print_config, ConfigBuilder, etc.) have been extracted to the `repro-tools` package to avoid code duplication. Import those from `repro_tools` instead of `shared`.
 
 ## Modules
 
@@ -23,47 +25,6 @@ Each study defines:
 - `table_agg` - Aggregation function (mean, sum, etc.)
 - `figure`, `table` - Output paths
 
-### `cli.py` - Command-Line Interface Utilities
-
-Enhanced CLI tools for better user experience:
-
-- **`friendly_docopt(doc, version=None)`** - Enhanced docopt with typo suggestions
-  ```python
-  args = friendly_docopt(__doc__, version="my_script 1.0")
-  # Unknown option --lis? Suggests: Did you mean --list?
-  ```
-
-- **`setup_environment()`** - Auto-detect execution context
-  ```python
-  env = setup_environment()
-  # Returns: 'terminal', 'jupyter', 'ipython', 'emacs-python', etc.
-  # Automatically filters IPython-specific arguments
-  ```
-
-- **`print_config(config, title="CONFIGURATION")`** - Pretty-print configuration
-  ```python
-  print_config({
-      "Study": "price_base",
-      "Data": "data/housing.csv",
-      "Y Variable": "price_index"
-  }, title="RUNNING STUDY: PRICE_BASE")
-  # Outputs formatted table with aligned columns
-  ```
-
-- **`ConfigBuilder`** - Structured configuration building
-  ```python
-  builder = ConfigBuilder(args)
-  builder.add("input_path", lambda: args["--input"])
-  builder.add("limit", lambda: int(args["--limit"]) if args["--limit"] else None)
-  config = builder.build()  # Prints and returns config dict
-  ```
-
-- **Parse utilities** - Type conversion with "auto" support
-  - `parse_csv_list(value)` - Parse comma-separated strings
-  - `parse_int_or_auto(value, default=None)` - Integer or "auto"
-  - `parse_float_or_auto(value, default=None)` - Float or "auto"
-  - `parse_string_or_auto(value, default=None)` - String or "auto"
-
 ### `config_validator.py` - Configuration Validation
 
 Validates study configurations before execution:
@@ -83,25 +44,20 @@ Validates study configurations before execution:
   - Variable names are strings
   - Aggregation functions are valid
 
-- **`print_validation_errors(errors)`** - User-friendly error display
-  ```python
-  print_validation_errors([
-      "Missing required config: yvar",
-      "Input file not found: data.csv"
-  ])
-  # Outputs formatted error list with numbered items
-  ```
-
 ## Usage in `run_analysis.py`
 
 ```python
-from shared import (
+# Import CLI utilities from repro_tools (not shared)
+from repro_tools import (
     friendly_docopt,
     print_config,
     print_validation_errors,
     setup_environment,
-    validate_config,
 )
+
+# Import project-specific utilities from shared
+from shared import config
+from shared.config_validator import validate_config
 
 def main():
     # Detect environment and filter IPython args
@@ -110,8 +66,11 @@ def main():
     # Parse with enhanced error messages
     args = friendly_docopt(__doc__, version="run_analysis 1.0")
     
+    # Get study configuration
+    study = config.STUDIES[study_name]
+    
     # Validate configuration
-    errors = validate_config(study_config, study_name)
+    errors = validate_config(study, study_name)
     if errors:
         print_validation_errors(errors)
         sys.exit(1)
@@ -124,26 +83,55 @@ def main():
     }, title=f"RUNNING STUDY: {study_name.upper()}")
 ```
 
+## Import Pattern
+
+**For generic CLI utilities** (shared across projects):
+```python
+from repro_tools import (
+    friendly_docopt,       # Enhanced docopt with typo suggestions
+    print_config,          # Pretty-print configuration
+    print_header,          # Extract script description from docstring
+    setup_environment,     # Auto-detect execution environment
+    ConfigBuilder,         # Fluent config builder
+    parse_csv_list,        # Parse comma-separated lists
+    parse_int_or_auto,     # Integer or "auto"
+    print_validation_errors,  # User-friendly error display
+)
+```
+
+**For project-specific utilities**:
+```python
+from shared import config              # Study configurations (STUDIES, DEFAULTS)
+from shared.config_validator import validate_config  # Project-specific validation
+```
+
 ## Benefits
 
-1. **Better Error Messages** - Suggests corrections for typos
-2. **Environment Awareness** - Adapts to Jupyter, IPython, Emacs, terminal
+1. **Separation of Concerns** - Generic utilities in repro_tools, project-specific in shared
+2. **Code Reusability** - repro_tools can be shared across all research projects
 3. **Pre-flight Validation** - Catches configuration errors before execution
-4. **Clear Output** - Pretty-printed configuration for transparency
-5. **Production-Tested** - Patterns from real research project
+4. **Production-Tested** - Patterns from fire/housing-analysis production project
 
-## Excluded from Fire Project
+## What's in repro_tools vs shared
 
-The following patterns were **not** ported to keep the template simple:
+**repro_tools** (generic, reusable):
+- CLI parsing with typo suggestions (friendly_docopt)
+- Environment detection (Jupyter, IPython, terminal)
+- Configuration display (print_config, print_header)
+- Type conversion utilities (parse_csv_list, parse_int_or_auto, etc.)
+- Generic validation error display (print_validation_errors)
+- Provenance tracking (git_state, write_build_record, etc.)
+- Publishing infrastructure (publish_analyses, publish_files)
 
-- **Caching system** - Data/computation caching (too complex for template)
-- **Backend selection** - Julia/Python/GPU backend switching (handled via environment)
-- **Advanced parsing** - 90+ command-line options (template has ~5)
-
-These can be added to your project if needed by referring to the fire/housing-analysis implementation.
+**shared/** (project-specific):
+- Study configurations (STUDIES, DEFAULTS dictionaries)
+- Data file paths (DATA_FILES)
+- Project directory structure (REPO_ROOT, OUTPUT_DIR)
+- Project-specific validation logic (validate_config)
 
 ## See Also
 
-- [fire/housing-analysis](https://github.com/yourusername/fire) - Original implementation
+- [lib/repro-tools](../lib/repro-tools/) - Generic reproducibility tools (git submodule)
+- [run_analysis.py](../run_analysis.py) - Example usage pattern
+- [fire/housing-analysis](https://github.com/yourusername/fire) - Original patterns source
 - [docopt documentation](http://docopt.org/) - CLI parsing library
-- [run_analysis.py](../run_analysis.py) - Example usage
