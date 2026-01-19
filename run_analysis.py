@@ -44,16 +44,16 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from repro_tools import auto_build_record
-
-from shared import (
-    config,
+from repro_tools import (
+    auto_build_record,
     friendly_docopt,
     print_config,
     print_validation_errors,
     setup_environment,
-    validate_config,
 )
+
+from shared import config
+from shared.config_validator import validate_config
 
 
 def list_studies() -> None:

@@ -1,39 +1,21 @@
 """
 Shared utilities for reproducible research template.
 
+NOTE: Most CLI utilities (friendly_docopt, print_config, etc.) have been
+moved to repro_tools package to avoid code duplication across projects.
+
+Import from repro_tools: from repro_tools import friendly_docopt, print_config, etc.
+
+This module now only contains project-specific configuration and validation.
+
 Copyright (c) 2026 Richard Stanton
 License: MIT
 """
 
 from . import config
-from .cli import (
-    ConfigBuilder,
-    filter_ipython_args,
-    friendly_docopt,
-    get_execution_environment,
-    parse_csv_list,
-    parse_float_or_auto,
-    parse_int_or_auto,
-    parse_string_or_auto,
-    print_config,
-    print_header,
-    setup_environment,
-)
-from .config_validator import print_validation_errors, validate_config
+from .config_validator import validate_config
 
 __all__ = [
     "config",
-    "ConfigBuilder",
-    "filter_ipython_args",
-    "friendly_docopt",
-    "get_execution_environment",
-    "parse_csv_list",
-    "parse_float_or_auto",
-    "parse_int_or_auto",
-    "parse_string_or_auto",
-    "print_config",
-    "print_header",
-    "print_validation_errors",
-    "setup_environment",
     "validate_config",
 ]

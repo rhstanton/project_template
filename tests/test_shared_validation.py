@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from shared import print_validation_errors, validate_config
+from repro_tools import print_validation_errors
+from shared import validate_config
 
 
 class TestValidateConfig:

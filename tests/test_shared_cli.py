@@ -1,4 +1,4 @@
-"""Tests for shared CLI utilities."""
+"""Tests for repro_tools CLI utilities."""
 
 import sys
 from io import StringIO
@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from shared import (
+from repro_tools import (
     ConfigBuilder,
     filter_ipython_args,
     friendly_docopt,
