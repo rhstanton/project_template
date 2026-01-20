@@ -7,8 +7,32 @@
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 # Data manipulation
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+# Statistical packages
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+FixedEffectModels = "9d5cd8c9-2029-5cab-9928-427838db53e3"
+# Data formats
+Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
+# Example datasets
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
+# Standard library
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+# GPU support utilities
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+# OpenSSL for secure connections
+OpenSSL_jll = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 
 [compat]
-julia = "1.10, 1.11, 1.12"
-PythonCall = "0.9"
-DataFrames = "1"
+julia = "1.9, 1.10, 1.11, 1.12"
+PythonCall = "=0.9.31"
+DataFrames = "1.7"
+Distributions = "0.25"
+StatsModels = "0.7"
+FixedEffectModels = "1"
+OpenSSL_jll = "3.0.0 - 3.6"
+
+[extras]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+
+[targets]
+gpu = ["CUDA"]

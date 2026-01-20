@@ -564,36 +564,61 @@ lint:
 		echo "  make format"; \
 		exit 1; \
 	}
-	@echo "✓ Linting passed"
+	@echo "✓ Ruff linting passed"
 
 .PHONY: format
 format:
-	@echo "Running code formatter (ruff)..."
-	@$(PYTHON) -m ruff format .
+	@echo "Formatting code..."
 	@echo ""
-	@echo "Running import sorting and auto-fixes..."
-	@$(PYTHON) -m ruff check --fix . || true
+	@echo "1/3: Running black formatter..."
+	@$(PYTHON) -m black . --quiet
+	@echo "    ✓ Black formatting complete"
 	@echo ""
-	@echo "✓ Code formatted"
+	@echo "2/3: Running ruff formatter..."
+	@$(PYTHON) -m ruff format . --quiet
+	@echo "    ✓ Ruff formatting complete"
+	@echo ""
+	@echo "3/3: Running import sorting and auto-fixes..."
+	@$(PYTHON) -m ruff check --fix . --quiet || true
+	@echo "    ✓ Auto-fixes applied"
+	@echo ""
+	@echo "✓ Code formatting complete"
 
 .PHONY: format-check
 format-check:
 	@echo "Checking code formatting (no changes)..."
-	@$(PYTHON) -m ruff format --check . || { \
+	@FAILED=0; \
+	echo "1/2: Checking black formatting..."; \
+	$(PYTHON) -m black --check . --quiet || FAILED=1; \
+	if [ $$FAILED -eq 0 ]; then \
+		echo "    ✓ Black check passed"; \
+	else \
+		echo "    ✗ Black formatting issues found"; \
+	fi; \
+	echo ""; \
+	echo "2/2: Checking ruff formatting..."; \
+	$(PYTHON) -m ruff format --check . || FAILED=1; \
+	if [ $$FAILED -eq 0 ]; then \
+		echo "    ✓ Ruff check passed"; \
+	else \
+		echo "    ✗ Ruff formatting issues found"; \
+	fi; \
+	if [ $$FAILED -ne 0 ]; then \
 		echo ""; \
 		echo "Formatting issues found. To fix:"; \
 		echo "  make format"; \
 		exit 1; \
-	}
+	fi
+	@echo ""
 	@echo "✓ Formatting check passed"
 
 .PHONY: type-check
 type-check:
 	@echo "Running type checker (mypy)..."
-	@$(PYTHON) -m mypy build_*.py config.py || { \
+	@$(PYTHON) -m mypy run_analysis.py shared/*.py scripts/*.py --exclude 'lib/repro-tools' || { \
 		echo ""; \
 		echo "Type checking failed. Run for details:"; \
-		echo "  $(PYTHON) -m mypy build_*.py config.py"; \
+		echo "  $(PYTHON) -m mypy run_analysis.py shared/*.py"; \
 		exit 1; \
 	}
 	@echo "✓ Type checking passed"
@@ -606,7 +631,7 @@ check: lint format-check type-check test
 	@echo "================================================"
 	@echo ""
 	@echo "  ✓ Linting (ruff)"
-	@echo "  ✓ Formatting (ruff format)"
+	@echo "  ✓ Formatting (black + ruff)"
 	@echo "  ✓ Type checking (mypy)"
 	@echo "  ✓ Tests (pytest)"
 	@echo ""

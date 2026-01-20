@@ -11,19 +11,33 @@ dependencies:
   - pandas
   - matplotlib
   - scipy
+  # Data analysis and databases
+  - pyarrow  # Fast columnar data format
+  - python-duckdb  # In-process SQL database
+  - ibis-framework  # DataFrame API for multiple backends
   # For provenance and environment
   - pyyaml
   - jinja2  # Required for pandas LaTeX export
   - tomli  # For parsing TOML files (used in tests)
   - docopt  # CLI argument parsing with inline documentation
+  # Interactive development
+  - ipython  # Better REPL for development and Emacs integration
+  - notebook  # Jupyter notebook
+  - jupyterlab  # JupyterLab interface
+  - ipywidgets  # Interactive widgets for notebooks
   # Testing
   - pytest
   - pytest-cov
   # Code quality
   - ruff  # Linter and formatter
   - mypy  # Type checker
+  - black  # Code formatter
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14
+    # Type stubs for better type checking
+    - types-docopt
+    - pandas-stubs
+    - scipy-stubs
     # Reproducibility tools (git submodule in editable mode)
     - -e ../lib/repro-tools
