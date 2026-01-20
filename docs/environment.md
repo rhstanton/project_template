@@ -37,10 +37,20 @@ The Nix shell provides:
 
 ## Components
 
-- `env/python.yml`: conda environment spec (Python, pandas, matplotlib, PyYAML, juliacall)
-- `env/Project.toml`: Julia dependencies (PythonCall, DataFrames)
+- `env/python.yml`: conda environment spec
+  - Core: Python 3.11, pandas, numpy, matplotlib, scipy
+  - Data tools: ibis-framework, python-duckdb, pyarrow
+  - Interactive: ipython, notebook, jupyterlab, ipywidgets
+  - Quality: ruff, black, mypy, pytest
+  - Type stubs: types-docopt, pandas-stubs, scipy-stubs
+  - Bridge: juliacall (Python/Julia interop)
+- `env/Project.toml`: Julia dependencies
+  - Core: PythonCall, DataFrames
+  - Stats: Distributions, StatsModels, FixedEffectModels
+  - Data: Arrow, RDatasets
+  - Utils: Adapt (GPU), OpenSSL_jll
 - `env/Manifest.toml`: Julia lockfile (auto-generated during `make environment`)
-- `env/stata-packages.txt`: Stata packages to install (reghdfe, ftools, estout)
+- `env/stata-packages.txt`: Stata packages (reghdfe, ftools, estout 3.1.2, coefplot 2.0.0)
 - `env/scripts/runpython`: Wrapper that activates conda env and configures Julia/Python bridge
 - `env/scripts/runstata`: Wrapper that runs Stata with local package path
 - `env/scripts/execute.ado`: Stata helper for running .do files with logging

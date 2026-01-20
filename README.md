@@ -93,7 +93,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
-- **Code quality tools**: Integrated linting (ruff), formatting, and type checking (mypy)
+- **Code quality tools**: Integrated linting (ruff), formatting (black + ruff), and type checking (mypy)
 - **Automated testing**: pytest-based test suite for reliability
 - **Output comparison**: Diff current vs. published outputs
 - **Pre-submission checks**: Comprehensive validation before journal submission
@@ -334,7 +334,7 @@ make publish REQUIRE_CURRENT_HEAD=1   # Strict: require current HEAD
 
 make test             # Run test suite
 make lint             # Run code linter (ruff)
-make format           # Auto-format code (ruff)
+make format           # Auto-format code (black + ruff)
 make type-check       # Run type checker (mypy)
 make check            # Run all quality checks (lint + format + type + test)
 make diff-outputs     # Compare current vs published outputs

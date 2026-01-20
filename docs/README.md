@@ -99,7 +99,7 @@ Complete guide to the reproducible research template.
   - Run with `make test` or `make test-cov` for coverage
 - **Code Quality Tools** - Integrated linting and formatting
   - `make lint`: Ruff linter for code quality
-  - `make format`: Auto-format with ruff (imports, whitespace, etc.)
+  - `make format`: Auto-format with black and ruff (imports, whitespace, etc.)
   - `make format-check`: Check formatting without changes
   - `make type-check`: Mypy type checking for build scripts
   - `make check`: All quality checks (lint + format + type + test)
@@ -159,7 +159,7 @@ Complete guide to the reproducible research template.
 ### Development Workflow
 - **Code Quality** - Linting, formatting, and type checking
   - Integrated ruff linter for code quality enforcement
-  - Auto-formatting with `make format`
+  - Auto-formatting with black and ruff (`make format`)
   - Type checking with mypy for build scripts
   - Comprehensive `make check` runs all quality tools
   - Configured via `pyproject.toml`

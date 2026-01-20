@@ -10,6 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Development tools and environment enhancements**:
+  - **Python packages**:
+    - `ipython` - Better REPL experience with Emacs integration (`.dir-locals.el` configured)
+    - `black` - Opinionated code formatter (in addition to ruff)
+    - `notebook`, `jupyterlab`, `ipywidgets` - Jupyter notebook support
+    - `ibis-framework`, `python-duckdb`, `pyarrow` - Advanced data analysis tools
+    - `types-docopt`, `pandas-stubs`, `scipy-stubs` - Type stubs for better type checking
+  - **Julia packages**:
+    - `Distributions`, `StatsModels`, `FixedEffectModels` - Statistical modeling
+    - `Arrow` - Fast columnar data format
+    - `RDatasets` - Example datasets for testing
+    - `Adapt`, `OpenSSL_jll` - GPU support and secure connections
+    - GPU configuration with `[extras]` and `[targets]` for CUDA
+    - Pinned `PythonCall` to `0.9.31` with detailed version constraints
+    - Added Julia 1.9 to compatibility range
+  - **Stata packages**:
+    - Added version constraints: `estout 3.1.2`, `coefplot 2.0.0`
+  - **Makefile code quality targets**:
+    - Enhanced `make format` to run both black and ruff formatters
+    - Improved `make format-check` to validate both formatters
+    - Updated `make type-check` to check `run_analysis.py` and `shared/` modules
+    - Added detailed progress output for all formatting steps
+    - `make check` now validates: lint (ruff) + format (black + ruff) + type-check (mypy) + tests (pytest)
+  - **Emacs integration**:
+    - `.dir-locals.el` configured for Python, Julia, and LSP
+    - IPython REPL integration for better interactive development
+    - Auto-detection of project-local environments
+
 - **3-level defaults system** for flexible configuration:
   - **Level 1 (Docopt)**: Default values in docstring `[default: mean]` syntax
   - **Level 2 (DEFAULTS)**: Global defaults in `shared/config.py` DEFAULTS dictionary
