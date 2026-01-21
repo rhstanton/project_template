@@ -58,9 +58,7 @@ def validate_config(config: dict, study_name: str) -> list[str]:
                 try:
                     output_dir.mkdir(parents=True, exist_ok=True)
                 except Exception as e:
-                    errors.append(
-                        f"Cannot create output directory {output_dir}: {e}"
-                    )
+                    errors.append(f"Cannot create output directory {output_dir}: {e}")
 
     # =========================================================================
     # Variable Names
@@ -69,9 +67,7 @@ def validate_config(config: dict, study_name: str) -> list[str]:
     for var_name in ["xlabel", "ylabel", "yvar", "xvar", "groupby"]:
         value = config.get(var_name)
         if value and not isinstance(value, str):
-            errors.append(
-                f"{var_name} must be a string, got: {type(value).__name__}"
-            )
+            errors.append(f"{var_name} must be a string, got: {type(value).__name__}")
 
     # =========================================================================
     # Aggregation Function

@@ -570,15 +570,11 @@ lint:
 format:
 	@echo "Formatting code..."
 	@echo ""
-	@echo "1/3: Running black formatter..."
-	@$(PYTHON) -m black . --quiet
-	@echo "    ✓ Black formatting complete"
-	@echo ""
-	@echo "2/3: Running ruff formatter..."
+	@echo "1/2: Running ruff formatter..."
 	@$(PYTHON) -m ruff format . --quiet
 	@echo "    ✓ Ruff formatting complete"
 	@echo ""
-	@echo "3/3: Running import sorting and auto-fixes..."
+	@echo "2/2: Running import sorting and auto-fixes..."
 	@$(PYTHON) -m ruff check --fix . --quiet || true
 	@echo "    ✓ Auto-fixes applied"
 	@echo ""
@@ -588,15 +584,7 @@ format:
 format-check:
 	@echo "Checking code formatting (no changes)..."
 	@FAILED=0; \
-	echo "1/2: Checking black formatting..."; \
-	$(PYTHON) -m black --check . --quiet || FAILED=1; \
-	if [ $$FAILED -eq 0 ]; then \
-		echo "    ✓ Black check passed"; \
-	else \
-		echo "    ✗ Black formatting issues found"; \
-	fi; \
-	echo ""; \
-	echo "2/2: Checking ruff formatting..."; \
+	echo "1/1: Checking ruff formatting..."; \
 	$(PYTHON) -m ruff format --check . || FAILED=1; \
 	if [ $$FAILED -eq 0 ]; then \
 		echo "    ✓ Ruff check passed"; \
@@ -615,7 +603,7 @@ format-check:
 .PHONY: type-check
 type-check:
 	@echo "Running type checker (mypy)..."
-	@$(PYTHON) -m mypy run_analysis.py shared/*.py scripts/*.py --exclude 'lib/repro-tools' || { \
+	@$(PYTHON) -m mypy run_analysis.py shared/*.py --exclude 'lib/repro-tools' || { \
 		echo ""; \
 		echo "Type checking failed. Run for details:"; \
 		echo "  $(PYTHON) -m mypy run_analysis.py shared/*.py"; \

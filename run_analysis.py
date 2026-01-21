@@ -23,7 +23,7 @@ Options:
   --list              List all available studies and exit
   -h --help           Show this help message
   --version           Show version information
-  
+
   Study overrides:
     --data=<path>      Override input data file
     --yvar=<name>      Override outcome variable
@@ -37,6 +37,7 @@ Options:
     --table=<path>     Override table output path
 
 """
+
 from __future__ import annotations
 
 import sys
@@ -74,11 +75,11 @@ def build_config(study_name: str, args: dict) -> dict:
     """
     # Start with global defaults
     cfg = config.DEFAULTS.copy()
-    
+
     # Override with study-specific config
     if study_name in config.STUDIES:
         cfg.update(config.STUDIES[study_name])
-    
+
     # Override with command-line arguments (if provided)
     # Convert docopt arg names to config keys
     override_map = {
@@ -93,26 +94,26 @@ def build_config(study_name: str, args: dict) -> dict:
         "--figure": "figure",
         "--table": "table",
     }
-    
+
     for arg_name, cfg_key in override_map.items():
         if args.get(arg_name):
             cfg[cfg_key] = args[arg_name]
-    
+
     return cfg
 
 
 def main() -> None:
     # Setup environment (detects Jupyter, IPython, terminal, etc.)
     setup_environment()
-    
+
     # Parse arguments with enhanced error messages
     args = friendly_docopt(__doc__, version="run_analysis 1.0")
-    
+
     if args["--list"]:
         list_studies()
-    
+
     study_name = args["<study>"]
-    
+
     # Check study exists
     if study_name not in config.STUDIES:
         print(f"\n❌ Error: Unknown study '{study_name}'")
@@ -121,16 +122,16 @@ def main() -> None:
             print(f"  - {name}")
         print("\nRun with --list to see all available studies\n")
         sys.exit(1)
-    
+
     # Build final configuration (3-level merge: DEFAULTS → STUDIES → args)
     study = build_config(study_name, args)
-    
+
     # Validate configuration before proceeding
     validation_errors = validate_config(study, study_name)
     if validation_errors:
         print_validation_errors(validation_errors)
         sys.exit(1)
-    
+
     # Print configuration for transparency
     print_config(
         {
@@ -144,19 +145,19 @@ def main() -> None:
         },
         title=f"RUNNING STUDY: {study_name.upper()}",
     )
-    
+
     # Extract paths from study config
     data_file = Path(study["data"])
     out_fig = Path(study["figure"])
     out_table = Path(study["table"])
-    
+
     # Create output directories
     out_fig.parent.mkdir(parents=True, exist_ok=True)
     out_table.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Load data
     df = pd.read_csv(data_file)
-    
+
     # Extract parameters from study config
     xvar = study["xvar"]
     yvar = study["yvar"]
@@ -165,17 +166,17 @@ def main() -> None:
     ylabel = study["ylabel"]
     title = study["title"]
     table_agg = study["table_agg"]
-    
+
     # Generate table: aggregate yvar by xvar
     tbl = (
         df.groupby(xvar, as_index=False)[yvar]
         .agg(table_agg)
         .rename(columns={yvar: f"{table_agg}_{yvar}"})
     )
-    
+
     tex = tbl.to_latex(index=False, float_format="%.2f")
     out_table.write_text(tex, encoding="utf-8")
-    
+
     # Generate figure: lines by group
     fig, ax = plt.subplots()
     for group_val, g in df.groupby(groupby):
@@ -188,7 +189,7 @@ def main() -> None:
     fig.tight_layout()
     fig.savefig(out_fig)
     plt.close(fig)
-    
+
     # Auto-generate provenance
     prov_file = out_fig.parent.parent / "provenance" / f"{study_name}.yml"
     prov_file.parent.mkdir(parents=True, exist_ok=True)
@@ -198,7 +199,7 @@ def main() -> None:
         inputs=[data_file],
         outputs=[out_fig, out_table],
     )
-    
+
     print(f"✓ {study_name} complete")
 
 

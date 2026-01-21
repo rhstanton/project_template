@@ -14,17 +14,19 @@ try:
     print()
 
     # Simple Julia computation
-    jl.seval("""
+    jl.seval(
+        """
     println("Running Julia code from Python...")
     println()
-    
+
     # Create a simple array
     x = [1, 2, 3, 4, 5]
     println("Array x: ", x)
     println("Mean: ", sum(x) / length(x))
     println("Sum: ", sum(x))
     println()
-    """)
+    """
+    )
 
     # Python can call Julia functions
     result = jl.seval("sum([1, 2, 3, 4, 5])")

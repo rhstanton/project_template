@@ -93,7 +93,7 @@ try:
             if hasattr(julia_cmd, "exec")
             else str(julia_cmd).split()[0]
         )
-    except:
+    except Exception:
         # Method 2: Use Sys.BINDIR
         julia_exe = jl.seval('joinpath(Sys.BINDIR, "julia")')
 

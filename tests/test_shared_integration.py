@@ -1,10 +1,6 @@
 """Integration tests for shared utilities with run_analysis.py."""
 
 import subprocess
-import sys
-from pathlib import Path
-
-import pytest
 
 
 class TestRunAnalysisIntegration:
@@ -17,7 +13,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         assert "Available studies:" in result.stdout
         assert "price_base" in result.stdout
@@ -30,7 +26,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         assert "run_analysis 1.0" in result.stdout
 
@@ -41,7 +37,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 2
         assert "Unknown option --lists" in result.stdout
         assert "Did you mean --list?" in result.stdout
@@ -53,7 +49,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 1
         assert "Unknown study 'nonexistent_study'" in result.stdout
         assert "Available studies:" in result.stdout
@@ -65,7 +61,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         assert "RUNNING STUDY: PRICE_BASE" in result.stdout
         assert "Study" in result.stdout
@@ -80,7 +76,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         assert "Execution environment:" in result.stdout
         assert "terminal" in result.stdout or "batch" in result.stdout
@@ -92,7 +88,7 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         # Should show usage and exit with error
         assert result.returncode != 0
         assert "Usage:" in result.stdout or "Usage:" in result.stderr
@@ -104,12 +100,14 @@ class TestRunAnalysisIntegration:
             capture_output=True,
             text=True,
         )
-        
+
         # Help should exit successfully
         assert result.returncode == 0
         assert "Usage:" in result.stdout
         assert "Options:" in result.stdout
-        assert "<study>" in result.stdout  # Check for the actual argument name in docstring
+        assert (
+            "<study>" in result.stdout
+        )  # Check for the actual argument name in docstring
 
 
 class TestConfigImport:
@@ -118,7 +116,7 @@ class TestConfigImport:
     def test_config_imports_from_shared(self):
         """Test that config module is in shared."""
         from shared import config
-        
+
         assert hasattr(config, "STUDIES")
         assert hasattr(config, "DATA_FILES")
         assert hasattr(config, "REPO_ROOT")
@@ -126,21 +124,21 @@ class TestConfigImport:
 
     def test_config_studies_structure(self):
         """Test STUDIES dictionary has expected structure.
-        
+
         Note: Studies may inherit some values from DEFAULTS, so we check
         that required study-specific fields are present.
         """
-        from shared.config import STUDIES, DEFAULTS
-        
+        from shared.config import DEFAULTS, STUDIES
+
         assert "price_base" in STUDIES
         assert "remodel_base" in STUDIES
-        
+
         for study_name, study in STUDIES.items():
             # Required fields that must be study-specific
             assert "yvar" in study, f"{study_name} missing 'yvar'"
             assert "figure" in study, f"{study_name} missing 'figure'"
             assert "table" in study, f"{study_name} missing 'table'"
-            
+
             # These can come from DEFAULTS or study
             # Check they exist after merging (simulating build_config logic)
             merged = DEFAULTS.copy()
@@ -152,12 +150,12 @@ class TestConfigImport:
 
     def test_config_paths_correct(self):
         """Test that config paths are correct relative to project root."""
-        from shared.config import REPO_ROOT, DATA_DIR, OUTPUT_DIR
-        
+        from shared.config import DATA_DIR, OUTPUT_DIR, REPO_ROOT
+
         # REPO_ROOT should be the project root, not shared/
         assert REPO_ROOT.name == "project_template"
         assert (REPO_ROOT / "shared" / "config.py").exists()
-        
+
         # Paths should be correct
         assert DATA_DIR == REPO_ROOT / "data"
         assert OUTPUT_DIR == REPO_ROOT / "output"
@@ -172,7 +170,7 @@ class TestValidationIntegration:
         # This would require modifying STUDIES to have a bad config
         # For now, we test the validation function directly
         from shared import validate_config
-        
+
         bad_config = {
             "data": "nonexistent.csv",
             "xlabel": "X",
@@ -182,7 +180,7 @@ class TestValidationIntegration:
             "figure": "output/fig.pdf",
             "table": "output/table.tex",
         }
-        
+
         errors = validate_config(bad_config, "test_study")
         assert len(errors) > 0
         assert any("Input file not found" in error for error in errors)

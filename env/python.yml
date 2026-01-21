@@ -29,9 +29,8 @@ dependencies:
   - pytest
   - pytest-cov
   # Code quality
-  - ruff  # Linter and formatter
+  - ruff  # Linter and formatter (includes black-compatible formatting)
   - mypy  # Type checker
-  - black  # Code formatter
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14

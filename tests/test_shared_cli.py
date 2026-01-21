@@ -1,11 +1,9 @@
 """Tests for repro_tools CLI utilities."""
 
 import sys
-from io import StringIO
 from unittest.mock import patch
 
 import pytest
-
 from repro_tools import (
     ConfigBuilder,
     filter_ipython_args,
@@ -32,7 +30,7 @@ class TestFriendlyDocopt:
     def test_friendly_docopt_with_flags(self):
         """Test parsing with flags."""
         doc = """Usage: test.py [--flag]
-        
+
         Options:
           --flag  A flag
         """
@@ -43,14 +41,14 @@ class TestFriendlyDocopt:
     def test_friendly_docopt_typo_suggestion(self, capsys):
         """Test that typos suggest corrections."""
         doc = """Usage: test.py [--list]
-        
+
         Options:
           --list  Show list
         """
         with patch.object(sys, "argv", ["test.py", "--lists"]):
             with pytest.raises(SystemExit) as exc_info:
                 friendly_docopt(doc)
-            
+
             assert exc_info.value.code == 2
             captured = capsys.readouterr()
             assert "Unknown option --lists" in captured.out
@@ -59,14 +57,14 @@ class TestFriendlyDocopt:
     def test_friendly_docopt_version(self, capsys):
         """Test version flag."""
         doc = """Usage: test.py
-        
+
         Options:
           --version  Show version
         """
         with patch.object(sys, "argv", ["test.py", "--version"]):
             with pytest.raises(SystemExit):
                 friendly_docopt(doc, version="1.0")
-            
+
             captured = capsys.readouterr()
             assert "1.0" in captured.out
 
@@ -137,7 +135,7 @@ class TestPrintConfig:
         """Test basic configuration printing."""
         config = {"key1": "value1", "key2": "value2"}
         print_config(config)
-        
+
         captured = capsys.readouterr()
         assert "CONFIGURATION" in captured.out
         assert "key1" in captured.out
@@ -150,14 +148,14 @@ class TestPrintConfig:
         """Test configuration with custom title."""
         config = {"test": "value"}
         print_config(config, title="CUSTOM TITLE")
-        
+
         captured = capsys.readouterr()
         assert "CUSTOM TITLE" in captured.out
 
     def test_print_config_empty(self, capsys):
         """Test empty configuration."""
         print_config({})
-        
+
         captured = capsys.readouterr()
         assert "(empty)" in captured.out
 
@@ -171,7 +169,7 @@ class TestConfigBuilder:
         builder = ConfigBuilder(args)
         builder.add("input_path", lambda: args["--input"])
         builder.add("limit", lambda: int(args["--limit"]))
-        
+
         config = builder.build(print_output=False)
         assert config["input_path"] == "test.csv"
         assert config["limit"] == 10
@@ -181,7 +179,7 @@ class TestConfigBuilder:
         args = {"--val": "42"}
         builder = ConfigBuilder(args)
         builder.add("value", lambda: int(args["--val"]), display_name="Custom Value")
-        
+
         config = builder.build(print_output=False)
         assert config["value"] == 42
 
@@ -190,9 +188,9 @@ class TestConfigBuilder:
         args = {"--test": "value"}
         builder = ConfigBuilder(args)
         builder.add("test_key", lambda: args["--test"])
-        
-        config = builder.build(print_output=True)
-        
+
+        builder.build(print_output=True)
+
         captured = capsys.readouterr()
         assert "CONFIGURATION" in captured.out
         assert "Test Key" in captured.out  # Auto-formatted from test_key
@@ -203,7 +201,7 @@ class TestConfigBuilder:
         args = {"--bad": "not-a-number"}
         builder = ConfigBuilder(args)
         builder.add("value", lambda: int(args["--bad"]))
-        
+
         # Should raise ValueError when build is called
         with pytest.raises(ValueError):
             builder.build(print_output=False)
@@ -221,7 +219,7 @@ class TestEnvironmentDetection:
     def test_filter_ipython_args(self):
         """Test filtering IPython-specific arguments."""
         original_argv = sys.argv.copy()
-        
+
         try:
             sys.argv = [
                 "script.py",
@@ -231,9 +229,9 @@ class TestEnvironmentDetection:
                 "--colors=NoColor",
                 "arg3",
             ]
-            
+
             filter_ipython_args()
-            
+
             assert sys.argv == ["script.py", "arg1", "arg2", "arg3"]
         finally:
             sys.argv = original_argv
@@ -241,13 +239,13 @@ class TestEnvironmentDetection:
     def test_filter_ipython_args_preserves_normal_args(self):
         """Test that normal arguments are preserved."""
         original_argv = sys.argv.copy()
-        
+
         try:
             # Use arguments that don't look like IPython flags
             sys.argv = ["script.py", "input.csv", "output.pdf"]
-            
+
             filter_ipython_args()
-            
+
             assert sys.argv == ["script.py", "input.csv", "output.pdf"]
         finally:
             sys.argv = original_argv
