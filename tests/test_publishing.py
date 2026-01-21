@@ -114,13 +114,22 @@ class TestPublishedArtifacts:
             data = yaml.safe_load(f)
 
         # Check artifacts section
-        for _artifact_name, artifact_data in data.get("artifacts", {}).items():
+        for artifact_name, artifact_data in data.get("artifacts", {}).items():
             for output_type in ["figures", "tables"]:
                 if output_type in artifact_data:
                     output_info = artifact_data[output_type]
                     if output_info.get("copied", False):
                         dst_path = Path(output_info["dst"])
-                        assert dst_path.exists(), f"Published file missing: {dst_path}"
+                        
+                        # Handle cross-platform: if absolute path doesn't exist,
+                        # try relative path from repo root
+                        if not dst_path.exists():
+                            # Extract filename from recorded path
+                            filename = dst_path.name
+                            # Build expected path from repo root
+                            dst_path = REPO_ROOT / "paper" / output_type / filename
+                        
+                        assert dst_path.exists(), f"Published file missing: {dst_path} (artifact: {artifact_name}, type: {output_type})"
 
     def test_published_checksums_match(self):
         """Published files should match their recorded checksums."""
