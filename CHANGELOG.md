@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Journal package improvements**:
+  - **Bundled repro-tools**: Journal packages now include complete `lib/repro-tools/` source
+  - Self-contained replication packages work without network access
+  - Fixed bug where git submodules weren't copied to journal package
+  - Replication packages can be extracted and run immediately with `make environment && make all`
+
 - **Development tools and environment enhancements**:
   - **Python packages**:
     - `ipython` - Better REPL experience with Emacs integration (`.dir-locals.el` configured)

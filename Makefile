@@ -639,6 +639,9 @@ journal-package:
 	@rm -rf replication-package
 	@mkdir -p replication-package
 	@git archive --format=tar HEAD | tar -x -C replication-package/
+	@echo "Copying git submodules (repro-tools)..."
+	@mkdir -p replication-package/lib
+	@cp -r lib/repro-tools replication-package/lib/
 	@echo "Removing excluded directories..."
 	@cd replication-package && rm -rf data-construction notes paper JOURNAL_EXCLUDE .github .vscode .dir-locals.el .editorconfig .mypy_cache .ruff_cache logs TEMPLATE_USAGE.md COAUTHOR_SETUP.md 2>/dev/null || true
 	@echo "Generating clean Makefile (removing AUTHOR-ONLY sections)..."
