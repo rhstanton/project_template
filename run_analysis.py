@@ -51,10 +51,10 @@ from repro_tools import (
     print_config,
     print_validation_errors,
     setup_environment,
+    validate_study_config,
 )
 
 from shared import config
-from shared.config_validator import validate_config
 
 
 def list_studies() -> None:
@@ -127,7 +127,7 @@ def main() -> None:
     study = build_config(study_name, args)
 
     # Validate configuration before proceeding
-    validation_errors = validate_config(study, study_name)
+    validation_errors = validate_study_config(study, study_name)
     if validation_errors:
         print_validation_errors(validation_errors)
         sys.exit(1)
