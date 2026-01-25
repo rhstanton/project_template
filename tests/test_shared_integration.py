@@ -169,7 +169,7 @@ class TestValidationIntegration:
         """Test that validation catches missing data files before execution."""
         # This would require modifying STUDIES to have a bad config
         # For now, we test the validation function directly
-        from shared import validate_config
+        from repro_tools import validate_study_config
 
         bad_config = {
             "data": "nonexistent.csv",
@@ -181,6 +181,6 @@ class TestValidationIntegration:
             "table": "output/table.tex",
         }
 
-        errors = validate_config(bad_config, "test_study")
+        errors = validate_study_config(bad_config, "test_study")
         assert len(errors) > 0
         assert any("Input file not found" in error for error in errors)

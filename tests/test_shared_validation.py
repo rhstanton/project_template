@@ -1,14 +1,12 @@
 """Tests for configuration validation."""
 
-from repro_tools import print_validation_errors
-
-from shared import validate_config
+from repro_tools import print_validation_errors, validate_study_config
 
 
 class TestValidateConfig:
     """Test configuration validation."""
 
-    def test_validate_config_valid(self, tmp_path):
+    def test_validate_study_config_valid(self, tmp_path):
         """Test validation with valid configuration."""
         # Create a temporary data file
         data_file = tmp_path / "test_data.csv"
@@ -24,10 +22,10 @@ class TestValidateConfig:
             "table": str(tmp_path / "table.tex"),
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert errors == []
 
-    def test_validate_config_missing_required_keys(self):
+    def test_validate_study_config_missing_required_keys(self):
         """Test validation catches missing required keys."""
         config = {
             "data": "test.csv",
@@ -35,11 +33,11 @@ class TestValidateConfig:
             # Missing ylabel, yvar, xvar, figure, table
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert len(errors) > 0
         assert any("Missing required config" in error for error in errors)
 
-    def test_validate_config_missing_data_file(self):
+    def test_validate_study_config_missing_data_file(self):
         """Test validation catches missing data file."""
         config = {
             "data": "nonexistent_file.csv",
@@ -51,10 +49,10 @@ class TestValidateConfig:
             "table": "output/table.tex",
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert any("Input file not found" in error for error in errors)
 
-    def test_validate_config_invalid_variable_type(self):
+    def test_validate_study_config_invalid_variable_type(self):
         """Test validation catches non-string variable names."""
         config = {
             "data": "test.csv",
@@ -66,10 +64,10 @@ class TestValidateConfig:
             "table": "output/table.tex",
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert any("must be a string" in error for error in errors)
 
-    def test_validate_config_invalid_aggregation(self):
+    def test_validate_study_config_invalid_aggregation(self):
         """Test validation catches invalid aggregation function."""
         config = {
             "data": "test.csv",
@@ -82,10 +80,10 @@ class TestValidateConfig:
             "table_agg": "invalid_agg",
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert any("Invalid table_agg" in error for error in errors)
 
-    def test_validate_config_valid_aggregations(self, tmp_path):
+    def test_validate_study_config_valid_aggregations(self, tmp_path):
         """Test that valid aggregations pass validation."""
         data_file = tmp_path / "test_data.csv"
         data_file.write_text("x,y\n1,2\n")
@@ -104,12 +102,12 @@ class TestValidateConfig:
                 "table_agg": agg,
             }
 
-            errors = validate_config(config, "test_study")
+            errors = validate_study_config(config, "test_study")
             assert errors == [], (
                 f"Aggregation '{agg}' should be valid but got errors: {errors}"
             )
 
-    def test_validate_config_creates_output_directories(self, tmp_path):
+    def test_validate_study_config_creates_output_directories(self, tmp_path):
         """Test validation creates output directories if they don't exist."""
         data_file = tmp_path / "test_data.csv"
         data_file.write_text("x,y\n1,2\n")
@@ -126,7 +124,7 @@ class TestValidateConfig:
             "table": str(output_dir / "table.tex"),
         }
 
-        errors = validate_config(config, "test_study")
+        errors = validate_study_config(config, "test_study")
         assert errors == []
         assert output_dir.exists()
 
