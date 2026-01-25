@@ -9,7 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Complete Stata integration** via repro-tools submodule updates:
+  - Auto-generated `env/stata-packages.txt` for package management
+  - Auto-generated `env/scripts/runstata` wrapper and `execute.ado` helper
+  - Stata installation targets in `env/Makefile` (stata-env, stata-clean, stata-check)
+  - Stata packages installed locally to `.stata/ado/plus/` directory
+  - Full integration with `make environment` workflow
+- **Example files auto-generation** in `env/examples/`:
+  - `sample_python.py` - Python example with pandas/numpy
+  - `sample_julia.jl` - Pure Julia example with DataFrames
+  - `sample_juliacall.py` - Python/Julia interop example
+  - `sample_stata.do` - Stata example with basic operations
+  - `README.md` - Documentation for running examples
+  - Examples generated based on selected languages in project scaffolding
+
 ### Changed
+- **repro-tools submodule**: Updated to latest version with Stata support and example generation
 - **Directory reorganization**:
   - Moved `examples/` directory to `env/examples/` for better organization
   - Updated all references in documentation, Makefile, and test files
