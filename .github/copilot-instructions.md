@@ -29,7 +29,7 @@ This is a **reproducible research workflow** template with strict separation of 
   - `scripts/runpython` - Python wrapper with PYTHONPATH and Julia bridge config
   - `scripts/runjulia` - Julia wrapper pointing to bundled Julia
   - `scripts/runstata` - Stata wrapper for local package installation
-- `examples/`: Sample scripts demonstrating Python, Julia, juliacall, and Stata usage
+  - `examples/` - Sample scripts demonstrating Python, Julia, juliacall, and Stata usage
 - `docs/`: Comprehensive documentation (environment, provenance, publishing, troubleshooting, etc.)
 
 ## Critical Workflows
@@ -181,14 +181,14 @@ Comprehensive documentation in `docs/` directory:
 
 ## Examples
 
-Sample scripts in `examples/` directory demonstrating each language:
+Sample scripts in `env/examples/` directory demonstrating each language:
 
-- `examples/sample_python.py` - Pure Python example
-- `examples/sample_julia.jl` - Pure Julia example
-- `examples/sample_juliacall.py` - Python → Julia interop via juliacall
-- `examples/sample_stata.do` - Stata example (if Stata installed)
+- `env/examples/sample_python.py` - Pure Python example
+- `env/examples/sample_julia.jl` - Pure Julia example
+- `env/examples/sample_juliacall.py` - Python → Julia interop via juliacall
+- `env/examples/sample_stata.do` - Stata example (if Stata installed)
 
-Each example has a Makefile target for testing: `make -C examples python`, `make -C examples julia`, etc.
+Each example has a Makefile target for testing: `make sample-python`, `make sample-julia`, etc.
 
 ## System Requirements
 

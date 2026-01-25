@@ -25,7 +25,6 @@ make environment  # Automatically initializes git submodules
 **⚠️ IMPORTANT:** When creating a new project, do **NOT** manually copy the `lib/repro-tools/` directory. Let git handle it as a submodule. The Makefile automatically initializes it when you run `make environment`.
 
 **Updating repro-tools:** 
-
 - Quick update: `make update-submodules` (updates submodule only)
 - Full update: `make update-environment` (updates submodule + reinstalls environment)
 - See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for details
@@ -108,8 +107,8 @@ project_template/
 ├── run_analysis.py    # Unified analysis script (handles all studies)
 ├── data/              # Input datasets
 ├── env/               # Environment setup (Python/Julia/Stata)
+│   └── examples/      # Sample scripts for testing
 ├── lib/               # Git submodules (repro-tools)
-├── examples/          # Sample scripts for testing
 ├── output/            # Build outputs (can be deleted/rebuilt)
 │   ├── figures/       # Generated PDFs
 │   ├── tables/        # Generated LaTeX tables
@@ -142,7 +141,6 @@ make all              # Builds all artifacts
 ```
 
 This produces **three outputs per artifact** (atomically):
-
 - `output/figures/<name>.pdf` - The figure
 - `output/tables/<name>.tex` - The table  
 - `output/provenance/<name>.yml` - Build metadata
@@ -156,7 +154,6 @@ make publish REQUIRE_CURRENT_HEAD=1         # Strict: require current HEAD
 ```
 
 Publishing enforces **git safety checks**:
-
 - Working tree must be clean
 - Branch must not be behind upstream
 - Optionally require artifacts from current HEAD
@@ -183,7 +180,6 @@ outputs:
 ```
 
 **Publication provenance** (`paper/provenance.yml`):
-
 - Aggregates all build records
 - Tracks when each artifact was published
 - Records analysis repo git state at publication time
@@ -250,7 +246,6 @@ python script.py
 ```
 
 **Packages** (see `env/python.yml`):
-
 - pandas, matplotlib, numpy
 - pyyaml (for provenance)
 - juliacall (Python/Julia interop)
@@ -273,7 +268,6 @@ df = jl.DataFrame(x=[1,2,3], y=[4,5,6])
 ```
 
 **Packages** (see `env/Project.toml`):
-
 - PythonCall (Julia/Python interop)
 - DataFrames
 
@@ -306,7 +300,7 @@ make sample-juliacall  # Python/Julia interop
 make sample-stata      # Stata example (if installed)
 ```
 
-See `examples/README.md` for details.
+See `env/examples/README.md` for details.
 
 ---
 
@@ -419,7 +413,6 @@ See [examples/](examples/) directory for sample scripts in Python, Julia, and St
 ## 📞 Troubleshooting
 
 **Quick fixes**:
-
 - Import errors: Use `env/scripts/runpython` not bare `python`
 - Build failures: `make clean && make all`
 - Environment issues: `make cleanall && make environment`

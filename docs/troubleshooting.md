@@ -606,7 +606,7 @@ git log -p Makefile
 
 ## Still Stuck?
 
-1. **Check example scripts** in `examples/` directory
+1. **Check example scripts** in `env/examples/` directory
 2. **Compare with fire project**: `../fire/` has similar structure
 3. **Review inline comments** in Makefile and scripts
 4. **Check git commit messages** for context

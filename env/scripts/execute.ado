@@ -24,12 +24,15 @@ program execute
    
    * Extract just the filename without directory path
    * Find the last "/" or "\" and extract everything after it
-   local lastSlash = max(strpos("`doFile'", "/"), strpos("`doFile'", "\"))
+   local baseFile "`doFile'"
+   local lastSlash = 0
+   forvalues i = 1/`=length("`doFile'")' {
+      if substr("`doFile'", `i', 1) == "/" | substr("`doFile'", `i', 1) == "\" {
+         local lastSlash = `i'
+      }
+   }
    if `lastSlash' > 0 {
       local baseFile = substr("`doFile'", `lastSlash' + 1, .)
-   }
-   else {
-      local baseFile "`doFile'"
    }
    
    * Create name of log file from base filename
@@ -45,11 +48,22 @@ program execute
    * Start logging
    quietly log using output/logs/`logFile', replace text
 
-   * Execute command line
-   do `*'
+   * Execute command line with error handling
+   * - capture: Prevents error from stopping execution
+   * - noisily: Shows error messages to user
+   capture noisily do `*'
+   local rc = _rc
 
    * Turn off logging and exit Stata
    quietly log close
+   
+   * Exit with appropriate return code
+   * - If error occurred (rc != 0), exit with that code to propagate failure
+   * - Otherwise, exit cleanly with STATA keyword to force exit
+   if `rc' != 0 {
+      display as error "Error in do-file (return code: `rc')"
+      exit `rc'
+   }
    exit, clear STATA
 
 end

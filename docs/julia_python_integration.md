@@ -100,7 +100,7 @@ Julia scripts using the bundled Julia:
 env/scripts/runjulia my_script.jl
 ```
 
-Example (`examples/sample_julia.jl`):
+Example (`env/examples/sample_julia.jl`):
 ```julia
 using DataFrames
 
@@ -131,7 +131,7 @@ df = jl.DataFrame(x=[1,2,3], y=[4,5,6])
 mean_y = jl.mean(df.y)
 ```
 
-Example script: `examples/sample_juliacall.py`
+Example script: `env/examples/sample_juliacall.py`
 
 ### 4. Julia → Python (via PythonCall)
 

@@ -15,7 +15,7 @@ project_template/
 ├── data/                  # Input datasets
 ├── docs/                  # Documentation
 ├── env/                   # Environment setup
-├── examples/              # Example scripts
+│   └── examples/          # Example scripts
 ├── lib/                   # Git submodules
 │   └── repro-tools/       # Reproducibility tools (editable install)
 ├── output/                # Build outputs (ephemeral)
@@ -206,12 +206,12 @@ env/
 - `runjulia`: Points to `.julia/pyjuliapkg/install/bin/julia`
 - `runstata`: Sets STATA_PACKAGES, uses execute.ado
 
-### `examples/`
+### `env/examples/`
 
 Sample scripts demonstrating all three languages.
 
 ```
-examples/
+env/examples/
 ├── README.md
 ├── sample_python.py           # Python example
 ├── sample_julia.jl            # Pure Julia example

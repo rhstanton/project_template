@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Directory reorganization**:
+  - Moved `examples/` directory to `env/examples/` for better organization
+  - Updated all references in documentation, Makefile, and test files
+  - Example scripts now co-located with environment specifications
+
+### Fixed
+- **Stata example script** (`env/scripts/execute.ado`):
+  - Fixed path extraction bug that used `strpos()` (finds first occurrence) instead of finding last path separator
+  - Now correctly extracts filename from paths with multiple directories (e.g., `env/examples/sample_stata.do`)
+  - Prevents error: "file output/logs/examples/sample_stata.log could not be opened"
+- **Stata runstata wrapper** (`env/scripts/runstata`):
+  - Added `</dev/null` to redirect stdin, preventing Stata from hanging when waiting for input
+  - Added `timeout 10` to kill Stata after 10 seconds if it hangs (safety net)
+  - Added `TERM=dumb` to prevent Stata from waiting for terminal input
+  - Added error handling with `capture noisily` in `execute.ado` to display error messages before exit
+  - **Error code propagation**: Parse Stata output to detect errors (Stata batch mode always returns exit code 0)
+    - Detects "Error in do-file (return code: ###)" pattern from execute.ado
+    - Returns exit code 1 when errors detected, allowing make commands to fail properly
+  - Scripts now exit immediately on errors instead of hanging
+
 ### Added
 - **Journal package improvements**:
   - **Bundled repro-tools**: Journal packages now include complete `lib/repro-tools/` source

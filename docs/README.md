@@ -194,7 +194,7 @@ Complete guide to the reproducible research template.
 
 ## 📂 Examples
 
-See **[examples/](../examples/)** directory for:
+See **[env/examples/](../env/examples/)** directory for:
 - `sample_python.py` - Pure Python example
 - `sample_julia.jl` - Pure Julia example  
 - `sample_juliacall.py` - Python → Julia interop
@@ -226,7 +226,7 @@ Each example includes a Makefile target for testing.
 #### Add Julia/Python analysis
 1. [julia_python_integration.md](julia_python_integration.md) - Usage patterns
 2. [TEMPLATE_USAGE.md](../TEMPLATE_USAGE.md) - Script template
-3. [examples/](../examples/) - Working examples
+3. [env/examples/](../env/examples/) - Working examples
 
 #### Enable GPU support
 1. [platform_compatibility.md](platform_compatibility.md) - GPU configuration
@@ -274,11 +274,12 @@ project_template/
 │   ├── platform_compatibility.md       # System requirements
 │   └── troubleshooting.md              # Problem solving
 │
-└── examples/
-    ├── sample_python.py
-    ├── sample_julia.jl
-    ├── sample_juliacall.py
-    └── sample_stata.do
+└── env/
+    └── examples/
+        ├── sample_python.py
+        ├── sample_julia.jl
+        ├── sample_juliacall.py
+        └── sample_stata.do
 ```
 
 ---
@@ -347,7 +348,7 @@ When making significant changes:
 - [ ] Update README.md if core workflow changes
 - [ ] Update troubleshooting.md with new issues found
 - [ ] Update .github/copilot-instructions.md if architecture changes
-- [ ] Update examples/ if usage patterns change
+- [ ] Update env/examples/ if usage patterns change
 - [ ] Test all documented commands actually work
 
 ---
@@ -393,7 +394,7 @@ When making significant changes:
 ### Documentation Not Clear?
 
 1. **Check related docs**: Use "See also" links at bottom of pages
-2. **Try examples**: Run code from `examples/` directory
+2. **Try examples**: Run code from `env/examples/` directory
 3. **Check troubleshooting**: [troubleshooting.md](troubleshooting.md)
 4. **Review git history**: See how features evolved
 5. **Compare with fire project**: `../fire/` has similar structure

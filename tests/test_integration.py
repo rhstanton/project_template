@@ -57,7 +57,7 @@ class TestBuildWorkflow:
             pytest.skip("runpython wrapper not found")
 
         result = subprocess.run(
-            [str(python_exe), "examples/sample_python.py"],
+            [str(python_exe), "env/examples/sample_python.py"],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,

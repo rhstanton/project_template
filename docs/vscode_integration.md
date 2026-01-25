@@ -445,7 +445,7 @@ After updating environment (e.g., `make environment`):
 
 ### Workflow 5: Quick Script Testing
 
-1. Open Python file (e.g., `examples/sample_python.py`)
+1. Open Python file (e.g., `env/examples/sample_python.py`)
 2. **Ctrl+Shift+P** → `Tasks: Run Task` → `Run Python script with environment`
 3. Or press **F5** to debug
 

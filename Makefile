@@ -196,19 +196,19 @@ environment:
 
 sample-python: | $(OUT_LOG_DIR)
 	@echo "Running Python example..."
-	$(PYTHON) examples/sample_python.py 2>&1 | tee $(OUT_LOG_DIR)/sample_python.log
+	$(PYTHON) env/examples/sample_python.py 2>&1 | tee $(OUT_LOG_DIR)/sample_python.log
 
 sample-julia: | $(OUT_LOG_DIR)
 	@echo "Running Julia example..."
-	$(JULIA) examples/sample_julia.jl 2>&1 | tee $(OUT_LOG_DIR)/sample_julia.log
+	$(JULIA) env/examples/sample_julia.jl 2>&1 | tee $(OUT_LOG_DIR)/sample_julia.log
 
 sample-juliacall: | $(OUT_LOG_DIR)
 	@echo "Running Python/Julia interop example (juliacall)..."
-	$(PYTHON) examples/sample_juliacall.py 2>&1 | tee $(OUT_LOG_DIR)/sample_juliacall.log
+	$(PYTHON) env/examples/sample_juliacall.py 2>&1 | tee $(OUT_LOG_DIR)/sample_juliacall.log
 
 sample-stata: | $(OUT_LOG_DIR)
 	@echo "Running Stata example..."
-	$(STATA) examples/sample_stata.do 2>&1 | tee $(OUT_LOG_DIR)/sample_stata.log
+	$(STATA) env/examples/sample_stata.do 2>&1 | tee $(OUT_LOG_DIR)/sample_stata.log
 
 examples: sample-python sample-julia sample-juliacall
 	@echo "✓ All examples complete (Stata skipped - run 'make sample-stata' if Stata is installed)"
@@ -838,7 +838,7 @@ info:
 	@echo "  env/                     Environment setup (Python/Julia/Stata)"
 	@echo "  docs/                    Documentation (10 guides)"
 	@echo "  tests/                   Test suite (pytest)"
-	@echo "  examples/                Sample scripts (Python/Julia/Stata)"
+	@echo "  env/examples/            Sample scripts (Python/Julia/Stata)"
 	@echo ""
 	@echo "PIPELINE FLOW:"
 	@echo "  1. make environment      → Install Python 3.11, Julia, Stata packages"
