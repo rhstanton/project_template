@@ -5,44 +5,10 @@
 # This Makefile orchestrates all research analyses and artifact generation.
 #
 # QUICK START:
-#   make all              # Run all analyses
+#   make all              # Run all analyses  
 #   make price_base       # Run single analysis
 #   make publish          # Publish results to paper/
 #   make help             # Show all commands
-#
-# ==============================================================================
-# FILE STRUCTURE
-# ==============================================================================
-#
-#   QUICK NAVIGATION - Jump to line number in your editor (Ctrl+G / Cmd+L):
-#
-#     30: Shell & Environment Variables (JULIA_NUM_THREADS, paths)
-#     60: Analysis Definitions (ANALYSES, DATA, directories)
-#    110: Main Build Targets (all, environment)
-#    165: Example Scripts (sample-python, sample-julia, etc.)
-#    190: Build Rules (macro-based analysis build system)
-#    270: Publishing (publish, publish-force, file/analysis-level)
-#    388: Cleanup (clean, cleanall)
-#    401: Verification & Testing (verify, test, diff-outputs)
-#    525: Journal Submission (journal-package, archives)
-#    604: Help & Info (default, help, info targets)
-#    788: Utility Commands (list-analyses, show-analysis-*, check-deps)
-#
-#   OVERVIEW:
-#   1. CONFIGURATION (lines 30-80)
-#      - Shell options, paths, environment variables, analysis definitions
-#
-#   2. BUILD RULES (lines 110-180)
-#      - Pattern rules for building analyses (figures, tables, provenance)
-#
-#   3. PUBLISHING (lines 190-260)
-#      - Publishing artifacts to paper/ with provenance tracking
-#
-#   4. TESTING & VERIFICATION (lines 270-350)
-#      - Environment verification, output comparison, pre-submission checks
-#
-#   5. UTILITY COMMANDS (lines 360+)
-#      - Help, info, list-analyses, show-analysis-*, clean, etc.
 #
 # ==============================================================================
 # Configuration: See config.py for centralized paths and analysis definitions
@@ -114,20 +80,38 @@ ANALYSES := price_base remodel_base
 DATA := data/housing_panel.csv
 
 # ==============================================================================
-# Directory Paths
+# Directory Paths  
 # ==============================================================================
 
+# Repository root (for common.mk)
+REPO_ROOT := $(shell pwd)
+
+# Output directories
 OUT_FIG_DIR := output/figures
 OUT_TBL_DIR := output/tables
 OUT_PROV_DIR := output/provenance
 OUT_LOG_DIR := output/logs
 
+# Paper directories
 PAPER_DIR := paper
 PAPER_FIG_DIR := $(PAPER_DIR)/figures
 PAPER_TBL_DIR := $(PAPER_DIR)/tables
 
 # Default target
 .DEFAULT_GOAL := default
+
+# ==============================================================================
+# Include Generic Targets from repro-tools
+# ==============================================================================
+# This provides common targets used across all research projects:
+#   - environment, examples, sample-*
+#   - clean, cleanall, verify, test, test-cov
+#   - lint, format, type-check, check
+#   - update-submodules, update-environment
+#   - diff-outputs, pre-submit, replication-report
+#   - init-submodules (automatically run)
+
+include lib/repro-tools/lib/common.mk
 
 # ==============================================================================
 # Main Build Targets
@@ -165,62 +149,13 @@ all:
 		echo ""; \
 	fi
 
-# Environment setup
-.PHONY: environment
-environment:
-	@echo ""
-	@echo "=========================================="
-	@echo "Setting up software environment..."
-	@echo "=========================================="
-	@echo ""
-	@echo "📦 Initializing git submodules..."
-	@git submodule update --init --recursive 2>/dev/null || echo "  ⚠️  Warning: git submodule update failed (not critical if already initialized)"
-	@echo ""
-	$(MAKE) -C env all-env
-	@echo ""
-	@echo "✓ Environment ready!"
-	@echo ""
-	@echo "  Python 3.11:    .env/bin/python"
-	@echo "  Julia:          .julia/pyjuliapkg/install/bin/julia"
-	@echo "  Stata packages: .stata/ado/plus/ (if Stata installed)"
-	@echo "  repro-tools:    lib/repro-tools/ (git submodule)"
-	@echo ""
-	@echo "Next: make all (to run all analyses)"
-	@echo ""
-
 # ==============================================================================
-# Example Scripts
+# Analysis Build Rules (Macro-Based System)
 # ==============================================================================
-
-.PHONY: sample-python sample-julia sample-juliacall sample-stata examples
-
-sample-python: | $(OUT_LOG_DIR)
-	@echo "Running Python example..."
-	$(PYTHON) env/examples/sample_python.py 2>&1 | tee $(OUT_LOG_DIR)/sample_python.log
-
-sample-julia: | $(OUT_LOG_DIR)
-	@echo "Running Julia example..."
-	$(JULIA) env/examples/sample_julia.jl 2>&1 | tee $(OUT_LOG_DIR)/sample_julia.log
-
-sample-juliacall: | $(OUT_LOG_DIR)
-	@echo "Running Python/Julia interop example (juliacall)..."
-	$(PYTHON) env/examples/sample_juliacall.py 2>&1 | tee $(OUT_LOG_DIR)/sample_juliacall.log
-
-sample-stata: | $(OUT_LOG_DIR)
-	@echo "Running Stata example..."
-	$(STATA) env/examples/sample_stata.do 2>&1 | tee $(OUT_LOG_DIR)/sample_stata.log
-
-examples: sample-python sample-julia sample-juliacall
-	@echo "✓ All examples complete (Stata skipped - run 'make sample-stata' if Stata is installed)"
-
-# ==============================================================================
-# Build Rules
-# ==============================================================================
-# Uses a macro/template system for flexibility:
-# - Each analysis explicitly defines its script, inputs, and outputs
-# - No rigid naming conventions required
+# Flexible analysis definitions - no rigid naming conventions required.
+# Each analysis explicitly defines its script, inputs, and outputs.
 # - Can have different numbers or types of outputs per analysis
-# - Easier to add new analyses with non-standard configurations
+# - Easier to add analyses with non-standard configurations
 #
 # Inspired by housing-analysis/Makefile but simplified for template use.
 # ==============================================================================
@@ -412,219 +347,6 @@ $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 	@touch .publish_marker
 
 # ==============================================================================
-# Cleanup Targets
-# ==============================================================================
-
-.PHONY: clean
-clean:
-	rm -rf output/figures output/tables output/provenance output/logs .publish_stamps
-	@rm -f .publish_marker .make_build_marker
-
-.PHONY: cleanall
-cleanall: clean
-	@rm -rf .env .julia .stata
-
-# ==============================================================================
-# Verification & Testing
-# ==============================================================================
-
-.PHONY: verify
-verify:
-	@echo ""
-	@echo "========================================"
-	@echo "  Quick Verification (~1 minute)"
-	@echo "========================================"
-	@echo ""
-	@echo "1. Checking Python environment..."
-	@if [ -f .env/bin/python ]; then \
-		$(PYTHON) --version | sed 's/^/   /' && echo "   ✓"; \
-	else \
-		echo "   ✗ Python environment not found"; \
-		echo "   Run: make environment"; \
-		exit 1; \
-	fi
-	@echo ""
-	@echo "2. Checking key packages..."
-	@$(PYTHON) -c "import pandas; print('   pandas', pandas.__version__, '✓')" || echo "   ✗ pandas missing"
-	@$(PYTHON) -c "import matplotlib; print('   matplotlib', matplotlib.__version__, '✓')" || echo "   ✗ matplotlib missing"
-	@$(PYTHON) -c "import yaml; print('   pyyaml ✓')" || echo "   ✗ pyyaml missing"
-	@$(PYTHON) -c "import juliacall; print('   juliacall ✓')" || echo "   ✗ juliacall missing"
-	@echo ""
-	@echo "3. Checking data availability..."
-	@if [ -f $(DATA) ]; then \
-		echo "   $(DATA) ✓"; \
-		sha256sum $(DATA) | awk '{print "   SHA256: " substr($$1,1,16) "... ✓"}'; \
-	else \
-		echo "   ✗ Data file not found: $(DATA)"; \
-		exit 1; \
-	fi
-	@echo ""
-	@echo "========================================"
-	@echo "  ✓ Verification Complete"
-	@echo "========================================"
-	@echo ""
-	@echo "Environment is ready. Next steps:"
-	@echo "  make all              # Run all analyses"
-	@echo "  make price_base       # Run single analysis"
-	@echo "  make system-info      # Log computational environment"
-	@echo ""
-
-.PHONY: system-info
-system-info:
-	@echo "Logging computational environment..."
-	@$(REPRO_SYSINFO) --output output/system_info.yml \
-	  --repo-root $(REPO_ROOT)
-	@echo ""
-	@echo "System information saved to output/system_info.yml"
-	@echo "This file contains OS, Python, Julia versions and package lists."
-	@echo ""
-
-.PHONY: test
-test:
-	@echo "Running test suite..."
-	@$(PYTHON) -m pytest tests/ -v
-	@echo ""
-	@echo "✓ Tests complete"
-	@echo ""
-
-.PHONY: test-cov
-test-cov:
-	@echo "Running tests with coverage..."
-	@$(PYTHON) -m pytest tests/ --cov=scripts --cov-report=html --cov-report=term
-	@echo ""
-	@echo "Coverage report: htmlcov/index.html"
-	@echo ""
-
-.PHONY: diff-outputs
-diff-outputs:
-	@echo "Comparing current outputs with published outputs..."
-	@$(REPRO_COMPARE) --reference paper \
-	  --current-dir output
-	@echo ""
-
-.PHONY: pre-submit
-pre-submit:
-	@echo "Running pre-submission checklist..."
-	@$(REPRO_CHECK) --pre-submit
-	@echo ""
-
-.PHONY: pre-submit-strict
-pre-submit-strict:
-	@echo "Running pre-submission checklist (strict mode)..."
-	@$(REPRO_CHECK) --pre-submit --strict
-	@echo ""
-
-.PHONY: replication-report
-replication-report:
-	@echo "Generating replication report..."
-	@$(REPRO_REPORT) --format html \
-	  --output output/replication_report.html
-	@echo ""
-	@echo "Report generated: output/replication_report.html"
-	@echo "Open in browser: file://$(REPO_ROOT)/output/replication_report.html"
-	@echo ""
-
-.PHONY: test-outputs
-test-outputs:
-	@echo "Verifying all expected outputs exist..."
-	@echo ""
-	@MISSING=0; \
-	for analysis in $(ANALYSES); do \
-		for file in $(OUT_FIG_DIR)/$${analysis}.pdf $(OUT_TBL_DIR)/$${analysis}.tex; do \
-			if [ -f "$$file" ]; then \
-				echo "  ✓ $$file"; \
-			else \
-				echo "  ✗ Missing $$file"; \
-				MISSING=$$((MISSING + 1)); \
-			fi; \
-		done; \
-	done; \
-	echo ""; \
-	if [ $$MISSING -eq 0 ]; then \
-		echo "✓ All expected outputs present!"; \
-		echo "  See docs/expected_outputs.md for details"; \
-	else \
-		echo "✗ $$MISSING file(s) missing. Run: make all"; \
-		exit 1; \
-	fi
-
-# ==============================================================================
-# Code Quality & Formatting
-# ==============================================================================
-
-.PHONY: lint
-lint:
-	@echo "Running ruff linter..."
-	@$(PYTHON) -m ruff check . || { \
-		echo ""; \
-		echo "Linting failed. To see details:"; \
-		echo "  $(PYTHON) -m ruff check ."; \
-		echo ""; \
-		echo "To auto-fix issues:"; \
-		echo "  make format"; \
-		exit 1; \
-	}
-	@echo "✓ Ruff linting passed"
-
-.PHONY: format
-format:
-	@echo "Formatting code..."
-	@echo ""
-	@echo "1/2: Running ruff formatter..."
-	@$(PYTHON) -m ruff format . --quiet
-	@echo "    ✓ Ruff formatting complete"
-	@echo ""
-	@echo "2/2: Running import sorting and auto-fixes..."
-	@$(PYTHON) -m ruff check --fix . --quiet || true
-	@echo "    ✓ Auto-fixes applied"
-	@echo ""
-	@echo "✓ Code formatting complete"
-
-.PHONY: format-check
-format-check:
-	@echo "Checking code formatting (no changes)..."
-	@FAILED=0; \
-	echo "1/1: Checking ruff formatting..."; \
-	$(PYTHON) -m ruff format --check . || FAILED=1; \
-	if [ $$FAILED -eq 0 ]; then \
-		echo "    ✓ Ruff check passed"; \
-	else \
-		echo "    ✗ Ruff formatting issues found"; \
-	fi; \
-	if [ $$FAILED -ne 0 ]; then \
-		echo ""; \
-		echo "Formatting issues found. To fix:"; \
-		echo "  make format"; \
-		exit 1; \
-	fi
-	@echo ""
-	@echo "✓ Formatting check passed"
-
-.PHONY: type-check
-type-check:
-	@echo "Running type checker (mypy)..."
-	@$(PYTHON) -m mypy run_analysis.py shared/*.py --exclude 'lib/repro-tools' || { \
-		echo ""; \
-		echo "Type checking failed. Run for details:"; \
-		echo "  $(PYTHON) -m mypy run_analysis.py shared/*.py"; \
-		exit 1; \
-	}
-	@echo "✓ Type checking passed"
-
-.PHONY: check
-check: lint format-check type-check test
-	@echo ""
-	@echo "================================================"
-	@echo "  ✓ All quality checks passed!"
-	@echo "================================================"
-	@echo ""
-	@echo "  ✓ Linting (ruff)"
-	@echo "  ✓ Formatting (black + ruff)"
-	@echo "  ✓ Type checking (mypy)"
-	@echo "  ✓ Tests (pytest)"
-	@echo ""
-
-# ==============================================================================
 # JOURNAL SUBMISSION PACKAGE
 # ==============================================================================
 # BEGIN AUTHOR-ONLY
@@ -706,6 +428,10 @@ clean-journal:
 	@echo "✓ Cleaned journal package"
 
 # END AUTHOR-ONLY
+
+# ==============================================================================
+# Help & Info Targets
+# ==============================================================================
 
 # Default target: brief guidance
 .PHONY: default
@@ -906,12 +632,13 @@ info:
 	@echo "  Tests:      make test (run test suite)"
 	@echo "  Examples:   make examples (test environment)"
 	@echo ""
+
 # ==============================================================================
 # Utility Targets
 # ==============================================================================
 # Inspired by housing-analysis/Makefile utility commands
 
-.PHONY: list-analyses list-analyses-verbose show-analysis check-deps dryrun update-submodules
+.PHONY: list-analyses list-analyses-verbose show-analysis
 
 # List all available analyses
 list-analyses:
@@ -955,68 +682,3 @@ show-analysis-%:
 	@echo "To view logs:"
 	@echo "  cat $(OUT_LOG_DIR)/$*.log"
 	@echo "========================================"
-
-# Check that all dependencies are available
-check-deps:
-	@echo "Checking dependencies..."
-	@echo -n "  Python: "
-	@$(PYTHON) --version 2>&1 || echo "❌ ERROR: Python not available (run: make environment)"
-	@echo -n "  Julia:  "
-	@$(JULIA) --version 2>&1 | xargs echo || echo "❌ ERROR: Julia not available (run: make environment)"
-	@echo -n "  Data files: "
-	@if [ -f $(DATA) ]; then \
-		echo "✓ $(DATA)"; \
-	else \
-		echo "❌ ERROR: Data file not found: $(DATA)"; \
-	fi
-	@echo ""
-	@echo "Julia thread count: $(JULIA_NUM_THREADS)"
-	@echo ""
-
-# Show what would be built without actually building
-dryrun:
-	@echo "Dry run - showing what would be built:"
-	@echo ""
-	@$(MAKE) -n all 2>&1 | grep -E '^(Building|Running|======|✓)' || true
-
-# Update git submodules to latest version
-update-submodules:
-	@echo "=========================================="
-	@echo "Updating git submodules to latest..."
-	@echo "=========================================="
-	@echo ""
-	@echo "📦 Fetching latest repro-tools from main branch..."
-	@BEFORE=$$(git submodule status lib/repro-tools | awk '{print $$1}'); \
-	git submodule update --remote lib/repro-tools; \
-	AFTER=$$(git submodule status lib/repro-tools | awk '{print $$1}'); \
-	echo ""; \
-	if [ "$$BEFORE" = "$$AFTER" ]; then \
-		echo "✓ Already up to date!"; \
-		echo ""; \
-		echo "Current commit:"; \
-		git submodule status lib/repro-tools; \
-	else \
-		echo "✓ Submodule updated!"; \
-		echo ""; \
-		echo "Updated from $$BEFORE to $$AFTER"; \
-		echo ""; \
-		echo "To track this update in your project:"; \
-		echo "  git add lib/repro-tools"; \
-		echo "  git commit -m \"Update repro-tools to latest\""; \
-	fi; \
-	echo ""
-
-.PHONY: update-environment
-update-environment: update-submodules
-	@echo "=========================================="
-	@echo "Reinstalling environment with updates..."
-	@echo "=========================================="
-	@echo ""
-	@echo "📦 Reinstalling Python environment with updated repro-tools..."
-	$(MAKE) -C env python-env
-	@echo ""
-	@echo "📦 Reinstalling Julia packages..."
-	$(MAKE) -C env julia-install-via-python
-	@echo ""
-	@echo "✓ Environment updated!"
-	@echo ""
