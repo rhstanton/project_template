@@ -111,7 +111,7 @@ PAPER_TBL_DIR := $(PAPER_DIR)/tables
 #   - diff-outputs, pre-submit, replication-report
 #   - init-submodules (automatically run)
 
-include lib/repro-tools/lib/common.mk
+include lib/repro-tools/src/repro_tools/lib/common.mk
 
 # ==============================================================================
 # Main Build Targets
