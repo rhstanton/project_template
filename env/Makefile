@@ -40,9 +40,6 @@ export PYTHON_JULIAPKG_PROJECT := $(JULIA_DEPOT_PATH)
 
 # Check/install conda (micromamba if needed)
 conda-check:
-	@echo "=========================================================================="
-	@echo "Checking for conda/mamba/micromamba..."
-	@echo "=========================================================================="
 	@bash $(ENV_DIR)/scripts/install_micromamba.sh
 
 # Install Julia via Python (triggers juliacall auto-install)
