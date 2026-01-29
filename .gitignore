@@ -34,9 +34,9 @@
 paper/
 
 # Journal package artifacts (created by make journal-package)
-journal-package/
-journal-package.tar.gz
-journal-package.zip
+replication-package/
+replication-package.tar.gz
+replication-package.zip
 
 # Build marker (internal make state)
 .make_build_marker
