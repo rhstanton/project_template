@@ -343,7 +343,7 @@ class TestPublishingIdempotency:
 
     def test_publish_stamps_directory_exists(self):
         """Publish tracking directory should exist after publishing."""
-        stamps_dir = REPO_ROOT / "output" / ".publish_stamps"
+        stamps_dir = REPO_ROOT / ".publish_stamps"
         if not stamps_dir.exists():
             pytest.skip("Nothing has been published with stamp tracking")
 

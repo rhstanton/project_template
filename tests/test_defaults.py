@@ -172,18 +172,8 @@ class TestMakefileExtraArgs:
         assert "EXTRA_ARGS" in result.stdout
 
     def test_make_with_extra_args(self):
-        """Test that make passes EXTRA_ARGS to the script.
-
-        We use 'make -n clean' first to force rebuild, then check command.
-        """
-        # Clean first
-        subprocess.run(
-            ["make", "clean"],
-            capture_output=True,
-            cwd=Path(__file__).parent.parent,
-        )
-
-        # Dry run to see the command
+        """Test that make passes EXTRA_ARGS to the script."""
+        # Dry run with -B to show command even if up-to-date
         result = subprocess.run(
             ["make", "-Bn", "price_base", "EXTRA_ARGS=--ylabel='Test'"],
             capture_output=True,
