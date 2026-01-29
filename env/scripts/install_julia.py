@@ -66,11 +66,12 @@ print()
 
 want_cuda = os.environ.get("JULIA_ENABLE_CUDA") == "1"
 if want_cuda:
-    print("CUDA support requested (JULIA_ENABLE_CUDA=1)")
-    print("CUDA.jl will be added during installation.")
+    print("GPU support requested (JULIA_ENABLE_CUDA=1)")
+    print("Note: CUDA.jl is optional and loaded at runtime when available.")
+    print("It will be installed on-demand if you have a CUDA-capable GPU.")
 else:
-    print("CUDA support not requested (JULIA_ENABLE_CUDA unset/0)")
-    print("Skipping CUDA.jl install (CPU-only)")
+    print("GPU support not requested (JULIA_ENABLE_CUDA unset/0)")
+    print("Julia will use CPU-only backends.")
 
 # Import juliacall - this triggers Julia auto-install if needed
 try:
@@ -115,17 +116,25 @@ try:
     ]
     julia_env["JULIA_LOAD_PATH"] = ":".join(load_path)
 
-    cmd = [
-        julia_exe,
-        f"--project={env_dir}",
-        "-e",
-        """
+    # Build Julia installation command with optional CUDA
+    julia_code_parts = ["""
         using Pkg
         println("Resolving dependencies...")
         Pkg.resolve()
         println()
         println("Installing packages...")
         Pkg.instantiate()
+        """]
+    
+    if want_cuda:
+        julia_code_parts.append("""
+        println()
+        println("Installing CUDA.jl for GPU support...")
+        # Install without adding to Project.toml [deps]
+        Pkg.add("CUDA"; preserve=PRESERVE_ALL)
+        """)
+    
+    julia_code_parts.append("""
         println()
         println("Precompiling packages...")
         Pkg.precompile()
@@ -133,7 +142,15 @@ try:
         println("Verifying key packages...")
         using PythonCall
         println("  ✓ PythonCall")
-        """,
+        """)
+    
+    julia_code = "".join(julia_code_parts)
+    
+    cmd = [
+        julia_exe,
+        f"--project={env_dir}",
+        "-e",
+        julia_code,
     ]
 
     def run_julia_install():
