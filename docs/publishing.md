@@ -5,11 +5,13 @@ This document explains how to publish build artifacts from `output/` to `paper/`
 ## Overview
 
 The publishing workflow:
+
 1. **Builds** artifacts in `output/` (ephemeral, can be deleted)
 2. **Publishes** vetted outputs to `paper/` (permanent, tracked separately)
 3. **Updates** `paper/provenance.yml` with full build+publish metadata
 
 This separation allows:
+
 - Experimentation in `output/` without affecting paper
 - Explicit, traceable publication events
 - Different git histories for analysis vs. paper repos
@@ -50,6 +52,7 @@ make publish PUBLISH_FILES="output/figures/price_base.pdf output/tables/custom_t
 This publishes only the specified files, regardless of which analysis they came from.
 
 **Use cases**:
+
 - Analysis generates 5 figures but you only want 2 in the paper
 - You have supplementary materials in separate subdirectories
 - Custom aggregated tables that combine data from multiple analyses
@@ -298,6 +301,7 @@ cat paper/provenance.yml
 ```
 
 This ensures:
+
 - All outputs from same commit
 - No uncommitted changes
 - Full provenance chain documented

@@ -11,6 +11,7 @@ This document summarizes the improvements incorporated from the `housing-analysi
 ### 1. **Comprehensive Documentation Structure**
 
 **What was added:**
+
 - Clear file structure outline in header comments
 - Section markers throughout the Makefile (lines 30-80, 110-180, etc.)
 - Quick start guide at the top
@@ -37,6 +38,7 @@ This document summarizes the improvements incorporated from the `housing-analysi
 ### 2. **Environment Variables**
 
 **What was added:**
+
 - `JULIA_NUM_THREADS` - Auto-detects CPU cores or can be set explicitly
 - Proper shell configuration with safety options (`.SHELLFLAGS := -eu -o pipefail -c`)
 - `.DELETE_ON_ERROR` directive to clean up partial outputs on failures
@@ -48,6 +50,7 @@ export JULIA_NUM_THREADS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/de
 ```
 
 **Why it matters:** 
+
 - Improves Julia performance by using all available CPU cores
 - Cross-platform compatible (works on Linux and macOS)
 - Safer build process with better error handling
@@ -66,15 +69,18 @@ make all JULIA_NUM_THREADS=8
 ### 3. **Better Terminology: ANALYSES vs ARTIFACTS**
 
 **What changed:**
+
 - Renamed `ARTIFACTS` variable to `ANALYSES` throughout
 - Updated all references in Makefile targets and config.py
 - Clarified documentation to explain the distinction
 
 **Old thinking:**
+
 - "price_base" is an artifact
 - Forces 1:1 mapping between target name and output file
 
 **New thinking:**
+
 - "price_base" is an **analysis** or **run**
 - One analysis can produce multiple artifacts (figure, table, provenance, logs, etc.)
 - More flexible and accurate conceptually
@@ -98,6 +104,7 @@ ANALYSES = {
 ```
 
 **Why it matters:** 
+
 - More accurate conceptually - you're running analyses, not building singular artifacts
 - Allows for future flexibility where one analysis might produce many outputs
 - Better aligns with research workflow terminology
@@ -168,6 +175,7 @@ Building remodel_base...
 ```
 
 **Why it matters:** 
+
 - **Discoverability**: Easier to explore what's available
 - **Debugging**: Can inspect configuration without digging through files
 - **Verification**: Quick check that environment is set up correctly
@@ -178,6 +186,7 @@ Building remodel_base...
 ### 5. **Improved Section Organization**
 
 **What changed:**
+
 Added clear section markers with `==============` dividers:
 
 ```makefile
@@ -244,6 +253,7 @@ We now use a simplified macro/template system inspired by housing-analysis but t
 
 **How it works:**
 Each analysis explicitly defines:
+
 - `.script` - Path to the script
 - `.runner` - Command to run it (PYTHON, JULIA, STATA)
 - `.inputs` - Input files that trigger rebuild
@@ -253,6 +263,7 @@ Each analysis explicitly defines:
 Then a macro generates the Make rules automatically.
 
 **Benefits:**
+
 - ✅ No rigid naming conventions
 - ✅ Can have different numbers of outputs
 - ✅ Can use different script names/paths
@@ -295,6 +306,7 @@ STUDIES = {
 ```
 
 **Why not included:**
+
 - Template analyses are simple (same data source, same parameters)
 - config.py currently just tracks paths, not analysis parameters
 - Parameter configuration lives in each `build_*.py` script
@@ -315,6 +327,7 @@ lint:
 ```
 
 **Why not included:**
+
 - Project already has pytest in place
 - Can add if team adopts black/ruff
 - Not essential for core reproducibility workflow
@@ -363,11 +376,13 @@ make all JULIA_NUM_THREADS=16
 ### For Existing Users
 
 **No breaking changes** - all existing commands still work:
+
 - `make all` - still builds everything
 - `make price_base` - still builds price_base
 - `make publish` - still publishes to paper/
 
 **New commands available:**
+
 - `make list-analyses` - see what's available
 - `make show-analysis-<name>` - inspect configuration
 - `make check-deps` - verify environment
@@ -416,12 +431,14 @@ export JULIA_NUM_THREADS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/de
 ```
 
 **How it works:**
+
 1. Try `nproc` (Linux)
 2. If that fails, try `sysctl -n hw.ncpu` (macOS)
 3. If both fail, default to 1 core
 4. Use `?=` so it can be overridden: `make all JULIA_NUM_THREADS=8`
 
 **Impact on build times:**
+
 - Single-threaded Julia: 100% baseline
 - Multi-threaded Julia (32 cores): ~50-70% of baseline for compute-intensive tasks
 
@@ -505,11 +522,13 @@ export JULIA_NUM_THREADS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/de
 **Major new capability - Flexible Analysis Definitions:**
 
 Before (rigid pattern rule):
+
 - Had to be `build_<name>.py`
 - Had to produce exactly 3 files: `<name>.pdf`, `<name>.tex`, `<name>.yml`
 - Same naming relationship for all analyses
 
 After (flexible macro system):
+
 - Any script name
 - Any number of outputs
 - Different runners (Python, Julia, Stata)
@@ -540,6 +559,7 @@ ANALYSES := price_base remodel_base income_base
 ```
 
 **Impact:**
+
 - **Better discoverability** - easy to see what's available
 - **Better debugging** - inspect configuration without code diving
 - **Better performance** - Julia uses all CPU cores

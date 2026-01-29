@@ -7,6 +7,7 @@ This document explains how defaults are resolved with multiple priority levels.
 The template implements a **3-level defaults system** inspired by the fire/housing-analysis project, allowing you to define defaults at multiple levels and override them flexibly.
 
 **Priority order (lowest to highest)**:
+
 1. **Docopt defaults** (in `run_analysis.py` docstring)
 2. **`config.DEFAULTS`** (in `shared/config.py`)
 3. **`config.STUDIES[study]`** (study-specific config)
@@ -53,6 +54,7 @@ These apply to **all studies** unless overridden by study-specific config or com
 **Usage**: Edit `shared/config.py` to change global defaults.
 
 **When to use**: 
+
 - Common settings shared across most/all studies
 - Project-wide conventions (e.g., all analyses use the same data file)
 
@@ -81,6 +83,7 @@ These override `DEFAULTS` for a specific study.
 **Usage**: Edit `shared/config.py` to add/modify studies.
 
 **When to use**:
+
 - Study-specific parameters (e.g., different outcome variable)
 - Required unique values (output paths must differ per study)
 
@@ -113,6 +116,7 @@ make price_base price_base_EXTRA_ARGS="--title='My Custom Title'"
 Applies only to the specific analysis.
 
 **When to use**:
+
 - Quick one-off experiments without editing config files
 - Testing different parameters
 - Sensitivity analyses with varying parameters
@@ -356,6 +360,7 @@ DEFAULTS = {
 ### "My override isn't working!"
 
 **Check**:
+
 1. Are you using the correct flag name? (e.g., `--ylabel` not `--y-label`)
 2. Are you quoting correctly? Use `EXTRA_ARGS="--title='My Title'"` not `EXTRA_ARGS=--title='My Title'`
 3. Is the analysis name correct? (`price_base_EXTRA_ARGS` not `pricebase_EXTRA_ARGS`)

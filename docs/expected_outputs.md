@@ -1,6 +1,7 @@
 # Expected Outputs Checklist
 
 After running `make all`, you should have **4 files** from 2 analyses:
+
 - 2 figures (`.pdf` in `output/figures/`)
 - 2 tables (`.tex` in `output/tables/`)
 - 2 provenance records (`.yml` in `output/provenance/`)
@@ -290,17 +291,20 @@ make price_base
 ### Incorrect File Sizes
 
 **If PDFs are 0 bytes or unusually small:**
+
 - Check logs for matplotlib errors
 - Ensure data loaded correctly
 - Verify no exceptions during plotting
 
 **If PDFs are >1 MB:**
+
 - May indicate very complex plots or embedded data
 - Usually not an issue, but check content
 
 ### Provenance Missing Data
 
 **If provenance files incomplete:**
+
 - Check that `repro_tools` is installed and working
 - Ensure git repository initialized
 - Verify data files exist when analysis runs
@@ -308,6 +312,7 @@ make price_base
 ### Checksum Mismatches
 
 **If checksums don't match between runs:**
+
 - This is expected if data changed
 - Check git status of data files
 - Review provenance to see when file changed
@@ -384,6 +389,7 @@ All expected outputs present!
 ---
 
 **See also:**
+
 - [paper_output_mapping.md](paper_output_mapping.md) - Paper figures/tables → output files
 - [journal_editor_readme.md](journal_editor_readme.md) - Quick replication guide
 - [provenance.md](provenance.md) - Provenance system documentation

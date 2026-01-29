@@ -9,16 +9,19 @@
 ### 1. Enhanced repro-tools (2 commits pushed)
 
 **Commit 1**: Add `validate_study_config()` function
+
 - Moved validation logic from template to library
 - Added customizable `required_keys` and `valid_aggregations` parameters
 - Maintains all existing validation: required keys, file existence, output paths, variable types, aggregations
 
 **Commit 2**: Export `validate_study_config` in `__init__.py`
+
 - Made function accessible via `from repro_tools import validate_study_config`
 
 ### 2. Updated Template
 
 **Changes**:
+
 - Updated `run_analysis.py` to import from repro-tools
 - Deprecated `shared/config_validator.py` (removed from project)
 - Updated `shared/__init__.py` to remove deprecated exports
@@ -26,13 +29,14 @@
 
 ### 3. Tested
 
-✅ `run_analysis.py --list` works
-✅ All imports resolve correctly
-✅ Validation logic preserved
+- ✅ `run_analysis.py --list` works
+- ✅ All imports resolve correctly
+- ✅ Validation logic preserved
 
 ## Results
 
 ### Code Reduction
+
 - **Removed**: 89 lines from `shared/config_validator.py`
 - **Net reduction**: ~80 lines per project
 - **Maintenance**: Validation improvements now happen once in repro-tools
@@ -40,11 +44,13 @@
 ### Benefits for 10+ Projects
 
 **Before**: 
+
 - Each project has 89 lines of validation code
 - Updates require changing 10+ projects
 - Inconsistencies between projects
 
 **After**:
+
 - Validation lives in repro-tools (centralized)
 - Updates happen once, benefit all projects
 - Guaranteed consistency
@@ -56,6 +62,7 @@
 Create `lib/repro-tools/lib/common.mk` to extract ~600 lines of generic Makefile targets:
 
 ### Targets to Extract (all identical across projects):
+
 - `environment` - Environment setup
 - `examples` - Sample script runners  
 - `verify` - Environment verification
@@ -67,6 +74,7 @@ Create `lib/repro-tools/lib/common.mk` to extract ~600 lines of generic Makefile
 - `help`, `info`, `default` - Documentation displays
 
 ### What Stays Project-Specific (~400 lines):
+
 - `ANALYSES` variable
 - Analysis definitions (`<name>.script`, `.args`, etc.)
 - `make-analysis-rule` macro

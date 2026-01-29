@@ -126,6 +126,7 @@ Installed complete multi-language environment:
 - **Stata packages** (if Stata installed): estout, etc.
 
 **Key features**:
+
 - ✅ Auto-installs micromamba if conda/mamba not found
 - ✅ Julia auto-downloaded (no manual installation)
 - ✅ Single unified Python environment (no CondaPkg duplication)
@@ -186,17 +187,20 @@ Published artifacts to `paper/` directory:
 ### System Requirements
 
 **Minimum**:
+
 - CPU: x86_64 or ARM64 (Apple Silicon)
 - RAM: 8GB
 - Disk: 5GB free (2GB environment + 3GB cache)
 - OS: Linux, macOS 11+, or Windows 10+ with WSL 2
 
 **Recommended**:
+
 - RAM: 16GB (for large datasets)
 - Disk: 10GB free
 - OS: Ubuntu 22.04 LTS or macOS 13+
 
 **For GPU support** (optional):
+
 - NVIDIA GPU with CUDA 12.x or 13.x
 - Set `JULIA_ENABLE_CUDA=1` and `GPU_CUDA_MAJOR=12` before `make environment`
 

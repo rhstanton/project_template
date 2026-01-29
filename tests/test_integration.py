@@ -131,7 +131,7 @@ class TestOutputs:
         # If output/ exists, subdirectories may or may not exist yet
         # Just check that output directory itself exists
         assert output_dir.exists()
-        
+
         # Check provenance if it exists
         prov_dir = output_dir / "provenance"
         if prov_dir.exists() and list(prov_dir.glob("*.yml")):

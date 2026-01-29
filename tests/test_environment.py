@@ -196,25 +196,25 @@ class TestJuliaEnvironment:
             pytest.skip("env/Project.toml not found")
 
         content = project_toml.read_text()
-        
+
         # Parse TOML sections
         import re
-        
+
         # Check [deps] section - PythonCall should NOT be there
-        deps_match = re.search(r'\[deps\](.*?)(?:\[|$)', content, re.DOTALL)
+        deps_match = re.search(r"\[deps\](.*?)(?:\[|$)", content, re.DOTALL)
         if deps_match:
             deps_section = deps_match.group(1)
-            assert not re.match(r'^\s*PythonCall\s*=', deps_section, re.MULTILINE), (
+            assert not re.match(r"^\s*PythonCall\s*=", deps_section, re.MULTILINE), (
                 "CRITICAL ERROR: PythonCall found in [deps] section of env/Project.toml! "
                 "This causes installation failures. PythonCall is managed by "
                 "juliacall and should ONLY be in .julia/pyjuliapkg/"
             )
-        
+
         # Check [compat] section - PythonCall should NOT be there
-        compat_match = re.search(r'\[compat\](.*?)(?:\[|$)', content, re.DOTALL)
+        compat_match = re.search(r"\[compat\](.*?)(?:\[|$)", content, re.DOTALL)
         if compat_match:
             compat_section = compat_match.group(1)
-            assert not re.match(r'^\s*PythonCall\s*=', compat_section, re.MULTILINE), (
+            assert not re.match(r"^\s*PythonCall\s*=", compat_section, re.MULTILINE), (
                 "CRITICAL ERROR: PythonCall found in [compat] section of env/Project.toml! "
                 "This causes installation failures. PythonCall is managed by "
                 "juliacall and should ONLY be in .julia/pyjuliapkg/"
@@ -228,7 +228,7 @@ class TestJuliaEnvironment:
             pytest.skip("Julia not installed via juliacall yet")
 
         content = julia_project.read_text()
-        
+
         # PythonCall SHOULD be in juliacall's Project.toml
         assert "PythonCall" in content, (
             "PythonCall not found in .julia/pyjuliapkg/Project.toml. "
@@ -242,7 +242,11 @@ class TestJuliaEnvironment:
             pytest.skip("runpython wrapper not found")
 
         result = subprocess.run(
-            [str(runpython), "-c", "from juliacall import Main as jl; print(jl.VERSION)"],
+            [
+                str(runpython),
+                "-c",
+                "from juliacall import Main as jl; print(jl.VERSION)",
+            ],
             capture_output=True,
             text=True,
             timeout=30,
@@ -259,7 +263,7 @@ class TestJuliaEnvironment:
         # Check if CUDA.jl is in Project.toml (indicates GPU support requested)
         project_toml = REPO_ROOT / "env" / "Project.toml"
         content = project_toml.read_text()
-        
+
         if "CUDA" not in content:
             pytest.skip("CUDA not in Project.toml - GPU support not enabled")
 

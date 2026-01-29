@@ -18,6 +18,7 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 ```
 
 **Limitations:**
+
 - ❌ Script MUST be `build_<name>.py`
 - ❌ MUST produce exactly 3 files: `<name>.pdf`, `<name>.tex`, `<name>.yml`
 - ❌ Same naming relationship for ALL analyses
@@ -46,6 +47,7 @@ $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 ```
 
 **Advantages:**
+
 - ✅ Any script name or path
 - ✅ Any number of outputs
 - ✅ Different configurations per analysis
@@ -179,6 +181,7 @@ make show-analysis-my_analysis  # Inspect configuration
 ### 1. Define Variables
 
 Each analysis defines 5 variables:
+
 - `<name>.script` - Path to executable script
 - `<name>.runner` - Command to run it
 - `<name>.inputs` - Files that trigger rebuild
@@ -220,9 +223,11 @@ $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 ```
 
 **Pros:**
+
 - Concise
 
 **Cons:**
+
 - Inflexible naming
 - Can't vary number of outputs
 - Hard to see what's configured
@@ -235,6 +240,7 @@ price_base.outputs := fig.pdf table.tex
 ```
 
 **Pros:**
+
 - Explicit configuration
 - Any number of outputs
 - Easy to see what's happening
@@ -242,6 +248,7 @@ price_base.outputs := fig.pdf table.tex
 - Self-documenting
 
 **Cons:**
+
 - Slightly more verbose
 
 **Verdict:** The flexibility and clarity are worth the extra lines.
@@ -284,6 +291,7 @@ $($(1).outputs) &: $($(1).script) $($(1).inputs)
 ```
 
 This means **all outputs are built by one command**, ensuring atomicity:
+
 - Either all outputs are created, or none are
 - No partial/inconsistent states
 - Requires GNU Make 4.3+
@@ -310,6 +318,7 @@ price_base.args    := --data $(DATA) --prelags=10
 ```
 
 **Why different:**
+
 - housing-analysis has 43 analyses with shared configuration
 - Template has 2-5 analyses with independent configuration
 - Simpler = better for a template
@@ -410,6 +419,7 @@ make publish PUBLISH_FILES="output/figures/detailed_analysis_fig1.pdf output/fig
 ```
 
 **Common scenarios:**
+
 - Analysis generates multiple figures but paper only uses some
 - Want appendix materials separate from main paper
 - Different output subsets for paper vs. supplementary materials
@@ -440,6 +450,7 @@ While keeping:
 ---
 
 **See also:**
+
 - [docs/makefile_improvements.md](makefile_improvements.md) - Full list of improvements
 - [docs/publishing.md](publishing.md) - Complete publishing workflow guide
 - [Makefile](../Makefile) - Lines 168-255 for macro definitions

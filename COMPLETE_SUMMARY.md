@@ -32,11 +32,13 @@ Successfully reduced per-project code by **61%** (1,252 lines) and automated pro
 **Documentation**: PHASE1_COMPLETE.md
 
 **Changes**:
+
 - Moved `validate_study_config()` from project to repro-tools
 - Eliminated 89 lines of duplicated validation code per project
 - All projects now use centralized, tested validation
 
 **Benefits**:
+
 - Single source of truth for validation logic
 - Bug fixes propagate to all projects
 - Easier to add new validation rules
@@ -52,6 +54,7 @@ Successfully reduced per-project code by **61%** (1,252 lines) and automated pro
 **Documentation**: PHASE2_COMPLETE.md
 
 **Changes**:
+
 - Created `lib/repro-tools/lib/common.mk` (360 lines)
 - Reduced project_template Makefile from 1021 → 684 lines (33%)
 - Extracted reusable targets: environment, examples, clean, verify, test, lint, format, check, utilities
@@ -78,6 +81,7 @@ list-analyses, show-analysis-%, update-submodules, update-environment, check-dep
 ```
 
 **Benefits**:
+
 - Projects only define analysis-specific logic
 - Common targets updated centrally
 - Consistent behavior across all projects
@@ -93,6 +97,7 @@ list-analyses, show-analysis-%, update-submodules, update-environment, check-dep
 **Documentation**: PHASE3_COMPLETE.md
 
 **Changes**:
+
 - Created `src/repro_tools/scaffold.py` (952 lines)
 - Added `repro-new-project` CLI command
 - Generates complete projects with 195-line Makefile (81% reduction)
@@ -106,6 +111,7 @@ repro-new-project \
 ```
 
 **Generated Project Includes**:
+
 - ✅ Git repository with repro-tools submodule
 - ✅ Minimal Makefile (includes common.mk)
 - ✅ Sample analysis with provenance tracking
@@ -115,6 +121,7 @@ repro-new-project \
 - ✅ Sample data for testing
 
 **Benefits**:
+
 - 30-second project creation (vs 1 hour manual)
 - Instant best practices (git, provenance, validation)
 - Zero configuration duplication
@@ -406,6 +413,7 @@ The 3-phase efficiency improvement successfully transformed the project_template
 **Phase 3** automated project generation completely
 
 **Results**:
+
 - ✅ **82% less code** per project (1110 → 195 lines)
 - ✅ **98% faster setup** (60 min → 30 sec)
 - ✅ **10+ projects** ready to scale

@@ -259,6 +259,7 @@ if __name__ == "__main__":
 ## Next Steps
 
 See `project_template/` for a complete working example with:
+
 - Multi-language support (Python, Julia, Stata)
 - Flexible analysis definitions
 - Publishing workflow

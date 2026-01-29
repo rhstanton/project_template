@@ -89,7 +89,7 @@ if os.path.exists(manifest_path):
     manifest_backup = manifest_path + ".backup"
     try:
         shutil.move(manifest_path, manifest_backup)
-        print(f"Temporarily moved Manifest.toml aside for juliacall import")
+        print("Temporarily moved Manifest.toml aside for juliacall import")
     except Exception as e:
         print(f"⚠ Could not move Manifest.toml: {e}")
         manifest_backup = None
@@ -106,7 +106,7 @@ try:
     if manifest_backup and os.path.exists(manifest_backup):
         try:
             os.remove(manifest_backup)
-            print(f"Removed old Manifest.toml backup (will be regenerated)")
+            print("Removed old Manifest.toml backup (will be regenerated)")
         except Exception as e:
             print(f"⚠ Could not remove Manifest.toml backup: {e}")
 
@@ -137,16 +137,16 @@ try:
 
     # Build Julia command
     julia_env = os.environ.copy()
-    
+
     # CRITICAL: Set JULIA_DEPOT_PATH to use local .julia/ directory
     # Without this, Julia may use ~/.julia or other system depots
     julia_env["JULIA_DEPOT_PATH"] = julia_depot
-    
+
     # CRITICAL: Unset JULIA_PROJECT so Pkg.activate() in Julia code can work
     # juliacall may have set this to the depot project
     julia_env.pop("JULIA_PROJECT", None)
     julia_env.pop("JULIAPKG_PROJECT", None)
-    
+
     julia_env["JULIA_CONDAPKG_BACKEND"] = "Null"
     julia_env["JULIA_PYTHONCALL_EXE"] = sys.executable
 
@@ -156,12 +156,12 @@ try:
     julia_code_parts = [
         f"""
         import Pkg
-        
+
         # Activate the env/ project (not .julia/ or .julia/pyjuliapkg/)
         Pkg.activate("{env_dir}")
-        
+
         println("Active project: ", Base.active_project())
-        
+
         println("Resolving dependencies...")
         Pkg.resolve()
         println()
@@ -169,7 +169,7 @@ try:
         Pkg.instantiate()
         """
     ]
-    
+
     # Install CUDA.jl if requested (won't add to [deps], uses temporary environment)
     if want_cuda:
         julia_code_parts.append("""
@@ -178,16 +178,16 @@ try:
         # Install without adding to Project.toml [deps]
         Pkg.add("CUDA"; preserve=Pkg.Types.PRESERVE_ALL)
         """)
-    
+
     julia_code_parts.append("""
         println()
         println("Precompiling packages...")
         Pkg.precompile()
     """)
-    
+
     # Don't verify PythonCall here - it's in a different project (depot vs env)
     # The verification will happen when scripts actually use Julia
-    
+
     if want_cuda:
         julia_code_parts.append("""
         try
@@ -201,7 +201,7 @@ try:
             println("  ⚠ CUDA.jl install failed: ", e)
         end
         """)
-    
+
     julia_code = "".join(julia_code_parts)
 
     # Run with --project=env/ to force using env/ project instead of depot

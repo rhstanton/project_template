@@ -11,6 +11,7 @@ make environment
 ```
 
 This creates:
+
 - `.env/`: Python 3.11 environment with conda/micromamba
 - `.julia/`: Julia depot with packages via juliacall
 - `.stata/`: Stata packages (reghdfe, ftools, estout) if Stata is installed
@@ -28,6 +29,7 @@ nix develop .#gpu        # GPU-enabled shell (Linux only)
 ```
 
 The Nix shell provides:
+
 - Julia + micromamba + GNU tools
 - Isolated environment (doesn't affect system)
 - Automatic `JULIA_PROJECT` and `JULIA_DEPOT_PATH` configuration
@@ -63,6 +65,7 @@ The Nix shell provides:
 ## Python/Julia Integration
 
 The `runpython` wrapper:
+
 - Activates the `.env` Python environment
 - Configures `JULIA_PROJECT` to point to `env/`
 - Sets `PYTHON_JULIAPKG_EXE` to use the bundled Julia in `.julia/pyjuliapkg/`
@@ -71,6 +74,7 @@ The `runpython` wrapper:
 ## Reproducibility
 
 For exact reproducibility:
+
 - Python: `env/python.yml` pins major versions; consider `conda-lock` for full lockfile
 - Julia: `env/Manifest.toml` provides exact version locking
 - Stata: `env/stata-packages.txt` specifies package names and optional versions
@@ -83,6 +87,7 @@ For exact reproducibility:
 **Target audience**: Academic researchers
 
 **Advantages**:
+
 - ✅ **Multi-language**: Handles Python, Julia packages, R, system libraries
 - ✅ **Widely adopted**: Standard in scientific computing
 - ✅ **Large ecosystem**: conda-forge has 20,000+ packages
@@ -90,6 +95,7 @@ For exact reproducibility:
 - ✅ **Familiar**: Most researchers already know conda
 
 **Limitations**:
+
 - ⚠️ Slower than modern alternatives
 - ⚠️ Lockfiles less robust than newer tools
 - ⚠️ Environment resolution can be slow
@@ -101,6 +107,7 @@ For exact reproducibility:
 **What it is**: Fast Python package installer (Rust-based, ~10-100x faster than pip)
 
 **Why not used**:
+
 - ❌ **Python-only** - Cannot handle Julia, Stata, or binary dependencies
 - ❌ Missing conda-forge packages
 - ❌ juliacall setup requires conda Python
@@ -113,6 +120,7 @@ For exact reproducibility:
 **What it is**: Modern conda-compatible package manager (Rust-based, from Prefix.dev)
 
 **Potential advantages**:
+
 - ✅ **Multi-language** like conda (Python + Julia + R + system libs)
 - ✅ Much faster than conda/mamba
 - ✅ Better lockfiles (`pixi.lock` with exact hashes)
@@ -120,6 +128,7 @@ For exact reproducibility:
 - ✅ Built-in task runner (could simplify Makefile)
 
 **Why not yet implemented**:
+
 - ⚠️ Newer tool (less mature ecosystem)
 - ⚠️ Smaller community than conda
 - ⚠️ Would require converting `env/python.yml` → `pixi.toml`
@@ -134,11 +143,13 @@ For exact reproducibility:
 **Current support**: `flake.nix` provides optional dev shell
 
 **Use case**:
+
 - Dev shell with system tools (julia, micromamba, GNU make)
 - True bit-for-bit reproducibility across platforms
 - Optional, not required
 
 **Why optional not required**:
+
 - ❌ Steep learning curve
 - ❌ Not familiar to most academic researchers  
 - ❌ Many HPC clusters don't allow Nix

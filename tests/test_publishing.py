@@ -120,7 +120,7 @@ class TestPublishedArtifacts:
                     output_info = artifact_data[output_type]
                     if output_info.get("copied", False):
                         dst_path = Path(output_info["dst"])
-                        
+
                         # Handle cross-platform: if absolute path doesn't exist,
                         # try relative path from repo root
                         if not dst_path.exists():
@@ -128,8 +128,10 @@ class TestPublishedArtifacts:
                             filename = dst_path.name
                             # Build expected path from repo root
                             dst_path = REPO_ROOT / "paper" / output_type / filename
-                        
-                        assert dst_path.exists(), f"Published file missing: {dst_path} (artifact: {artifact_name}, type: {output_type})"
+
+                        assert dst_path.exists(), (
+                            f"Published file missing: {dst_path} (artifact: {artifact_name}, type: {output_type})"
+                        )
 
     def test_published_checksums_match(self):
         """Published files should match their recorded checksums."""
@@ -344,15 +346,17 @@ class TestPublishingIdempotency:
     def test_publish_stamps_directory_can_be_created(self):
         """Publish tracking directory can be created (or already exists)."""
         stamps_dir = REPO_ROOT / ".publish_stamps"
-        
+
         # If it doesn't exist, the Makefile should be able to create it
         # We test this by checking the Makefile has the logic, not by actually running it
         makefile = REPO_ROOT / "Makefile"
         content = makefile.read_text()
-        
+
         # Check that Makefile references .publish_stamps
-        assert ".publish_stamps" in content, "Makefile should reference .publish_stamps directory"
-        
+        assert ".publish_stamps" in content, (
+            "Makefile should reference .publish_stamps directory"
+        )
+
         # If it exists, verify it's a directory
         if stamps_dir.exists():
             assert stamps_dir.is_dir()

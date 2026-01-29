@@ -195,6 +195,7 @@ Complete guide to the reproducible research template.
 ## 📂 Examples
 
 See **[env/examples/](../env/examples/)** directory for:
+
 - `sample_python.py` - Pure Python example
 - `sample_julia.jl` - Pure Julia example  
 - `sample_juliacall.py` - Python → Julia interop
@@ -322,12 +323,14 @@ project_template/
 ### When to Update
 
 **Add to CHANGELOG.md**:
+
 - New features
 - Breaking changes
 - Bug fixes
 - Dependency updates
 
 **Update technical docs**:
+
 - New environment variables
 - Changed directory structure
 - New Makefile targets
@@ -356,11 +359,13 @@ When making significant changes:
 ## 📧 Documentation Feedback
 
 **Found an error?**
+
 - Check git commit history for context
 - Verify against current code
 - Update or file issue
 
 **Missing documentation?**
+
 - Check if topic covered in related doc
 - Add to troubleshooting.md if it's a common question
 - Create new doc if substantial new topic

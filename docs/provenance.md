@@ -5,6 +5,7 @@ This project implements comprehensive provenance tracking to ensure reproducibil
 ## Overview
 
 Provenance tracking answers these critical questions:
+
 - **What code** generated each figure/table?
 - **What data** was used as input?
 - **When** was it built?
@@ -89,6 +90,7 @@ artifacts:
 ## Git State Tracking
 
 The `git` section records:
+
 - `commit`: Full SHA of current commit
 - `branch`: Current branch name
 - `dirty`: Whether working tree has uncommitted changes
@@ -100,6 +102,7 @@ This allows precise reproduction: checkout the commit, verify inputs match their
 ## SHA256 Checksums
 
 Every input and output file is checksummed:
+
 - **Inputs**: Proves exactly which data was used
 - **Outputs**: Detects any manual modifications
 
@@ -143,6 +146,7 @@ This function:
 ### In Publishing
 
 The publishing system (via repro_tools):
+
 1. Reads build provenance from `output/provenance/<name>.yml`
 2. Copies artifacts to `paper/`
 3. Embeds build records in `paper/provenance.yml`
@@ -186,6 +190,7 @@ sha256sum output/figures/price_base.pdf
 Publishing enforces git hygiene:
 
 **Default checks** (can be overridden):
+
 - `--allow-dirty 0`: Refuses if working tree is dirty
 - `--require-not-behind 1`: Refuses if branch is behind upstream
 - `--require-current-head 0`: Allows artifacts from older commits (default)
@@ -215,6 +220,7 @@ This ensures all artifacts were built from the current HEAD commit, preventing a
 ## Future Enhancements
 
 Potential improvements:
+
 - Track Python/Julia package versions
 - Record system info (OS, CPU, memory)
 - Capture environment variable dumps

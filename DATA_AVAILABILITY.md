@@ -47,6 +47,7 @@ sha256sum data/housing_panel.csv
 - **Our access:** We obtained this data under [agreement type] on [date]
 
 **To obtain access:**
+
 1. Visit [URL]
 2. Complete application at [application link]
 3. Expected turnaround: [timeframe]
@@ -103,6 +104,7 @@ make all
 ```
 
 **Sample data characteristics:**
+
 - Subset of full data (e.g., 1% sample, one year, one region)
 - Preserves data structure and variable definitions
 - Produces qualitatively similar results (not identical)
@@ -171,6 +173,7 @@ cat output/provenance/price_base.yml
 ## Questions About Data Access?
 
 **Contact:**
+
 - [Your Name], [Institution]
 - Email: your.email@institution.edu
 - Please include "Data Access Request" in subject line
@@ -184,11 +187,13 @@ cat output/provenance/price_base.yml
 **For journal editors/reviewers without data access:**
 
 We have deposited:
+
 - ✅ Complete processed datasets on [repository]
 - ✅ Sample data in this GitHub repository
 - ✅ Data construction code (requires raw data access)
 
 **Temporary access for peer review:**
+
 - Contact us for temporary access to processed datasets
 - Available via secure data enclave at [institution]
 - See [secure data access instructions]
@@ -198,6 +203,7 @@ We have deposited:
 ## Future Data Availability
 
 **After publication, data will be available at:**
+
 - [ ] Publicly at: [repository URL]
 - [ ] Via application to: [organization]
 - [ ] As supplementary material to published article
@@ -210,17 +216,20 @@ We have deposited:
 ## License
 
 **For data we created/processed:**
+
 - License: [CC BY 4.0 / CC0 / other]
 - Attribution: [required citation]
 - Restrictions: [any]
 
 **For third-party data:**
+
 - Governed by original provider's terms
 - See individual data sources above
 
 ---
 
 **See also:**
+
 - `data/README.md` - Data directory structure
 - `data/DATA_README.md` - Detailed data documentation
 - `data/CHECKSUMS.txt` - File verification checksums

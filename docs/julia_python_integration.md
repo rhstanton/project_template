@@ -84,6 +84,7 @@ These are set automatically by:
 **Problem**: By default, PythonCall.jl uses CondaPkg to create its own isolated conda environment at `env/.CondaPkg/.pixi/`.
 
 This creates redundancy:
+
 - Main Python: `.env/` (~2GB)
 - CondaPkg Python: `env/.CondaPkg/.pixi/` (~500MB)
 - Two separate Python installations with duplicate packages
@@ -91,6 +92,7 @@ This creates redundancy:
 **Solution**: Set `JULIA_CONDAPKG_BACKEND=Null` to disable CondaPkg and use the main Python environment.
 
 **Benefits**:
+
 - ✅ Single Python environment
 - ✅ Saves ~500MB disk space
 - ✅ Faster installation
@@ -356,11 +358,13 @@ Subsequent calls are fast (~milliseconds).
 ### Data Transfer
 
 Converting between Python and Julia objects has overhead:
+
 - Small arrays (<1000 elements): negligible
 - Large arrays (>1M elements): can be significant
 - DataFrames: moderate overhead
 
 **Mitigation**: 
+
 - Do bulk operations in one language
 - Minimize back-and-forth conversions
 - Consider pure Julia for large-scale numerical work

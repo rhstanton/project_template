@@ -9,6 +9,7 @@ This document covers platform-specific configuration, GPU support, and cross-pla
 **Status**: ✅ Fully supported (primary development platform)
 
 **Requirements**:
+
 - GNU Make 4.3+ (for grouped targets)
 - Python 3.11 (via conda)
 - Git 2.0+
@@ -35,6 +36,7 @@ sudo dnf install make
 **Status**: ✅ Supported (tested on macOS 11+)
 
 **Requirements**:
+
 - macOS 11 (Big Sur) or later
 - Xcode Command Line Tools (for git, make)
 - Homebrew (optional, for GNU Make 4.3+)
@@ -53,6 +55,7 @@ brew install make
 ```
 
 **Caveats**:
+
 - Apple Silicon (M1/M2/M3): All Python/Julia packages work via Rosetta or native ARM builds
 - GNU Make: macOS ships with Make 3.81; install via Homebrew for 4.3+
 - Stata: macOS uses `stata-mp` or `stata-se` (not `stata` command)
@@ -73,6 +76,7 @@ wsl --install -d Ubuntu-22.04
 ```
 
 **Native Windows**: Not officially supported due to:
+
 - GNU Make 4.3+ availability
 - Path handling differences
 - Conda environment activation
@@ -213,6 +217,7 @@ Forces Unix line endings for shell scripts and code.
 **Problem**: Windows uses backslashes (`\`), Unix uses forward slashes (`/`)
 
 **Mitigation**:
+
 - Python: Use `pathlib.Path` (cross-platform)
 - Julia: Use `joinpath()` (cross-platform)
 - Shell: Always use forward slashes (work on all platforms via Git Bash/WSL)
@@ -246,10 +251,12 @@ make -C env julia-install-via-python
 ```
 
 **Pros**:
+
 - No merge conflicts between platforms
 - Each platform uses optimal binaries
 
 **Cons**:
+
 - Slightly different dependency resolution
 - Must regenerate on new platform
 
@@ -473,6 +480,7 @@ CMD ["make", "all"]
 The template installs packages to `.env/` and `.julia/` **within the repo**, not globally.
 
 **Benefits**:
+
 - No pollution of global environment
 - Full control over versions
 - Easy cleanup (`rm -rf .env .julia`)
@@ -514,6 +522,7 @@ The environment requires ~2GB. To reduce:
 ---
 
 **See also**:
+
 - [docs/environment.md](environment.md) for installation details
 - [docs/julia_python_integration.md](julia_python_integration.md) for Julia/Python bridge
 - [README.md](../README.md) for quick start
