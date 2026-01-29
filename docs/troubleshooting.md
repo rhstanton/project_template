@@ -166,6 +166,28 @@ make -C env python-env                  # Install juliacall
 make -C env julia-install-via-python    # Install Julia packages
 ```
 
+#### "Package PythonCall does not seem to be installed"
+
+**Cause**: `PythonCall` is listed in `env/Project.toml` (THIS IS WRONG!)
+
+**Solution**: Remove PythonCall from `env/Project.toml`
+
+```bash
+# Check if PythonCall is in env/Project.toml
+grep -i pythoncall env/Project.toml
+
+# If found, edit env/Project.toml and remove the PythonCall line
+# Then retry:
+rm -rf .julia/compiled env/Manifest.toml
+make -C env julia-install-via-python
+```
+
+**Why this happens**: PythonCall is managed by juliacall in `.julia/pyjuliapkg/` and
+should ONLY exist there. When it's in `env/Project.toml`, Julia looks for it in the
+wrong project, causing installation to fail.
+
+**This is the #1 most common Julia installation error!**
+
 #### "Package X not found in current path" (Julia)
 
 **Cause**: Julia packages not installed
@@ -346,6 +368,39 @@ python my_script.py
 ```bash
 env/scripts/runjulia -e 'using Pkg; Pkg.precompile()'
 ```
+
+#### Python crashes/segfaults when using juliacall
+
+**Error**: "Segmentation fault (core dumped)" or Python process crashes during Julia operations
+
+**Cause**: Signal handling conflicts between Julia and Python
+
+When both Julia and Python runtimes are running in the same process, they can conflict over who handles system signals (SIGINT for Ctrl+C, SIGTERM, etc.). By default, Julia tries to install its own signal handlers, which can interfere with Python's signal handling and cause crashes.
+
+**Solution**: Use `runpython` wrapper (already configured)
+
+The `env/scripts/runpython` wrapper sets:
+```bash
+export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
+```
+
+This tells juliacall to let Python handle all signals instead of Julia, preventing crashes.
+
+**If running Python directly** (not recommended):
+```bash
+export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
+conda activate .env
+python my_script.py
+```
+
+**Verification**:
+```bash
+# Check if variable is set:
+env/scripts/runpython -c 'import os; print(os.environ.get("PYTHON_JULIACALL_HANDLE_SIGNALS"))'
+# Should print: yes
+```
+
+**Related**: The `install_julia.py` script uses subprocess for package installation to isolate Julia operations from the Python process, providing additional robustness.
 
 #### "Project.toml is for a package, not an environment"
 

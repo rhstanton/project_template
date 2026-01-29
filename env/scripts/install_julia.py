@@ -18,17 +18,24 @@ print("=" * 80)
 print()
 
 # Calculate environment directory FIRST (before importing juliacall)
-env_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-repo_root = os.path.dirname(env_dir)
+# This script is in lib/scripts/, so we need to go up to lib/ then across to env/
+script_dir = os.path.dirname(os.path.abspath(__file__))  # lib/scripts/
+lib_dir = os.path.dirname(script_dir)  # lib/
+repo_root = os.path.dirname(lib_dir)  # project root
+env_dir = os.path.join(repo_root, "env")  # env/
 julia_depot = os.path.join(repo_root, ".julia")
 
 # Configure Julia to use project-local depot (not ~/.julia)
 os.environ["JULIA_DEPOT_PATH"] = julia_depot
 
-# Configure Julia to use our project for packages
-os.environ["JULIA_PROJECT"] = env_dir
+# CRITICAL: PythonCall should NOT be in env/Project.toml!
+# It is managed by juliacall in .julia/pyjuliapkg/ and should only exist there.
+# Adding it to env/Project.toml causes "Package PythonCall does not seem to be
+# installed" errors because Julia looks for it in the wrong project.
 
-# Tell juliacall to install Julia binary in .julia/ directory
+# Tell juliacall to create its pyjuliapkg environment inside .julia/
+# Juliacall will create .julia/pyjuliapkg/ subdirectory with Project.toml and Manifest.toml
+# If not set, juliacall defaults to ~/.julia/pyjuliapkg (global, not project-local)
 os.environ["PYTHON_JULIAPKG_PROJECT"] = julia_depot
 
 # Configure PythonCall to use system Python (not CondaPkg)
@@ -61,7 +68,7 @@ print()
 print(f"Julia depot: {julia_depot}")
 print(f"Julia project: {env_dir}")
 print(f"Python executable: {sys.executable}")
-print("(CondaPkg disabled - using system Python)")
+print("(CondaPkg disabled - Julia will use the conda environment Python)")
 print()
 
 want_cuda = os.environ.get("JULIA_ENABLE_CUDA") == "1"
@@ -73,12 +80,35 @@ else:
     print("GPU support not requested (JULIA_ENABLE_CUDA unset/0)")
     print("Julia will use CPU-only backends.")
 
+# Temporarily hide Manifest.toml during juliacall import to avoid
+# chicken-egg problem: Manifest references PythonCall, but depot doesn't have it yet.
+# The Manifest will be properly generated during Pkg.instantiate() below.
+manifest_path = os.path.join(env_dir, "Manifest.toml")
+manifest_backup = None
+if os.path.exists(manifest_path):
+    manifest_backup = manifest_path + ".backup"
+    try:
+        shutil.move(manifest_path, manifest_backup)
+        print(f"Temporarily moved Manifest.toml aside for juliacall import")
+    except Exception as e:
+        print(f"⚠ Could not move Manifest.toml: {e}")
+        manifest_backup = None
+
 # Import juliacall - this triggers Julia auto-install if needed
 try:
     from juliacall import Main as jl
 
     print("✓ juliacall imported successfully")
     print()
+
+    # Don't restore Manifest.toml - let Pkg.instantiate() generate a fresh one
+    # from env/Project.toml. The backup will be cleaned up if it exists.
+    if manifest_backup and os.path.exists(manifest_backup):
+        try:
+            os.remove(manifest_backup)
+            print(f"Removed old Manifest.toml backup (will be regenerated)")
+        except Exception as e:
+            print(f"⚠ Could not remove Manifest.toml backup: {e}")
 
     # Check Julia version
     julia_version = jl.seval("VERSION")
@@ -107,45 +137,75 @@ try:
 
     # Build Julia command
     julia_env = os.environ.copy()
+    
+    # CRITICAL: Set JULIA_DEPOT_PATH to use local .julia/ directory
+    # Without this, Julia may use ~/.julia or other system depots
+    julia_env["JULIA_DEPOT_PATH"] = julia_depot
+    
+    # CRITICAL: Unset JULIA_PROJECT so Pkg.activate() in Julia code can work
+    # juliacall may have set this to the depot project
+    julia_env.pop("JULIA_PROJECT", None)
+    julia_env.pop("JULIAPKG_PROJECT", None)
+    
     julia_env["JULIA_CONDAPKG_BACKEND"] = "Null"
     julia_env["JULIA_PYTHONCALL_EXE"] = sys.executable
-    load_path = [
-        env_dir,
-        os.environ.get("PYTHON_JULIAPKG_PROJECT", julia_depot),
-        "@stdlib",
-    ]
-    julia_env["JULIA_LOAD_PATH"] = ":".join(load_path)
 
-    # Build Julia installation command with optional CUDA
-    julia_code_parts = ["""
-        using Pkg
+    # Build Julia installation code
+    # CRITICAL: Don't use "using Pkg" - it tries to load all project dependencies first!
+    # Use "import Pkg" instead which doesn't load dependencies
+    julia_code_parts = [
+        f"""
+        import Pkg
+        
+        # Activate the env/ project (not .julia/ or .julia/pyjuliapkg/)
+        Pkg.activate("{env_dir}")
+        
+        println("Active project: ", Base.active_project())
+        
         println("Resolving dependencies...")
         Pkg.resolve()
         println()
         println("Installing packages...")
         Pkg.instantiate()
-        """]
+        """
+    ]
     
+    # Install CUDA.jl if requested (won't add to [deps], uses temporary environment)
     if want_cuda:
         julia_code_parts.append("""
         println()
         println("Installing CUDA.jl for GPU support...")
         # Install without adding to Project.toml [deps]
-        Pkg.add("CUDA"; preserve=PRESERVE_ALL)
+        Pkg.add("CUDA"; preserve=Pkg.Types.PRESERVE_ALL)
         """)
     
     julia_code_parts.append("""
         println()
         println("Precompiling packages...")
         Pkg.precompile()
-        println()
-        println("Verifying key packages...")
-        using PythonCall
-        println("  ✓ PythonCall")
+    """)
+    
+    # Don't verify PythonCall here - it's in a different project (depot vs env)
+    # The verification will happen when scripts actually use Julia
+    
+    if want_cuda:
+        julia_code_parts.append("""
+        try
+            using CUDA
+            if CUDA.functional()
+                println("  ✓ CUDA.jl (GPU functional)")
+            else
+                println("  ⚠ CUDA.jl installed but GPU not functional")
+            end
+        catch e
+            println("  ⚠ CUDA.jl install failed: ", e)
+        end
         """)
     
     julia_code = "".join(julia_code_parts)
-    
+
+    # Run with --project=env/ to force using env/ project instead of depot
+    # This is more reliable than Pkg.activate() which can be overridden by env vars
     cmd = [
         julia_exe,
         f"--project={env_dir}",
@@ -154,7 +214,7 @@ try:
     ]
 
     def run_julia_install():
-        return subprocess.run(cmd, env=julia_env).returncode == 0
+        return subprocess.run(cmd, env=julia_env, cwd=env_dir).returncode == 0
 
     if not run_julia_install():
         print()

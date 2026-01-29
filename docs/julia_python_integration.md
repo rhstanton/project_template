@@ -12,6 +12,27 @@ The template supports three modes of Python/Julia interaction:
 
 ## Architecture
 
+> **⚠️ CRITICAL: PythonCall Must NOT Be In env/Project.toml**
+> 
+> This is the #1 most common mistake that causes installation failures!
+> 
+> **DO NOT** add `PythonCall` to your `env/Project.toml` dependencies. PythonCall is
+> managed by juliacall in `.julia/pyjuliapkg/` and should ONLY exist there.
+> 
+> **Symptom if you do this wrong:**
+> ```
+> ERROR: ArgumentError: Package PythonCall [6099a3de-...] is required but
+> does not seem to be installed
+> ```
+> 
+> **Why this happens:** When PythonCall is in `env/Project.toml`, Julia looks for it
+> in the `env/` project but it's actually installed in `.julia/pyjuliapkg/`. This
+> creates a mismatch that breaks the installation.
+> 
+> **The two projects:**
+> - `.julia/pyjuliapkg/` - juliacall's managed environment (contains PythonCall)
+> - `env/` - Your analysis packages (DataFrames, FixedEffectModels, etc.)
+
 ### Julia Installation
 
 Julia is **automatically installed** via the `juliacall` Python package:
@@ -281,6 +302,15 @@ export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 exec "$PYTHON_BIN" -u "$@"
 ```
+
+**Key configuration details**:
+
+- `PYTHON_JULIACALL_HANDLE_SIGNALS=yes`: **Prevents segfaults** by letting Python handle system signals instead of Julia. Without this, Julia and Python can conflict over signal handling (SIGINT, SIGTERM, etc.), causing crashes.
+- `PYTHON_JULIAPKG_PROJECT`: Points to `.julia/` where juliacall creates the `pyjuliapkg/` subdirectory
+- `JULIA_PROJECT`: Points to `env/` for user packages (DataFrames, etc.)
+- `JULIA_DEPOT_PATH`: Local package depot (not `~/.julia/`)
+- `JULIA_CONDAPKG_BACKEND=Null`: Disables CondaPkg to avoid duplicate Python environments
+- `JULIA_PYTHONCALL_EXE`: Points to conda Python so PythonCall uses correct interpreter
 
 ### runjulia
 

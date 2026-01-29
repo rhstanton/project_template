@@ -101,6 +101,14 @@ PAPER_TBL_DIR := $(PAPER_DIR)/tables
 .DEFAULT_GOAL := default
 
 # ==============================================================================
+# Pre-flight Checks (Run before environment installation)
+# ==============================================================================
+
+.PHONY: check-prereq
+check-prereq:
+	@./scripts/check_prerequisites.sh
+
+# ==============================================================================
 # Include Generic Targets from repro-tools
 # ==============================================================================
 # This provides common targets used across all research projects:
@@ -442,6 +450,7 @@ default:
 	@echo "=========================================="
 	@echo ""
 	@echo "ESSENTIAL COMMANDS:"
+	@echo "  make check-prereq       Check system prerequisites (before install)"
 	@echo "  make environment        Setup Python/Julia/Stata (~10 min)"
 	@echo "  make update-environment Get latest updates + reinstall environment"
 	@echo "  make all                Run all analyses (~5 min)"
@@ -475,6 +484,9 @@ help:
 	@echo "================================================================"
 	@echo "  Research Template Makefile"
 	@echo "================================================================"
+	@echo ""
+	@echo "PRE-FLIGHT:"
+	@echo "  make check-prereq       Check system prerequisites (before install)"
 	@echo ""
 	@echo "ENVIRONMENT:"
 	@echo "  make environment        Setup Python 3.11 + Julia + Stata (~10 min)"

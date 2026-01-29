@@ -1,11 +1,20 @@
+# ============================================================================
+# CRITICAL: DO NOT ADD PythonCall TO [deps]!
+# ============================================================================
+# PythonCall is managed by juliacall in .julia/pyjuliapkg/ - adding it here
+# will cause installation failures with "Package PythonCall does not seem to
+# be installed" errors. This is because Julia will look for it in the wrong
+# project. PythonCall should ONLY be in the juliacall-managed environment.
+# ============================================================================
+
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FixedEffectModels = "9d5cd8c9-2029-5cab-9928-427838db53e3"
 OpenSSL_jll = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
@@ -15,7 +24,6 @@ DataFrames = "1.7"
 Distributions = "0.25"
 FixedEffectModels = "1"
 OpenSSL_jll = "3.0.0 - 3.6"
-PythonCall = "=0.9.31"
 StatsModels = "0.7"
 julia = "1.9, 1.10, 1.11, 1.12"
 

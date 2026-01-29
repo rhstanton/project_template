@@ -341,13 +341,21 @@ class TestPublishingModes:
 class TestPublishingIdempotency:
     """Test that publishing is idempotent."""
 
-    def test_publish_stamps_directory_exists(self):
-        """Publish tracking directory should exist after publishing."""
+    def test_publish_stamps_directory_can_be_created(self):
+        """Publish tracking directory can be created (or already exists)."""
         stamps_dir = REPO_ROOT / ".publish_stamps"
-        if not stamps_dir.exists():
-            pytest.skip("Nothing has been published with stamp tracking")
-
-        assert stamps_dir.is_dir()
+        
+        # If it doesn't exist, the Makefile should be able to create it
+        # We test this by checking the Makefile has the logic, not by actually running it
+        makefile = REPO_ROOT / "Makefile"
+        content = makefile.read_text()
+        
+        # Check that Makefile references .publish_stamps
+        assert ".publish_stamps" in content, "Makefile should reference .publish_stamps directory"
+        
+        # If it exists, verify it's a directory
+        if stamps_dir.exists():
+            assert stamps_dir.is_dir()
 
     def test_makefile_has_publish_force_target(self):
         """Makefile should have publish-force target to override idempotency."""

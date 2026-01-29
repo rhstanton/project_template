@@ -189,6 +189,91 @@ class TestJuliaEnvironment:
         assert result.returncode == 0
         assert "Null" in result.stdout
 
+    def test_pythoncall_not_in_env_project(self):
+        """CRITICAL: PythonCall must NOT be in env/Project.toml [deps] or [compat]."""
+        project_toml = REPO_ROOT / "env" / "Project.toml"
+        if not project_toml.exists():
+            pytest.skip("env/Project.toml not found")
+
+        content = project_toml.read_text()
+        
+        # Parse TOML sections
+        import re
+        
+        # Check [deps] section - PythonCall should NOT be there
+        deps_match = re.search(r'\[deps\](.*?)(?:\[|$)', content, re.DOTALL)
+        if deps_match:
+            deps_section = deps_match.group(1)
+            assert not re.match(r'^\s*PythonCall\s*=', deps_section, re.MULTILINE), (
+                "CRITICAL ERROR: PythonCall found in [deps] section of env/Project.toml! "
+                "This causes installation failures. PythonCall is managed by "
+                "juliacall and should ONLY be in .julia/pyjuliapkg/"
+            )
+        
+        # Check [compat] section - PythonCall should NOT be there
+        compat_match = re.search(r'\[compat\](.*?)(?:\[|$)', content, re.DOTALL)
+        if compat_match:
+            compat_section = compat_match.group(1)
+            assert not re.match(r'^\s*PythonCall\s*=', compat_section, re.MULTILINE), (
+                "CRITICAL ERROR: PythonCall found in [compat] section of env/Project.toml! "
+                "This causes installation failures. PythonCall is managed by "
+                "juliacall and should ONLY be in .julia/pyjuliapkg/"
+            )
+
+    def test_pythoncall_in_pyjuliapkg(self):
+        """PythonCall should be in juliacall-managed environment (.julia/Project.toml)."""
+        # juliacall creates .julia/Project.toml as its shared environment
+        julia_project = REPO_ROOT / ".julia" / "Project.toml"
+        if not julia_project.exists():
+            pytest.skip("Julia not installed via juliacall yet")
+
+        content = julia_project.read_text()
+        
+        # PythonCall SHOULD be in juliacall's Project.toml
+        assert "PythonCall" in content, (
+            "PythonCall not found in .julia/pyjuliapkg/Project.toml. "
+            "This is managed by juliacall."
+        )
+
+    def test_juliacall_can_import(self):
+        """Test that juliacall can be imported from Python."""
+        runpython = REPO_ROOT / "env" / "scripts" / "runpython"
+        if not runpython.exists():
+            pytest.skip("runpython wrapper not found")
+
+        result = subprocess.run(
+            [str(runpython), "-c", "from juliacall import Main as jl; print(jl.VERSION)"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0, f"juliacall import failed: {result.stderr}"
+        assert len(result.stdout.strip()) > 0, "Julia version not printed"
+
+    def test_cuda_available_if_enabled(self):
+        """Test CUDA.jl is available if GPU support was enabled."""
+        runjulia = REPO_ROOT / "env" / "scripts" / "runjulia"
+        if not runjulia.exists():
+            pytest.skip("Julia not installed")
+
+        # Check if CUDA.jl is in Project.toml (indicates GPU support requested)
+        project_toml = REPO_ROOT / "env" / "Project.toml"
+        content = project_toml.read_text()
+        
+        if "CUDA" not in content:
+            pytest.skip("CUDA not in Project.toml - GPU support not enabled")
+
+        # CUDA should be loadable
+        result = subprocess.run(
+            [str(runjulia), "-e", "using CUDA; println(CUDA.functional())"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0, f"CUDA.jl not functional: {result.stderr}"
+        # Note: CUDA.functional() will be true if GPU is available, false if not
+        # We just check it doesn't error
+
 
 class TestEnvironmentWrappers:
     """Test environment wrapper scripts."""
