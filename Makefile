@@ -5,7 +5,8 @@
 # This Makefile orchestrates all research analyses and artifact generation.
 #
 # QUICK START:
-#   make all              # Run all analyses  
+#   make environment      # Setup environment (first time only)
+#   make all              # Run all analyses
 #   make price_base       # Run single analysis
 #   make publish          # Publish results to paper/
 #   make help             # Show all commands
@@ -74,7 +75,7 @@ REPRO_REPORT  := $(PYTHON) -m repro_tools.cli report
 # Think of price_base as an analysis/run, not a single artifact.
 
 # All analyses to run
-ANALYSES := price_base remodel_base
+ANALYSES := price_base remodel_base did_example
 
 # Input data files
 DATA := data/housing_panel.csv
@@ -192,6 +193,13 @@ remodel_base.runner  := $(PYTHON)
 remodel_base.inputs  := $(DATA)
 remodel_base.outputs := $(OUT_FIG_DIR)/remodel_base.pdf $(OUT_TBL_DIR)/remodel_base.tex $(OUT_PROV_DIR)/remodel_base.yml
 remodel_base.args    := remodel_base
+
+# did_example analysis - DiD regression with Julia/pyfixest backend selection
+did_example.script  := run_did.py
+did_example.runner  := $(PYTHON)
+did_example.inputs  := $(DATA)
+did_example.outputs := $(OUT_FIG_DIR)/did_example.pdf $(OUT_TBL_DIR)/did_example.tex $(OUT_PROV_DIR)/did_example.yml
+did_example.args    :=
 
 # ------------------------------------------------------------------------------
 # Rule Generator Macro

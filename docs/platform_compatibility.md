@@ -104,17 +104,18 @@ To enable CUDA GPU support:
 **1. Set environment variables BEFORE `make environment`:**
 
 ```bash
-export JULIA_ENABLE_CUDA=1    # Enable Julia CUDA
 export GPU_CUDA_MAJOR=12      # CUDA version (12 or 13)
-export DEFAULT_USE_GPU=1      # GPU as default for scripts
+export JULIA_ENABLE_CUDA=1    # Enable Julia CUDA (auto-set if GPU_CUDA_MAJOR is provided)
 
 make environment
 ```
 
+**Note:** Setting `GPU_CUDA_MAJOR` automatically enables `JULIA_ENABLE_CUDA`, so you typically only need to set one variable.
+
 **2. What this does:**
 
 - Installs CUDA.jl for Julia
-- Installs CUDA-aware Python packages (if configured)
+- Installs CUDA-aware Python packages (JAX, CuPy) on Linux x86_64
 - Sets GPU as default computation device
 - Configures Julia precompilation for GPU
 
@@ -128,14 +129,14 @@ export GPU_CUDA_MAJOR=12
 export GPU_CUDA_MAJOR=13
 ```
 
-This affects Python package selection (e.g., `torch` with cuda12 vs cuda13 wheels).
+This affects Python package selection (e.g., JAX and CuPy with cuda12 vs cuda13 wheels).
 
 ### Environment Variables Reference
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `JULIA_ENABLE_CUDA` | `0` | Install CUDA.jl if `1` |
-| `GPU_CUDA_MAJOR` | `12` | CUDA major version for Python wheels |
+| `JULIA_ENABLE_CUDA` | `$(if $(GPU_CUDA_MAJOR),1,0)` | Install CUDA.jl (auto-enabled if GPU_CUDA_MAJOR set) |
+| `GPU_CUDA_MAJOR` | (unset) | CUDA major version for Python wheels (12 or 13) |
 | `DEFAULT_USE_GPU` | `0` | Default computation device (0=CPU, 1=GPU) |
 | `JULIA_CONDAPKG_BACKEND` | `Null` | Disable CondaPkg duplicate Python |
 | `JULIA_PYTHONCALL_EXE` | `.env/bin/python` | Python executable for PythonCall |

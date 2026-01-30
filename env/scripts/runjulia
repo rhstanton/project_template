@@ -1,26 +1,86 @@
 #!/usr/bin/env bash
-# Julia environment runner
-# Note: This project uses Julia via juliacall from Python
-# For pure Julia scripts, this wrapper ensures the correct Julia is used
+# ==============================================================================
+# Julia Environment Runner
+# ==============================================================================
+#
+# This script activates the Julia project environment and runs Julia scripts
+# with proper environment checking.
+#
+# Usage:
+#   env/scripts/runjulia script.jl [args...]
+#
+# ==============================================================================
 
 set -euo pipefail
+
+# Unset CDPATH to prevent cd from printing directories
 unset CDPATH
 
-# Find repo root (where env/ is located)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-# Julia configuration
-export JULIA_PROJECT="$REPO_ROOT/env"
-export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
-
-# Prefer the bundled Julia inside the repo
-BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
-
-if [[ -x "$BUNDLED_JULIA" ]]; then
-  exec "$BUNDLED_JULIA" "$@"
+# --- config (override via env if you like) ---
+# Prefer the bundled Julia installed by make environment; fallback to juliaup
+BUNDLED_JULIA="$(cd "$(dirname "$0")/../.." && pwd)/.julia/pyjuliapkg/install/bin/julia"
+if [ -x "$BUNDLED_JULIA" ]; then
+  JULIA_BIN="${JULIA_BIN:-$BUNDLED_JULIA}"
 else
-  echo "❌ Julia not found at: '$BUNDLED_JULIA'"
-  echo "   Run: make environment"
+  JULIA_BIN="${JULIA_BIN:-${HOME}/.juliaup/bin/julia}"
+fi
+REQUIRED_VERSION_MIN="${REQUIRED_VERSION_MIN:-1.12.0}"
+# Use the in-repo env/ folder as the Julia project by default
+JULIA_ENV_DIR="${JULIA_ENV_DIR:-env}"
+# Use a per-repo depot to avoid global churn (can be overridden/disabled)
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_DEPOT_DEFAULT="$ROOT_DIR/.julia"
+JULIA_DEPOT_PATH="${JULIA_DEPOT_PATH:-$REPO_DEPOT_DEFAULT}"
+
+# --- resolve paths ---
+PROJECT_ABS="$(cd "$ROOT_DIR/$JULIA_ENV_DIR" && pwd)"
+
+# --- sanity checks ---
+if ! command -v "$JULIA_BIN" >/dev/null 2>&1; then
+  echo "❌ Julia not found. Set JULIA_BIN or install juliaup." >&2
+  exit 127
+fi
+
+if [ ! -f "$PROJECT_ABS/Project.toml" ]; then
+  echo "❌ Missing Project.toml at: $PROJECT_ABS" >&2
+  echo "   Run: make env-julia" >&2
   exit 1
 fi
+
+# --- version check inside Julia (warn if too old) ---
+VER_OK="$("$JULIA_BIN" --startup-file=no -e \
+  "try
+     using Pkg
+     v=parse(VersionNumber, string(VERSION))
+     need=parse(VersionNumber, ARGS[1])
+     print(v >= need ? \"ok\" : \"old\")
+   catch e
+     # If something odd happens, don't block execution.
+     print(\"ok\")
+   end" "$REQUIRED_VERSION_MIN")"
+
+if [ "$VER_OK" != "ok" ]; then
+  FOUND_VERSION="$("$JULIA_BIN" --startup-file=no -e 'print(VERSION)')"
+  echo "⚠️  Julia $FOUND_VERSION found, but >= $REQUIRED_VERSION_MIN is recommended." >&2
+fi
+
+# --- export env so every tool sees the same project/depot ---
+export JULIA_PROJECT="$PROJECT_ABS"
+export JULIAPKG_PROJECT="$PROJECT_ABS"
+export JULIA_DEPOT_PATH="$JULIA_DEPOT_PATH"
+
+# (Optional, harmless even if unused by this script)
+export JULIA_NUM_THREADS="${JULIA_NUM_THREADS:-1}"
+
+# Stop common shell/themes from pushing OSC titles (harmless if not present)
+unset PROMPT_COMMAND 2>/dev/null || true
+export DISABLE_AUTO_TITLE=true
+export JULIA_NO_TTY_TITLE=1
+export TERM="${TERM:-dumb}"
+
+# Run Julia, strip OSC "set title" sequences, and preserve Julia's exit code
+# (OSC 0 pattern: ESC ] 0 ; ... BEL)
+echo ""
+"$JULIA_BIN" --startup-file=no --project="$PROJECT_ABS" "$@" 2>&1 \
+  | perl -pe 's/\e\]0;.*?\a//g'
+exit ${PIPESTATUS[0]}

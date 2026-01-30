@@ -24,7 +24,7 @@ export JULIA_LOAD_PATH="$JULIA_PROJECT:$PYTHON_JULIAPKG_PROJECT:@stdlib"
 
 # Disable CondaPkg and use this Python environment
 export JULIA_CONDAPKG_BACKEND=Null
-export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
+export JULIA_PYTHONCALL_PYTHON="$PYTHON_BIN"
 
 # Add repo root to PYTHONPATH so scripts can import from scripts/
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
@@ -38,7 +38,8 @@ else
   SAFE_PATH=""
   IFS=':' read -r -a PARTS <<< "${PATH:-}"
   for P in "${PARTS[@]}"; do
-    if [[ "${P,,}" == *juliaup* ]]; then
+    # Use tr for case-insensitive matching (Bash 3.2 compatible)
+    if echo "$P" | tr '[:upper:]' '[:lower:]' | grep -q juliaup; then
       continue
     fi
     SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"

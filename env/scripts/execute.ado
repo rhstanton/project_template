@@ -24,15 +24,15 @@ program execute
    
    * Extract just the filename without directory path
    * Find the last "/" or "\" and extract everything after it
+   * We need to search from the end since strpos finds the first occurrence
    local baseFile "`doFile'"
-   local lastSlash = 0
-   forvalues i = 1/`=length("`doFile'")' {
-      if substr("`doFile'", `i', 1) == "/" | substr("`doFile'", `i', 1) == "\" {
-         local lastSlash = `i'
+   local len = strlen("`doFile'")
+   forvalues i = `len'(-1)1 {
+      local char = substr("`doFile'", `i', 1)
+      if "`char'" == "/" | "`char'" == "\" {
+         local baseFile = substr("`doFile'", `i' + 1, .)
+         continue, break
       }
-   }
-   if `lastSlash' > 0 {
-      local baseFile = substr("`doFile'", `lastSlash' + 1, .)
    }
    
    * Create name of log file from base filename

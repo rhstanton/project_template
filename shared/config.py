@@ -53,7 +53,7 @@ DEFAULTS = {
     "xlabel": "Year",  # Default x-axis label
     "ylabel": "Value",  # Default y-axis label
     "title": "Analysis",  # Default plot title
-    "groupby": "region",  # Default grouping variable
+    "groupby": "treated",  # Default grouping variable (treatment status for DiD data)
     "xvar": "year",  # Default x-axis variable
     "table_agg": "mean",  # Default table aggregation function
 }
@@ -71,7 +71,7 @@ STUDIES = {
         # Only specify what differs from DEFAULTS
         "ylabel": "Price index",  # Override default ylabel
         "title": "Price index over time",  # Override default title
-        "yvar": "price_index",  # Study-specific outcome variable (required)
+        "yvar": "outcome",  # Study-specific outcome variable (required) - using 'outcome' from DiD data
         "figure": OUTPUT_DIR / "figures" / "price_base.pdf",  # Output paths (required)
         "table": OUTPUT_DIR / "tables" / "price_base.tex",
         # Inherits: data, xlabel, groupby, xvar, table_agg from DEFAULTS
@@ -80,7 +80,7 @@ STUDIES = {
         # Only specify what differs from DEFAULTS
         "ylabel": "Remodel rate",
         "title": "Remodeling activity over time",
-        "yvar": "remodel_rate",  # Study-specific outcome variable (required)
+        "yvar": "outcome",  # Study-specific outcome variable (required) - using 'outcome' from DiD data
         "figure": OUTPUT_DIR / "figures" / "remodel_base.pdf",
         "table": OUTPUT_DIR / "tables" / "remodel_base.tex",
         # Inherits: data, xlabel, groupby, xvar, table_agg from DEFAULTS
