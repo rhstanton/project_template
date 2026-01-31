@@ -72,7 +72,7 @@ class TestDefaultsPriority:
 
         # Should have STUDIES[price_base] overrides
         assert config["ylabel"] == "Price index"  # From STUDIES
-        assert config["yvar"] == "price_index"  # From STUDIES
+        assert config["yvar"] == "outcome"  # From STUDIES
 
     def test_command_line_overrides_all(self):
         """Test that command-line args override both DEFAULTS and STUDIES."""
@@ -94,7 +94,7 @@ class TestDefaultsPriority:
         assert config["table_agg"] == "sum"
 
         # Should still have other values from DEFAULTS and STUDIES
-        assert config["yvar"] == "price_index"  # From STUDIES
+        assert config["yvar"] == "outcome"  # From STUDIES
         assert config["xvar"] == "year"  # From DEFAULTS
 
 
