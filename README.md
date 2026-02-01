@@ -491,6 +491,16 @@ See `CITATION.cff` for structured metadata.
 
 ---
 
+## 🏷️ Version
+
+**Current version: 1.0.0**
+
+- **Check version**: `env/scripts/runpython run_analysis.py --version` or `make info`
+- **Version file**: [`_version.py`](_version.py)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
+---
+
 ## 🎯 For Journal Submission
 
 **Authors preparing replication packages:**

@@ -602,6 +602,7 @@ help:
 info:
 	@echo "=============================================================================="
 	@echo "  Reproducible Research Template - Project Information"
+	@echo "  Version: 1.0.0"
 	@echo "=============================================================================="
 	@echo ""
 	@echo "PROJECT STRUCTURE:"

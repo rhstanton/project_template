@@ -53,7 +53,7 @@ from repro_tools import (
     setup_environment,
     validate_study_config,
 )
-
+from _version import __version__
 from shared import config
 
 
@@ -107,7 +107,7 @@ def main() -> None:
     setup_environment()
 
     # Parse arguments with enhanced error messages
-    args = friendly_docopt(__doc__, version="run_analysis 1.0")
+    args = friendly_docopt(__doc__, version=f"run_analysis {__version__}")
 
     if args["--list"]:
         list_studies()
