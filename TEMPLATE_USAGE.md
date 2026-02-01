@@ -67,7 +67,6 @@ make environment
 ### 1. Update Project Metadata
 
 **README.md**:
-
 - [ ] Change project title
 - [ ] Update description
 - [ ] Add your institution/affiliation
@@ -75,12 +74,10 @@ make environment
 - [ ] Add project-specific details
 
 **CHANGELOG.md**:
-
 - [ ] Reset to version 0.1.0
 - [ ] Add initial commit entry
 
 **.github/copilot-instructions.md**:
-
 - [ ] Update project architecture section
 - [ ] Add domain-specific conventions
 - [ ] Update workflow descriptions
@@ -195,10 +192,10 @@ from repro_tools import auto_build_record
 
 def main():
     args = docopt(__doc__)
-    
+
     # Your custom analysis logic here
     # ...
-    
+
     # Generate provenance
     auto_build_record(
         artifact_name="your_custom_analysis",
@@ -453,13 +450,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup environment
         run: make environment
-      
+
       - name: Build artifacts
         run: make all
-      
+
       - name: Upload outputs
         uses: actions/upload-artifact@v3
         with:
@@ -548,19 +545,16 @@ output/figures/your_analysis.pdf: build_your_analysis.ipynb
 ### From Other Build Systems
 
 **From R Makefile**:
-
 - Convert R scripts to use `env/scripts/runr`
 - Keep Makefile pattern rules
 - Add provenance tracking to R scripts
 
 **From Snakemake**:
-
 - Convert Snakefile rules to Makefile targets
 - Keep dependency graph structure
 - Use grouped targets for multi-output rules
 
 **From Jupyter notebooks**:
-
 - Convert notebooks to `.py` scripts via `nbconvert`
 - Or use `jupyter nbconvert --execute` in Makefile
 - Add provenance cells at end
@@ -617,7 +611,6 @@ git commit -am "Address reviewer comments"
 **Q: Can I use a different build tool (e.g., Snakemake, SCons)?**
 
 A: Yes, but you'll need to:
-
 - Reimplement provenance tracking
 - Ensure atomic multi-output builds
 - Add git safety checks for publishing
@@ -629,7 +622,6 @@ A: Yes (venv, poetry, etc.), but update `env/Makefile` accordingly.
 **Q: Do I need both Python and Julia?**
 
 A: No - remove Julia if not needed:
-
 1. Remove `juliacall` from `env/python.yml`
 2. Delete `env/Project.toml`
 3. Remove Julia examples
@@ -660,7 +652,6 @@ make environment
 ```
 
 **Makefile syntax errors**:
-
 - Use TAB not spaces for indentation
 - Check pattern rule syntax: `target &: prereqs`
 - Test with `make -n <target>` (dry run)
@@ -675,7 +666,6 @@ make all
 ---
 
 **See also**:
-
 - [docs/environment.md](docs/environment.md)
 - [docs/provenance.md](docs/provenance.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)

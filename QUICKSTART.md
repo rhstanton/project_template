@@ -43,7 +43,7 @@ make publish
 # Copies artifacts to paper/ with provenance tracking
 ```
 
-**Total time**: ~5-10 minutes  
+**Total time**: ~5-10 minutes
 **Total disk**: ~2.5GB (2GB environment + 500MB Julia)
 
 ---
@@ -72,7 +72,7 @@ You should see:
 You should see:
 ```
 ✅ Python environment: OK (3.11.x)
-✅ Python packages: pandas, matplotlib, juliacall, pyyaml, pytest, ruff, mypy
+✅ Python packages: pandas, matplotlib, juliacall, pyyaml, papermill, seaborn, pytest, ruff, mypy
 ✅ Julia: OK (1.10+)
 ✅ Julia packages: PythonCall, DataFrames
 ✅ Data files: housing_panel.csv (SHA256 matches)
@@ -126,7 +126,6 @@ Installed complete multi-language environment:
 - **Stata packages** (if Stata installed): estout, etc.
 
 **Key features**:
-
 - ✅ Auto-installs micromamba if conda/mamba not found
 - ✅ Julia auto-downloaded (no manual installation)
 - ✅ Single unified Python environment (no CondaPkg duplication)
@@ -187,20 +186,17 @@ Published artifacts to `paper/` directory:
 ### System Requirements
 
 **Minimum**:
-
 - CPU: x86_64 or ARM64 (Apple Silicon)
 - RAM: 8GB
 - Disk: 5GB free (2GB environment + 3GB cache)
 - OS: Linux, macOS 11+, or Windows 10+ with WSL 2
 
 **Recommended**:
-
 - RAM: 16GB (for large datasets)
 - Disk: 10GB free
 - OS: Ubuntu 22.04 LTS or macOS 13+
 
 **For GPU support** (optional):
-
 - NVIDIA GPU with CUDA 12.x or 13.x
 - Set `JULIA_ENABLE_CUDA=1` and `GPU_CUDA_MAJOR=12` before `make environment`
 
@@ -398,23 +394,23 @@ def main():
     parser.add_argument("--out-table", required=True)
     parser.add_argument("--out-meta", required=True)
     args = parser.parse_args()
-    
+
     # Load data
     df = pd.read_csv(args.data)
-    
+
     # Analysis...
     # (your code here)
-    
+
     # Save figure
     fig, ax = plt.subplots()
     # (your plot code)
     fig.savefig(args.out_fig, bbox_inches="tight")
     plt.close(fig)
-    
+
     # Save table
     # (your table code)
     result_table.to_latex(args.out_table, index=False)
-    
+
     # Save provenance
     write_build_record(
         metadata_path=args.out_meta,

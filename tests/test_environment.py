@@ -52,6 +52,7 @@ class TestPythonEnvironment:
     def test_required_packages_installed(self):
         """Required Python packages should be installed."""
         python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        runpython = REPO_ROOT / "env" / "scripts" / "runpython"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 
@@ -64,11 +65,13 @@ class TestPythonEnvironment:
         ]
 
         for package in required_packages:
-            result = subprocess.run(
-                [str(python_exe), "-c", f"import {package}"],
-                capture_output=True,
-                text=True,
-            )
+            # Use runpython for juliacall to avoid segfault (needs PYTHON_JULIACALL_HANDLE_SIGNALS=yes)
+            if package == "juliacall" and runpython.exists():
+                cmd = [str(runpython), "-c", f"import {package}"]
+            else:
+                cmd = [str(python_exe), "-c", f"import {package}"]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
             assert result.returncode == 0, (
                 f"Package {package} not installed: {result.stderr}"
             )
@@ -152,16 +155,11 @@ class TestJuliaEnvironment:
         if not runjulia.exists():
             pytest.skip("runjulia wrapper not found")
 
-        # Test PythonCall package
-        result = subprocess.run(
-            [str(runjulia), "-e", "using PythonCall"],
-            capture_output=True,
-            text=True,
-            timeout=60,  # Julia can be slow on first run
-        )
-        assert result.returncode == 0, f"PythonCall not installed: {result.stderr}"
-
-        # Test DataFrames package
+        # NOTE: PythonCall is managed by juliacall in .julia/pyjuliapkg/
+        # It should NOT be in env/Project.toml (see docs/julia_python_integration.md)
+        # We test juliacall integration separately in test_notebook_integration.py
+        
+        # Test DataFrames package (should be in env/Project.toml)
         result = subprocess.run(
             [str(runjulia), "-e", "using DataFrames"],
             capture_output=True,

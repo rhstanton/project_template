@@ -5,13 +5,11 @@ This document explains how to publish build artifacts from `output/` to `paper/`
 ## Overview
 
 The publishing workflow:
-
 1. **Builds** artifacts in `output/` (ephemeral, can be deleted)
 2. **Publishes** vetted outputs to `paper/` (permanent, tracked separately)
 3. **Updates** `paper/provenance.yml` with full build+publish metadata
 
 This separation allows:
-
 - Experimentation in `output/` without affecting paper
 - Explicit, traceable publication events
 - Different git histories for analysis vs. paper repos
@@ -52,7 +50,6 @@ make publish PUBLISH_FILES="output/figures/price_base.pdf output/tables/custom_t
 This publishes only the specified files, regardless of which analysis they came from.
 
 **Use cases**:
-
 - Analysis generates 5 figures but you only want 2 in the paper
 - You have supplementary materials in separate subdirectories
 - Custom aggregated tables that combine data from multiple analyses
@@ -76,7 +73,7 @@ make publish PUBLISH_FILES="output/figures/price_base.pdf output/tables/price_ba
 
 **Publishing mode switching**: If you switch from analysis-level to file-level publishing (or vice versa), the provenance file structure changes:
 - Analysis-level uses `artifacts:` section
-- File-level uses `files:` section  
+- File-level uses `files:` section
 - Switching modes clears the previous section to avoid stale data
 
 **Important**: Publishing never deletes files from `paper/`, it only adds or updates them. If you switch publishing modes or stop publishing certain outputs, you may have orphaned files in `paper/` that are no longer tracked in provenance.
@@ -127,7 +124,7 @@ make publish
 # Error: Refusing to publish: some artifacts were built from a dirty working tree:
 #   price_base
 #   remodel_base
-# 
+#
 # Rebuild from a clean tree: git commit/stash, then make clean && make all
 # Or set --allow-dirty 1 to allow.
 ```
@@ -301,7 +298,6 @@ cat paper/provenance.yml
 ```
 
 This ensures:
-
 - All outputs from same commit
 - No uncommitted changes
 - Full provenance chain documented

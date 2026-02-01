@@ -10,6 +10,7 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
+  - seaborn  # Statistical data visualization
   - scipy
   # Data analysis and databases
   - pyarrow  # Fast columnar data format
@@ -25,6 +26,9 @@ dependencies:
   - notebook  # Jupyter notebook
   - jupyterlab  # JupyterLab interface
   - ipywidgets  # Interactive widgets for notebooks
+  - papermill>=2.4  # Parameterized notebook execution for reproducible builds
+  - nbformat>=5.9  # Notebook format for programmatic access
+  - nbconvert>=7.0  # Convert and execute notebooks
   # Testing
   - pytest
   - pytest-cov
@@ -34,7 +38,6 @@ dependencies:
   # Julia interoperability
   - pip:
     - juliacall>=0.9.14
-    - pyfixest>=0.40.1  # Fast fixed effects regression
     # Type stubs for better type checking
     - types-docopt
     - pandas-stubs

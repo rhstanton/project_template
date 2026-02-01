@@ -150,13 +150,47 @@ class TestOutputs:
         if not prov_files:
             pytest.skip("No provenance files")
 
+        # Only test analyses that currently exist (avoid testing old/deleted analyses)
+        # Read ANALYSES from Makefile to get current list
+        makefile = REPO_ROOT / "Makefile"
+        with open(makefile) as f:
+            makefile_content = f.read()
+        
+        # Extract ANALYSES variable (simple pattern match)
+        import re
+        match = re.search(r'ANALYSES\s*:=\s*(.+)', makefile_content)
+        if match:
+            current_analyses = set(match.group(1).split())
+        else:
+            current_analyses = set()
+
         for prov_file in prov_files:
+            # Skip if this analysis is no longer in ANALYSES
+            artifact_name = prov_file.stem
+            if current_analyses and artifact_name not in current_analyses:
+                continue
+                
             with open(prov_file) as f:
                 data = yaml.safe_load(f)
 
             # Check that output files exist
             for output in data.get("outputs", []):
-                output_path = Path(output["path"])
+                output_path_str = output["path"]
+                
+                # Handle cross-platform paths by extracting from 'output/' onwards
+                if 'output/' in output_path_str or 'output\\' in output_path_str:
+                    # Find 'output' and take everything from there
+                    output_idx = output_path_str.find('output/')
+                    if output_idx == -1:
+                        output_idx = output_path_str.find('output\\')
+                    if output_idx >= 0:
+                        relative_path = output_path_str[output_idx:].replace('\\', '/')
+                        output_path = REPO_ROOT / relative_path
+                    else:
+                        output_path = Path(output_path_str)
+                else:
+                    output_path = Path(output_path_str)
+                
                 assert output_path.exists(), f"Output file missing: {output_path}"
 
 

@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Jupyter Notebook support** for reproducible analysis:
+  - Added `papermill` and `seaborn` to `env/python.yml` dependencies
+  - Created `env/scripts/runnotebook` wrapper with Julia/Python bridge configuration
+  - Auto-detection of `.ipynb` files in Makefile (prioritizes notebooks over `.py`)
+  - Executed notebooks saved to `output/executed_notebooks/` for inspection
+  - Full provenance tracking via `write_build_record()` in notebooks
+  - Example: `correlation_analysis.ipynb` demonstrates notebook workflow
+  - Fixed CDPATH bug in `runnotebook` wrapper (prevented path pollution)
+  - Fixed Make variable expansion timing for notebook command execution
 - **Complete Stata integration** via repro-tools submodule updates:
   - Auto-generated `env/stata-packages.txt` for package management
   - Auto-generated `env/scripts/runstata` wrapper and `execute.ado` helper
@@ -285,7 +294,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Infrastructure
 
 **Environment System** (`env/` directory):
-
 - Python 3.11 conda environment (`.env/`)
 - Julia auto-installed via juliacall (`.julia/pyjuliapkg/`)
 - Stata packages (`.stata/ado/plus/`)
@@ -293,14 +301,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Nix flake for reproducible dev shell (`flake.nix`)
 
 **Provenance System**:
-
 - Build records: `output/provenance/<name>.yml` per artifact
 - Publication records: `paper/provenance.yml` aggregated
 - Git safety checks on publishing (clean tree, not behind upstream)
 - Optional strict mode: require artifacts from current HEAD
 
 **Example Scripts**:
-
 - Python example
 - Pure Julia example
 - Python/Julia interop (juliacall)
@@ -329,25 +335,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Architecture Highlights
 
 **Atomic Builds**:
-
 - GNU Make grouped targets (`&:` syntax, requires Make 4.3+)
 - One script invocation produces figure + table + provenance
 - Prevents partial/inconsistent outputs
 
 **Provenance Chain**:
-
 - Build time: Record git state, command, input/output hashes
 - Publish time: Aggregate build records, track publication event
 - Verification: SHA256 checksums detect any modifications
 
 **Git Integration**:
-
 - Tracks commit, branch, dirty status, ahead/behind counts
 - Safety checks prevent publishing from dirty tree or outdated branch
 - Optional strict mode ensures artifacts match current HEAD
 
 **Environment Management**:
-
 - Auto-installs micromamba if conda/mamba not found
 - Julia installed via juliacall (no manual Julia installation needed)
 - CondaPkg disabled (uses main Python environment)

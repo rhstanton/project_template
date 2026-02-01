@@ -24,8 +24,7 @@ make environment  # Automatically initializes git submodules
 
 **⚠️ IMPORTANT:** When creating a new project, do **NOT** manually copy the `lib/repro-tools/` directory. Let git handle it as a submodule. The Makefile automatically initializes it when you run `make environment`.
 
-**Updating repro-tools:** 
-
+**Updating repro-tools:**
 - Quick update: `make update-submodules` (updates submodule only)
 - Full update: `make update-environment` (updates submodule + reinstalls environment)
 - See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for details
@@ -77,8 +76,8 @@ make examples      # Run example scripts
 3. **Press `Ctrl+Shift+B`** to build everything
 4. **Press `F5`** to debug Python scripts
 
-**Full guide:** [GETTING_STARTED_VSCODE.md](GETTING_STARTED_VSCODE.md)  
-**Cheat sheet:** [.vscode/QUICK_REFERENCE.md](.vscode/QUICK_REFERENCE.md)  
+**Full guide:** [GETTING_STARTED_VSCODE.md](GETTING_STARTED_VSCODE.md)
+**Cheat sheet:** [.vscode/QUICK_REFERENCE.md](.vscode/QUICK_REFERENCE.md)
 **Details:** [docs/vscode_integration.md](docs/vscode_integration.md)
 
 All Make commands are available as VS Code tasks - you can work entirely in the GUI!
@@ -93,6 +92,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata
+- **Jupyter Notebook support**: Parameterized notebooks via papermill with full provenance
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
 - **Code quality tools**: Integrated linting (ruff), formatting (black + ruff), and type checking (mypy)
 - **Automated testing**: pytest-based test suite for reliability
@@ -142,9 +142,8 @@ make all              # Builds all artifacts
 ```
 
 This produces **three outputs per artifact** (atomically):
-
 - `output/figures/<name>.pdf` - The figure
-- `output/tables/<name>.tex` - The table  
+- `output/tables/<name>.tex` - The table
 - `output/provenance/<name>.yml` - Build metadata
 
 ### Publishing Results
@@ -156,7 +155,6 @@ make publish REQUIRE_CURRENT_HEAD=1         # Strict: require current HEAD
 ```
 
 Publishing enforces **git safety checks**:
-
 - Working tree must be clean
 - Branch must not be behind upstream
 - Optionally require artifacts from current HEAD
@@ -183,7 +181,6 @@ outputs:
 ```
 
 **Publication provenance** (`paper/provenance.yml`):
-
 - Aggregates all build records
 - Tracks when each artifact was published
 - Records analysis repo git state at publication time
@@ -219,7 +216,7 @@ Adding a new analysis is simple - just add configuration to `config.py`:
 2. **Add to Makefile ANALYSES** and create pattern definition:
    ```makefile
    ANALYSES := price_base remodel_base my_new_study
-   
+
    # Add pattern definition:
    my_new_study.script  := run_analysis.py
    my_new_study.runner  := $(PYTHON)
@@ -250,7 +247,6 @@ python script.py
 ```
 
 **Packages** (see `env/python.yml`):
-
 - pandas, matplotlib, numpy
 - pyyaml (for provenance)
 - juliacall (Python/Julia interop)
@@ -273,7 +269,6 @@ df = jl.DataFrame(x=[1,2,3], y=[4,5,6])
 ```
 
 **Packages** (see `env/Project.toml`):
-
 - PythonCall (Julia/Python interop)
 - DataFrames
 
@@ -288,7 +283,6 @@ env/scripts/runstata script.do
 ```
 
 **Packages** (see `env/stata-packages.txt`):
-
 - reghdfe, ftools, estout
 
 Installed to `.stata/ado/plus/` (local to project).
@@ -302,7 +296,7 @@ Test your setup:
 ```bash
 make examples          # Run all examples
 make sample-python     # Python example
-make sample-julia      # Pure Julia example  
+make sample-julia      # Pure Julia example
 make sample-juliacall  # Python/Julia interop
 make sample-stata      # Stata example (if installed)
 ```
@@ -420,7 +414,6 @@ See [examples/](examples/) directory for sample scripts in Python, Julia, and St
 ## 📞 Troubleshooting
 
 **Quick fixes**:
-
 - Import errors: Use `env/scripts/runpython` not bare `python`
 - Build failures: `make clean && make all`
 - Environment issues: `make cleanall && make environment`
@@ -461,7 +454,6 @@ make journal-package    # Creates clean replication package
 ```
 
 This creates a fresh git repository excluding:
-
 - Development files (`.github/`, `.vscode/`, etc.)
 - Author-only directories (`data-construction/`, `notes/`, `paper/`)
 - Internal documentation (`TEMPLATE_USAGE.md`, etc.)

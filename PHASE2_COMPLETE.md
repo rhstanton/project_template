@@ -1,6 +1,6 @@
 # Phase 2 Complete: Makefile Library Created
 
-**Date**: 2026-01-17  
+**Date**: 2026-01-17
 **Status**: ✅ Complete
 
 ---
@@ -18,25 +18,21 @@ Successfully extracted generic Makefile targets into a reusable library (`lib/re
 New shared library containing ~400 lines of generic targets that are identical across all research projects:
 
 **Environment Setup** (lines 1-86):
-
 - `init-submodules` - Automatic git submodule initialization
 - `environment` - Full environment setup (Python + Julia + Stata)
 
 **Example Scripts** (lines 88-134):
-
 - `sample-python` - Run Python example
-- `sample-julia` - Run Julia example  
+- `sample-julia` - Run Julia example
 - `sample-juliacall` - Run Python/Julia interop example
 - `sample-stata` - Run Stata example (if installed)
 - `examples` - Run all examples
 
 **Cleanup** (lines 136-145):
-
 - `clean` - Remove build outputs
 - `cleanall` - Remove outputs + environments
 
 **Verification & Testing** (lines 147-220):
-
 - `verify` - Quick environment smoke test (~1 min)
 - `system-info` - Log computational environment
 - `test` - Run pytest test suite
@@ -48,7 +44,6 @@ New shared library containing ~400 lines of generic targets that are identical a
 - `test-outputs` - Verify all expected outputs exist
 
 **Code Quality** (lines 222-297):
-
 - `lint` - Run ruff linter
 - `format` - Auto-format with black + ruff
 - `format-check` - Check formatting without changes
@@ -56,7 +51,6 @@ New shared library containing ~400 lines of generic targets that are identical a
 - `check` - Run all quality checks (lint + format + type + test)
 
 **Utility Commands** (lines 299-360):
-
 - `update-submodules` - Update repro-tools to latest
 - `update-environment` - Update repro-tools + reinstall environment
 - `check-deps` - Check Python/Julia/data dependencies
@@ -64,12 +58,11 @@ New shared library containing ~400 lines of generic targets that are identical a
 
 ### 2. Updated `project_template/Makefile`
 
-**Before**: 1021 lines  
-**After**: 684 lines  
+**Before**: 1021 lines
+**After**: 684 lines
 **Reduction**: 337 lines (33%)
 
 **Changes**:
-
 - Added `REPO_ROOT` variable (required by common.mk)
 - Added `include lib/repro-tools/lib/common.mk` after variable definitions
 - Removed ~337 lines of duplicated targets now in common.mk
@@ -105,7 +98,7 @@ New shared library containing ~400 lines of generic targets that are identical a
 
 **Project-specific logic** that varies per project:
 
-1. **Analysis definitions**: 
+1. **Analysis definitions**:
    - `ANALYSES` variable
    - `<analysis>.script`, `<analysis>.inputs`, `<analysis>.outputs`
    - `make-analysis-rule` macro
@@ -131,7 +124,7 @@ All key targets verified working:
 
 ```bash
 make verify                 # ✅ Works
-make list-analyses         # ✅ Works  
+make list-analyses         # ✅ Works
 make show-analysis-price_base  # ✅ Works
 make environment           # ✅ Works (from common.mk)
 make test                  # ✅ Works (from common.mk)
@@ -184,10 +177,10 @@ git commit -m "Use common.mk from repro-tools for generic targets
    PYTHON := env/scripts/runpython
    DATA := data/my_data.csv
    # ... (analysis definitions)
-   
+
    # Include common targets
    include lib/repro-tools/lib/common.mk
-   
+
    # Project-specific targets
    .PHONY: all
    all:
@@ -220,7 +213,6 @@ repro-tools new-project \
 ```
 
 **What it will generate**:
-
 - Minimal Makefile (~400 lines with `include common.mk`)
 - Standard directory structure
 - Sample analysis script
@@ -255,18 +247,15 @@ repro-tools new-project \
 ## Metrics
 
 **Before Phase 2**:
-
 - Template Makefile: 1021 lines
 - repro-tools lib/: (didn't exist)
 
 **After Phase 2**:
-
 - Template Makefile: 684 lines (-337, -33%)
 - common.mk: 360 lines (generic targets)
 - Net reduction per project: 337 lines
 
 **With 10 projects** (user's target):
-
 - Before: 10,210 lines total (10 × 1021)
 - After: 7,200 lines total (10 × 684 + 360 common)
 - Savings: 3,010 lines (29.5% reduction)
@@ -278,11 +267,9 @@ repro-tools new-project \
 ✅ **Phase 2 complete!**
 
 Successfully created a Makefile library that:
-
 - Reduces duplication by 33% per project
 - Centralizes maintenance of generic targets
 - Provides automatic updates to all projects
 - Maintains full backward compatibility
 
 **Ready for Phase 3**: Scaffolding tool to automate project creation.
-

@@ -6,8 +6,7 @@ UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
 # Optional Julia GPU support: set JULIA_ENABLE_CUDA=1 to install CUDA.jl
-# Auto-enable if GPU_CUDA_MAJOR is provided (for Python GPU wheels)
-JULIA_ENABLE_CUDA ?= $(if $(GPU_CUDA_MAJOR),1,0)
+JULIA_ENABLE_CUDA ?= 0
 export JULIA_ENABLE_CUDA
 
 # Paths
@@ -87,10 +86,6 @@ python-env:
 		fi; \
 	else \
 		$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
-	fi; \
-	if [ "$(UNAME_S)" = "Linux" ] && [ "$(UNAME_M)" = "x86_64" ] && [ -n "$${GPU_CUDA_MAJOR:-}" ]; then \
-		echo ">> Installing GPU wheels (CUDA $$GPU_CUDA_MAJOR) for JAX/CuPy..."; \
-		"$(PY_PREFIX)/bin/pip" install "jax[cuda$${GPU_CUDA_MAJOR}_pip]" "cupy-cuda$${GPU_CUDA_MAJOR}x"; \
 	fi
 
 python-check:

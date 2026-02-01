@@ -18,10 +18,12 @@ pytest tests/test_provenance.py -v
 pytest tests/test_integration.py -v
 pytest tests/test_environment.py -v
 pytest tests/test_publishing.py -v
+pytest tests/test_notebook_integration.py -v
 
 # Run specific test class
 pytest tests/test_environment.py::TestPythonEnvironment -v
 pytest tests/test_publishing.py::TestGitSafetyChecks -v
+pytest tests/test_notebook_integration.py::TestJuliaIntegration -v
 
 # Run specific test
 pytest tests/test_provenance.py::TestSHA256::test_sha256_file_consistent -v
@@ -29,7 +31,7 @@ pytest tests/test_provenance.py::TestSHA256::test_sha256_file_consistent -v
 
 ## Test Organization
 
-### `test_provenance.py` - Unit Tests
+### `test_provenance.py` - Unit Tests (12 tests)
 
 Tests for core provenance tracking functionality:
 
@@ -48,6 +50,57 @@ Tests for core provenance tracking functionality:
 - **TestBuildRecord**: Build provenance generation
   - Tests YAML file creation
   - Validates provenance structure
+
+### `test_notebook_integration.py` - Notebook Tests (36 tests)
+
+Comprehensive tests for Jupyter notebook integration:
+
+- **TestNotebookEnvironment** (6 tests): Environment configuration
+  - Runnotebook wrapper exists and is executable
+  - CDPATH is unset (prevents path pollution bug)
+  - PYTHONPATH configured correctly
+  - Julia/Python bridge environment variables set
+  - Papermill execution configured
+
+- **TestNotebookStructure** (5 tests): Notebook file structure
+  - Example notebooks exist (correlation, julia_demo)
+  - Proper kernel metadata present
+  - Parameters cell tagged correctly
+  - Required variables defined in parameters
+
+- **TestNotebookExecution** (4 tests): Execution via papermill
+  - Sample notebooks execute successfully
+  - Parameters injected correctly
+  - Correlation and julia_demo build via make
+  - Executed notebooks saved to output/
+
+- **TestNotebookProvenance** (5 tests): Provenance generation
+  - Provenance files created for notebook builds
+  - Correct structure with all required fields
+  - Command records papermill execution
+  - Input and output files tracked with SHA256 hashes
+
+- **TestJuliaIntegration** (4 tests): Julia via juliacall
+  - juliacall imports successfully
+  - Julia Statistics package loads
+  - Julia functions callable from Python
+  - julia_demo notebook uses juliacall
+
+- **TestNotebookOutputs** (5 tests): Output verification
+  - Executed notebooks saved with cell outputs
+  - PDF figures created
+  - LaTeX tables created
+  - Build logs generated
+
+- **TestMakefileIntegration** (5 tests): Makefile integration
+  - Notebooks in ANALYSES list
+  - Makefile variables defined correctly
+  - $(NOTEBOOK) runner used for .ipynb files
+  - make correlation/julia_demo succeed
+
+- **TestNotebookErrorHandling** (2 tests): Error handling
+  - Notebooks with errors fail build
+  - Missing parameters cell detected
   - Checks required fields (built_at_utc, command, git, inputs, outputs)
 
 ### `test_integration.py` - Integration Tests

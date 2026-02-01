@@ -10,7 +10,7 @@ project_template/
 │   └── copilot-instructions.md
 ├── .gitignore             # Git exclusions
 ├── .gitmodules            # Git submodule configuration
-├── build_price_base.py    # Analysis scripts  
+├── build_price_base.py    # Analysis scripts
 ├── build_remodel_base.py
 ├── data/                  # Input datasets
 ├── docs/                  # Documentation
@@ -36,7 +36,6 @@ Analysis scripts that generate figures and tables, located in the project root.
 **Example**: `build_price_base.py`
 
 Each script:
-
 - Takes `--data`, `--out-fig`, `--out-table`, `--out-meta` arguments
 - Produces one figure + one table + one provenance record
 - Uses `repro_tools.write_build_record()` for metadata
@@ -97,7 +96,6 @@ output/
 ```
 
 **Purpose**:
-
 - `figures/`: Generated PDFs
 - `tables/`: Generated LaTeX tables
 - `provenance/`: Per-artifact build records
@@ -124,7 +122,6 @@ paper/
 **Intended use**: Separate git repository for Overleaf integration.
 
 **Workflow**:
-
 1. Build in `output/`
 2. Publish to `paper/` with `make publish`
 3. Commit `paper/` to its own git repo
@@ -154,14 +151,12 @@ lib/
 ```
 
 **repro-tools**:
-
 - Installed in editable mode (`pip install -e lib/repro-tools`)
 - Changes immediately available (no reinstall needed)
 - Automatically initialized by `make environment`
 - See [docs/repro_tools_submodule.md](repro_tools_submodule.md) for details
 
 **Git submodule**:
-
 - Tracked in `.gitmodules`
 - Auto-initialized by Makefile
 - Update with: `git submodule update --remote lib/repro-tools`
@@ -201,14 +196,12 @@ env/
 ```
 
 **Environment targets**:
-
 - `make -C env all-env`: Setup everything
 - `make -C env python-env`: Just Python
 - `make -C env julia-install-via-python`: Just Julia
 - `make -C env stata-env`: Just Stata
 
 **Wrapper scripts** configure environment before execution:
-
 - `runpython`: Sets PYTHONPATH, Julia bridge, conda activation
 - `runjulia`: Points to `.julia/pyjuliapkg/install/bin/julia`
 - `runstata`: Sets STATA_PACKAGES, uses execute.ado
@@ -227,7 +220,6 @@ env/examples/
 ```
 
 **Makefile targets**:
-
 - `make examples`: Run all
 - `make sample-python`: Python only
 - `make sample-julia`: Julia only
@@ -314,7 +306,6 @@ Stata packages (if Stata is installed).
 ### Root Level
 
 **Makefile**:
-
 - Defines `ARTIFACTS` variable (list of artifacts)
 - Grouped targets for atomic builds
 - Publish targets with git safety
@@ -322,7 +313,6 @@ Stata packages (if Stata is installed).
 - Help/info targets
 
 **README.md**:
-
 - Quick start guide
 - Overview of features and workflows
 
@@ -360,7 +350,6 @@ env/scripts/runpython analysis/build_price_base.py \
 ```
 
 **Outputs**:
-
 - `output/figures/price_base.pdf` (figure)
 - `output/tables/price_base.tex` (table)
 - `output/provenance/price_base.yml` (metadata)
@@ -377,12 +366,10 @@ $(REPRO_PUBLISH) \
 ```
 
 **Copies**:
-
 - `output/figures/*.pdf` → `paper/figures/*.pdf`
 - `output/tables/*.tex` → `paper/tables/*.tex`
 
 **Updates**:
-
 - `paper/provenance.yml` (aggregated provenance)
 
 ## Path References

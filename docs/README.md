@@ -35,6 +35,8 @@ Complete guide to the reproducible research template.
   - Common scenarios and troubleshooting
 
 ### Build System
+- **[notebook_support.md](notebook_support.md)** - Jupyter notebook integration and workflow
+- **[notebook_interactive_workflow.md](notebook_interactive_workflow.md)** - Interactive development with Jupyter (complete guide)
 - **[provenance.md](provenance.md)** - Provenance tracking system explained
   - Build provenance (per-artifact records)
   - Publication provenance (aggregated tracking)
@@ -195,9 +197,8 @@ Complete guide to the reproducible research template.
 ## 📂 Examples
 
 See **[env/examples/](../env/examples/)** directory for:
-
 - `sample_python.py` - Pure Python example
-- `sample_julia.jl` - Pure Julia example  
+- `sample_julia.jl` - Pure Julia example
 - `sample_juliacall.py` - Python → Julia interop
 - `sample_stata.do` - Stata example
 
@@ -323,14 +324,12 @@ project_template/
 ### When to Update
 
 **Add to CHANGELOG.md**:
-
 - New features
 - Breaking changes
 - Bug fixes
 - Dependency updates
 
 **Update technical docs**:
-
 - New environment variables
 - Changed directory structure
 - New Makefile targets
@@ -359,13 +358,11 @@ When making significant changes:
 ## 📧 Documentation Feedback
 
 **Found an error?**
-
 - Check git commit history for context
 - Verify against current code
 - Update or file issue
 
 **Missing documentation?**
-
 - Check if topic covered in related doc
 - Add to troubleshooting.md if it's a common question
 - Create new doc if substantial new topic
@@ -413,7 +410,7 @@ When making significant changes:
 
 ---
 
-**Last updated**: January 16, 2026  
+**Last updated**: January 16, 2026
 **Template version**: 1.0.0
 
 ---

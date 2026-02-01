@@ -11,7 +11,7 @@
 * stata -b file.do
 *
 * but allows control over the location of the log file (in batch mode,
-* Stata always creates a log file in the current directory).   
+* Stata always creates a log file in the current directory).
 
 program execute
 
@@ -21,20 +21,20 @@ program execute
    * Create logs directory if it doesn't exist
    capture mkdir output
    capture mkdir output/logs
-   
+
    * Extract just the filename without directory path
    * Find the last "/" or "\" and extract everything after it
-   * We need to search from the end since strpos finds the first occurrence
    local baseFile "`doFile'"
-   local len = strlen("`doFile'")
-   forvalues i = `len'(-1)1 {
-      local char = substr("`doFile'", `i', 1)
-      if "`char'" == "/" | "`char'" == "\" {
-         local baseFile = substr("`doFile'", `i' + 1, .)
-         continue, break
+   local lastSlash = 0
+   forvalues i = 1/`=length("`doFile'")' {
+      if substr("`doFile'", `i', 1) == "/" | substr("`doFile'", `i', 1) == "\" {
+         local lastSlash = `i'
       }
    }
-   
+   if `lastSlash' > 0 {
+      local baseFile = substr("`doFile'", `lastSlash' + 1, .)
+   }
+
    * Create name of log file from base filename
    local doLocation = strpos("`baseFile'", ".do")
    if "`doLocation'" == "0" {
@@ -43,7 +43,7 @@ program execute
    else { // If it does, replace ".do" with ".log"
       local logFile = substr("`baseFile'", 1, `doLocation')
       local logFile = "`logFile'log"
-      }   
+      }
 
    * Start logging
    quietly log using output/logs/`logFile', replace text
@@ -56,7 +56,7 @@ program execute
 
    * Turn off logging and exit Stata
    quietly log close
-   
+
    * Exit with appropriate return code
    * - If error occurred (rc != 0), exit with that code to propagate failure
    * - Otherwise, exit cleanly with STATA keyword to force exit

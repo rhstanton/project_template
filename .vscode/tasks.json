@@ -188,6 +188,39 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Build correlation analysis (notebook)",
+            "type": "shell",
+            "command": "make",
+            "args": ["correlation"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Open Jupyter Lab",
+            "type": "shell",
+            "command": "conda activate .env && jupyter lab",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "Execute current notebook with papermill",
+            "type": "shell",
+            "command": "${workspaceFolder}/env/scripts/runnotebook",
+            "args": [
+                "${file}",
+                "${workspaceFolder}/output/executed_notebooks/${fileBasenameNoExtension}.ipynb"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
         }
     ]
 }

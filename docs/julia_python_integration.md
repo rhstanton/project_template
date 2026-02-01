@@ -13,22 +13,22 @@ The template supports three modes of Python/Julia interaction:
 ## Architecture
 
 > **⚠️ CRITICAL: PythonCall Must NOT Be In env/Project.toml**
-> 
+>
 > This is the #1 most common mistake that causes installation failures!
-> 
+>
 > **DO NOT** add `PythonCall` to your `env/Project.toml` dependencies. PythonCall is
 > managed by juliacall in `.julia/pyjuliapkg/` and should ONLY exist there.
-> 
+>
 > **Symptom if you do this wrong:**
 > ```
 > ERROR: ArgumentError: Package PythonCall [6099a3de-...] is required but
 > does not seem to be installed
 > ```
-> 
+>
 > **Why this happens:** When PythonCall is in `env/Project.toml`, Julia looks for it
 > in the `env/` project but it's actually installed in `.julia/pyjuliapkg/`. This
 > creates a mismatch that breaks the installation.
-> 
+>
 > **The two projects:**
 > - `.julia/pyjuliapkg/` - juliacall's managed environment (contains PythonCall)
 > - `env/` - Your analysis packages (DataFrames, FixedEffectModels, etc.)
@@ -84,7 +84,6 @@ These are set automatically by:
 **Problem**: By default, PythonCall.jl uses CondaPkg to create its own isolated conda environment at `env/.CondaPkg/.pixi/`.
 
 This creates redundancy:
-
 - Main Python: `.env/` (~2GB)
 - CondaPkg Python: `env/.CondaPkg/.pixi/` (~500MB)
 - Two separate Python installations with duplicate packages
@@ -92,7 +91,6 @@ This creates redundancy:
 **Solution**: Set `JULIA_CONDAPKG_BACKEND=Null` to disable CondaPkg and use the main Python environment.
 
 **Benefits**:
-
 - ✅ Single Python environment
 - ✅ Saves ~500MB disk space
 - ✅ Faster installation
@@ -358,13 +356,11 @@ Subsequent calls are fast (~milliseconds).
 ### Data Transfer
 
 Converting between Python and Julia objects has overhead:
-
 - Small arrays (<1000 elements): negligible
 - Large arrays (>1M elements): can be significant
 - DataFrames: moderate overhead
 
-**Mitigation**: 
-
+**Mitigation**:
 - Do bulk operations in one language
 - Minimize back-and-forth conversions
 - Consider pure Julia for large-scale numerical work

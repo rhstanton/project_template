@@ -162,6 +162,39 @@ if __name__ == "__main__":
     main()
 ```
 
+### Jupyter Notebook Workflow
+
+Analyses can also be implemented as Jupyter notebooks (`.ipynb` files):
+
+**Structure requirements:**
+1. **Kernel metadata** (required by papermill)
+2. **Parameters cell** tagged with "parameters"
+3. **Provenance cell** at end using `write_build_record()` (not `auto_build_record()`)
+
+**Example notebook** (`notebooks/correlation_analysis.ipynb`):
+- Parameters cell (tagged): `study`, `data_file`, `out_fig`, `out_table`, `out_meta`
+- Analysis cells: Load data, compute statistics, create visualizations
+- Provenance cell: Call `write_build_record()` with explicit parameters
+
+**Julia integration** (`notebooks/julia_demo.ipynb`):
+- Use `from juliacall import Main as jl` for Julia/Python bridge
+- Load Julia packages: `jl.seval("using Statistics")`
+- Call Julia functions: `jl.mean(array)`, `jl.std(array)`
+- Leverage Julia's performance for numerical computations
+
+**Build via Make:**
+```makefile
+correlation.script  := notebooks/correlation_analysis.ipynb
+correlation.runner  := $(NOTEBOOK)
+correlation.inputs  := data/panel_data.csv
+correlation.outputs := $(OUT_FIG_DIR)/correlation.pdf $(OUT_TBL_DIR)/correlation.tex $(OUT_PROV_DIR)/correlation.yml
+correlation.args    := correlation
+```
+
+**Environment wrapper:** `env/scripts/runnotebook` (sets PYTHONPATH, Julia bridge, executes via papermill)
+
+**See:** [docs/notebook_interactive_workflow.md](../docs/notebook_interactive_workflow.md) for complete guide
+
 ## Documentation
 
 Comprehensive documentation in `docs/` directory:
@@ -173,6 +206,8 @@ Comprehensive documentation in `docs/` directory:
 - [docs/environment.md](../docs/environment.md) - Environment setup details
 - [docs/provenance.md](../docs/provenance.md) - Provenance system explained
 - [docs/publishing.md](../docs/publishing.md) - Publishing workflow
+- [docs/notebook_support.md](../docs/notebook_support.md) - Jupyter notebook integration
+- [docs/notebook_interactive_workflow.md](../docs/notebook_interactive_workflow.md) - Interactive development guide
 - [docs/directory_structure.md](../docs/directory_structure.md) - Project organization
 - [docs/julia_python_integration.md](../docs/julia_python_integration.md) - Julia/Python bridge
 - [docs/platform_compatibility.md](../docs/platform_compatibility.md) - System requirements, GPU support

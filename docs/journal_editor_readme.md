@@ -7,7 +7,6 @@
 ## ⚠️ IMPORTANT: Package Contents
 
 **This replication package excludes:**
-
 - `data-construction/` - Scripts that process proprietary raw data (if applicable)
 - `notes/` - Authors' working notes
 - `paper/` - Separate LaTeX repository
@@ -211,19 +210,16 @@ $ ls output/tables/*.tex | wc -l
 ## System Requirements
 
 **Software:**
-
 - Python 3.11 (installed automatically via `make environment`)
 - Julia 1.10+ (installed automatically via juliacall)
 - GNU Make 4.3+ (on macOS: `brew install make`, then use `gmake`)
 
 **Hardware:**
-
 - RAM: 8 GB minimum (16 GB recommended)
 - Disk: 5 GB free space
 - Time: ~15 minutes total (10 min setup + 5 min execution)
 
 **Platforms:**
-
 - ✅ Linux (tested on Ubuntu 22.04)
 - ✅ macOS 11+ (use `gmake` instead of `make`)
 - ⚠️  Windows (use WSL 2)
@@ -340,7 +336,6 @@ project_template/
 ```
 
 **Key insight:** Each `build_*.py` script:
-
 1. Loads data from `data/`
 2. Generates one figure + one table
 3. Records full provenance (git state, data checksums, timestamps)
@@ -350,14 +345,12 @@ project_template/
 ## Technical Notes
 
 **Provenance Tracking:** Every output is linked to:
-
 - Exact git commit that generated it
 - SHA256 checksums of input data
 - Timestamp of generation
 - Full command that was run
 
-**Reproducibility:** 
-
+**Reproducibility:**
 - Random seeds are fixed (if applicable)
 - All package versions pinned
 - Floating point differences across systems are negligible
@@ -402,7 +395,6 @@ make remodel_base     # Just remodeling analysis
 ```
 
 Each analysis:
-
 - Reads data from `data/housing_panel.csv`
 - Performs calculations
 - Generates figure (PDF) and table (LaTeX)
@@ -474,11 +466,11 @@ ls -lh output/figures/price_base.pdf
 
 ---
 
-**Last updated:** January 17, 2026  
+**Last updated:** January 17, 2026
 **Contact:** [Your Name], [Institution] (your.email@institution.edu)
 
 ---
 
-**Thank you for replicating our work!** 
+**Thank you for replicating our work!**
 
 If you encounter any issues, please let us know so we can improve this package.

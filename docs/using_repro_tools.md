@@ -232,24 +232,24 @@ def main():
     parser.add_argument("--out-fig", type=Path, required=True)
     parser.add_argument("--out-table", type=Path, required=True)
     args = parser.parse_args()
-    
+
     # Create output directories
     args.out_fig.parent.mkdir(parents=True, exist_ok=True)
     args.out_table.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Load data
     df = pd.read_csv(args.data)
-    
+
     # Generate figure
     fig, ax = plt.subplots()
     # ... your plotting code ...
     fig.savefig(args.out_fig)
     plt.close(fig)
-    
+
     # Generate table
     # ... your table generation code ...
     table.to_latex(args.out_table, index=False)
-    
+
     # That's it! Provenance recorded automatically at exit
 
 if __name__ == "__main__":
@@ -259,10 +259,8 @@ if __name__ == "__main__":
 ## Next Steps
 
 See `project_template/` for a complete working example with:
-
 - Multi-language support (Python, Julia, Stata)
 - Flexible analysis definitions
 - Publishing workflow
 - Testing and QA
 - Journal submission helpers
-

@@ -31,12 +31,10 @@
 ### Building Artifacts
 
 **Build everything:**
-
 - Press `Ctrl+Shift+B` (fastest!)
 - Or run task: "Build all artifacts"
 
 **Build specific artifact:**
-
 - `Ctrl+Shift+P` → "Tasks: Run Task"
 - Select: "Build price_base" or "Build remodel_base"
 - Or use integrated terminal: ``Ctrl+` `` then type `make price_base`
@@ -44,7 +42,6 @@
 ### Testing
 
 **Run tests:**
-
 - Click **Testing** icon in left sidebar (beaker icon)
 - Click "Run All Tests"
 - Or run task: "Run tests"
@@ -52,7 +49,6 @@
 ### Publishing
 
 **Publish to paper directory:**
-
 - Run task: "Publish artifacts"
 - (Make sure you've committed changes first!)
 
@@ -61,21 +57,18 @@
 ## 🔍 How to Find Available Tasks
 
 **Method 1: Task Picker**
-
 1. Press `Ctrl+Shift+P`
 2. Type: `task run`
 3. Press Enter
 4. **Browse the full list** of available tasks!
 
 **Method 2: Makefile Tools Extension**
-
 1. Install "Makefile Tools" extension (recommended automatically)
 2. Click **Makefile icon** in left sidebar
 3. See **all Make targets** from Makefile
 4. Click any target to run it!
 
 **Method 3: Integrated Terminal**
-
 - Press ``Ctrl+` `` to open terminal
 - Type any `make` command directly
 - Same as command line!
@@ -110,9 +103,8 @@
 **Just remember one shortcut: `Ctrl+Shift+P`**
 
 Type what you want to do:
-
 - "task" → Run tasks
-- "debug" → Start debugging  
+- "debug" → Start debugging
 - "test" → Configure tests
 - "python" → Python commands
 - "git" → Git commands

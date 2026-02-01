@@ -60,6 +60,7 @@ EXTRA_ARGS ?=
 PYTHON := env/scripts/runpython
 JULIA  := env/scripts/runjulia
 STATA  := env/scripts/runstata
+NOTEBOOK := env/scripts/runnotebook
 
 # repro-tools CLI commands (via Python module for portability)
 REPRO_CHECK   := $(PYTHON) -m repro_tools.cli check
@@ -75,13 +76,13 @@ REPRO_REPORT  := $(PYTHON) -m repro_tools.cli report
 # Think of price_base as an analysis/run, not a single artifact.
 
 # All analyses to run
-ANALYSES := price_base remodel_base did_example
+ANALYSES := price_base remodel_base correlation julia_demo
 
 # Input data files
 DATA := data/housing_panel.csv
 
 # ==============================================================================
-# Directory Paths  
+# Directory Paths
 # ==============================================================================
 
 # Repository root (for common.mk)
@@ -92,6 +93,7 @@ OUT_FIG_DIR := output/figures
 OUT_TBL_DIR := output/tables
 OUT_PROV_DIR := output/provenance
 OUT_LOG_DIR := output/logs
+OUT_EXEC_NB_DIR := output/executed_notebooks
 
 # Paper directories
 PAPER_DIR := paper
@@ -174,11 +176,14 @@ all:
 # ------------------------------------------------------------------------------
 # Define configuration for each analysis using simple Make variables.
 # Format:
-#   <analysis>.script  = path to script
-#   <analysis>.runner  = command to run it (default: PYTHON)
+#   <analysis>.script  = path to script (.py or .ipynb)
+#   <analysis>.runner  = command to run it (auto-detected if not specified)
 #   <analysis>.inputs  = input files
 #   <analysis>.outputs = output files (space-separated)
 #   <analysis>.args    = command-line arguments
+#
+# NOTE: If both .py and .ipynb exist, .ipynb takes priority (assumed .py was
+#       generated from .ipynb). Set .runner explicitly to override.
 
 # price_base analysis
 price_base.script  := run_analysis.py
@@ -194,12 +199,19 @@ remodel_base.inputs  := $(DATA)
 remodel_base.outputs := $(OUT_FIG_DIR)/remodel_base.pdf $(OUT_TBL_DIR)/remodel_base.tex $(OUT_PROV_DIR)/remodel_base.yml
 remodel_base.args    := remodel_base
 
-# did_example analysis - DiD regression with Julia/pyfixest backend selection
-did_example.script  := run_did.py
-did_example.runner  := $(PYTHON)
-did_example.inputs  := $(DATA)
-did_example.outputs := $(OUT_FIG_DIR)/did_example.pdf $(OUT_TBL_DIR)/did_example.tex $(OUT_PROV_DIR)/did_example.yml
-did_example.args    :=
+# correlation analysis (Jupyter notebook example)
+correlation.script  := notebooks/correlation_analysis.ipynb
+correlation.runner  := $(NOTEBOOK)
+correlation.inputs  := data/panel_data.csv
+correlation.outputs := $(OUT_FIG_DIR)/correlation.pdf $(OUT_TBL_DIR)/correlation.tex $(OUT_PROV_DIR)/correlation.yml
+correlation.args    := correlation
+
+# julia_demo analysis (Julia via juliacall in Python notebook)
+julia_demo.script  := notebooks/julia_demo.ipynb
+julia_demo.runner  := $(NOTEBOOK)
+julia_demo.inputs  := data/panel_data.csv
+julia_demo.outputs := $(OUT_FIG_DIR)/julia_demo.pdf $(OUT_TBL_DIR)/julia_demo.tex $(OUT_PROV_DIR)/julia_demo.yml
+julia_demo.args    := julia_demo
 
 # ------------------------------------------------------------------------------
 # Rule Generator Macro
@@ -207,12 +219,36 @@ did_example.args    :=
 # Takes an analysis name and generates Make rules for it.
 # Uses grouped targets (&:) so all outputs are built by one command.
 #
+# Automatically detects .ipynb files and uses papermill if needed:
+#   - Checks if .ipynb exists alongside .py
+#   - If both exist, .ipynb takes priority
+#   - Notebook execution creates executed version in output/executed_notebooks/
+#
 # Usage: $(call make-analysis-rule,<analysis_name>)
 
 define make-analysis-rule
 
+# Auto-detect script type if .ipynb exists
+# Priority: .ipynb > .py (assumes .py was generated from .ipynb)
+ifneq ($(suffix $($(1).script)),.ipynb)
+  # Check if .ipynb version exists
+  IPYNB_VERSION := $(dir $($(1).script))$(basename $(notdir $($(1).script))).ipynb
+  ifneq ($(wildcard $(IPYNB_VERSION)),)
+    $(1).script := $(IPYNB_VERSION)
+    $(1).runner := $(NOTEBOOK)
+  endif
+endif
+
+# For notebooks, update args to include papermill parameters and executed output path
+ifeq ($(suffix $($(1).script)),.ipynb)
+  # Compute executed notebook path directly in run_cmd (no intermediate variable)
+  $(1).run_cmd := $($(1).runner) $($(1).script) $(OUT_EXEC_NB_DIR)/$(basename $(notdir $($(1).script)))_executed.ipynb -p study $($(1).args) $(EXTRA_ARGS) $($(1)_EXTRA_ARGS)
+else
+  $(1).run_cmd := $($(1).runner) $($(1).script) $($(1).args) $(EXTRA_ARGS) $($(1)_EXTRA_ARGS)
+endif
+
 # Grouped target: all outputs built together
-$($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR)
+$($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR) $(OUT_EXEC_NB_DIR)
 	@echo "========================================"
 	@echo "Running analysis: $(1)"
 	@echo "========================================"
@@ -220,7 +256,7 @@ $($(1).outputs) &: $($(1).script) $($(1).inputs) | $(OUT_FIG_DIR) $(OUT_TBL_DIR)
 	@echo "Runner:  $($(1).runner)"
 	@echo "Outputs: $($(1).outputs)"
 	@echo ""
-	$($(1).runner) $($(1).script) $($(1).args) $(EXTRA_ARGS) $($(1)_EXTRA_ARGS) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
+	@set -o pipefail; $$($(1).run_cmd) 2>&1 | tee $(OUT_LOG_DIR)/$(1).log
 	@echo ""
 	@echo "✓ $(1) complete"
 	@echo "  Outputs:"
@@ -241,7 +277,7 @@ endef
 $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 
 # Ensure output directories exist
-$(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR):
+$(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR) $(OUT_EXEC_NB_DIR):
 	@mkdir -p $@
 
 # ==============================================================================
@@ -251,7 +287,7 @@ $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR):
 # Git safety checks prevent publishing from dirty tree or outdated branch.
 #
 # Two modes of selective publishing:
-#   1. Analysis-level: PUBLISH_ANALYSES="price_base remodel_base" 
+#   1. Analysis-level: PUBLISH_ANALYSES="price_base remodel_base"
 #      Publishes ALL outputs from specified analyses
 #   2. File-level: PUBLISH_FILES="output/figures/price_base.pdf output/tables/custom.tex"
 #      Publishes only specified files (for fine-grained control)
@@ -702,3 +738,4 @@ show-analysis-%:
 	@echo "To view logs:"
 	@echo "  cat $(OUT_LOG_DIR)/$*.log"
 	@echo "========================================"
+

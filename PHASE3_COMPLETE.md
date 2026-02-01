@@ -1,7 +1,7 @@
 # Phase 3 Complete: Scaffolding Tool
 
-**Status**: ✅ Complete  
-**Date**: January 2026  
+**Status**: ✅ Complete
+**Date**: January 2026
 **Commits**: repro-tools@6741f9f
 
 ---
@@ -9,7 +9,6 @@
 ## Summary
 
 Created `repro-new-project` command that automatically generates new research projects with:
-
 - Minimal Makefile (~195 lines) that includes `common.mk`
 - Git repository with repro-tools submodule
 - Sample analysis with provenance tracking
@@ -23,7 +22,6 @@ Created `repro-new-project` command that automatically generates new research pr
 **File**: `lib/repro-tools/src/repro_tools/scaffold.py` (952 lines)
 
 **Key Functions**:
-
 - `create_project()`: Main project generation logic
 - `generate_makefile()`: Creates minimal Makefile with `include common.mk`
 - `generate_config()`: Creates `shared/config.py` with sample study
@@ -35,7 +33,6 @@ Created `repro-new-project` command that automatically generates new research pr
 ### 2. CLI Integration
 
 **Changes**:
-
 - Added `new_project()` function to `cli.py`
 - Registered `repro-new-project` command in `pyproject.toml`
 - Follows existing CLI pattern (argparse + delegation)
@@ -64,7 +61,6 @@ repro-new-project --help
 **Key Feature**: `include lib/repro-tools/lib/common.mk` provides 360 lines of functionality
 
 **Project includes**:
-
 - ✅ Git repository initialized
 - ✅ repro-tools as submodule
 - ✅ Standard directory structure (data/, output/, paper/, env/, docs/, tests/)
@@ -83,7 +79,6 @@ repro-new-project --name "Test Project" --slug test-project --languages python
 ```
 
 **Results**:
-
 - ✅ 14 directories created
 - ✅ Git repo initialized
 - ✅ Submodule added successfully
@@ -95,14 +90,12 @@ repro-new-project --name "Test Project" --slug test-project --languages python
 ## Benefits for Future Projects
 
 ### Immediate Benefits
-
 1. **One command to start**: `repro-new-project --name "X" --slug y`
 2. **Instant best practices**: Git + provenance + validation built-in
 3. **Minimal duplication**: 195-line Makefile vs 1021 original
 4. **Auto-updated**: When common.mk improves, all projects benefit
 
 ### Long-Term Benefits
-
 1. **Consistency**: All projects follow same structure
 2. **Maintainability**: Updates to common.mk propagate via submodule
 3. **Onboarding**: New team members get working projects instantly
@@ -134,7 +127,6 @@ create_project()
 ### Template Components
 
 **Makefile** (195 lines):
-
 - Variables (PYTHON, JULIA, STATA, DATA, ANALYSES)
 - `include lib/repro-tools/lib/common.mk` (gets 360 lines of targets)
 - Analysis definitions (sample_analysis.*)
@@ -143,13 +135,11 @@ create_project()
 - Help targets
 
 **shared/config.py**:
-
 - STUDIES dictionary with sample_analysis
 - DATA_FILES dictionary
 - Path configuration (REPO_ROOT, DATA_DIR, OUTPUT_DIR)
 
 **run_analysis.py**:
-
 - Uses repro_tools.auto_build_record()
 - Uses repro_tools.validate_study_config()
 - Reads configuration from shared/config.py
@@ -157,7 +147,6 @@ create_project()
 - Generates figures, tables, and provenance
 
 **env/ directory**:
-
 - python.yml (conda environment)
 - Project.toml (Julia packages, if selected)
 - Makefile (environment installation)
@@ -185,7 +174,6 @@ create_project()
 **Commit**: 6741f9f "Add scaffolding tool: repro-new-project command"
 
 ### project_template Repository
-
 1. `lib/repro-tools` - Updated submodule to 6741f9f
 2. `PHASE3_COMPLETE.md` - This document
 
@@ -219,7 +207,6 @@ make publish
 ### For Existing Projects
 
 Existing projects can gradually adopt the new patterns:
-
 1. Add `include lib/repro-tools/lib/common.mk` to Makefile
 2. Remove duplicated targets that are now in common.mk
 3. Update config.py to use STUDIES dictionary
@@ -236,7 +223,6 @@ Existing projects can gradually adopt the new patterns:
 ## Success Criteria
 
 ✅ **All criteria met**:
-
 - [x] Command works non-interactively
 - [x] Generates complete, functional project
 - [x] Includes common.mk for shared targets
@@ -249,14 +235,12 @@ Existing projects can gradually adopt the new patterns:
 ## Lessons Learned
 
 ### What Worked Well
-
 1. **Template-based generation**: Clean separation of template code from scaffolding logic
 2. **Git automation**: Submodule initialization in generated projects works seamlessly
 3. **CLI integration**: Argparse pattern consistent with other repro-tools commands
 4. **Language selection**: Conditional generation based on --languages flag
 
 ### Potential Improvements
-
 1. **Interactive mode**: Could add more prompts for guided setup
 2. **Template variants**: Could support "minimal" vs "standard" templates
 3. **Custom templates**: Allow users to define their own templates
@@ -266,14 +250,12 @@ Existing projects can gradually adopt the new patterns:
 ## Final Statistics
 
 ### Phase 3 Achievements
-
 - **952 lines** of scaffolding code added to repro-tools
 - **195 lines** generated Makefile (81% reduction from original 1021)
 - **30 seconds** to create new project (vs ~1 hour manual setup)
 - **∞% automation** - zero manual setup required
 
 ### Combined Phases 1+2+3
-
 - **Phase 1**: 89 lines eliminated per project (validation consolidation)
 - **Phase 2**: 337 lines eliminated per project (Makefile library)
 - **Phase 3**: 826 lines eliminated per project (195 vs 1021)
@@ -284,8 +266,8 @@ Existing projects can gradually adopt the new patterns:
 
 Phase 3 completes the 3-phase efficiency improvement plan:
 
-**Phase 1** (Validation Consolidation): ✅ Eliminated per-project validation code  
-**Phase 2** (Makefile Library): ✅ Created reusable common.mk (360 lines)  
+**Phase 1** (Validation Consolidation): ✅ Eliminated per-project validation code
+**Phase 2** (Makefile Library): ✅ Created reusable common.mk (360 lines)
 **Phase 3** (Scaffolding Tool): ✅ Automated project generation
 
 **Result**: New projects require **81% fewer lines** of Makefile code and can be created in **30 seconds** vs ~1 hour of manual setup. All projects automatically benefit from improvements to common.mk and repro-tools validation library.
@@ -294,5 +276,5 @@ The template is now **production-ready** for managing 10+ research projects effi
 
 ---
 
-**Phase 3 Status**: ✅ **COMPLETE**  
+**Phase 3 Status**: ✅ **COMPLETE**
 **Efficiency Goal**: ✅ **ACHIEVED**

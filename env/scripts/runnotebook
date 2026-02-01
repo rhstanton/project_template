@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Execute Jupyter notebook with environment configured (via papermill)
+# This wrapper ensures the notebook runs with the same Julia/Python bridge
+# configuration as runpython scripts.
+#
+# Usage: runnotebook input.ipynb output.ipynb [papermill options]
+#   Example: runnotebook notebooks/analysis.ipynb output.ipynb -p param1 value1
+
+set -euo pipefail
+
+# Unset CDPATH to prevent it from polluting command substitutions
+unset CDPATH
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PYTHON_BIN="$REPO_ROOT/.env/bin/python"
+
+# Check if environment is installed
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "❌ Python environment not found. Run: make environment" >&2
+  exit 1
+fi
+
+# Julia/Python bridge configuration (same as runpython)
+export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
+export PYTHON_JULIAPKG_PROJECT="$REPO_ROOT/.julia"
+export JULIA_PROJECT="$REPO_ROOT/env"
+export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
+export JULIA_CONDAPKG_BACKEND=Null
+export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
+
+# Add repo root to PYTHONPATH for imports
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+# Execute via papermill
+exec "$REPO_ROOT/.env/bin/papermill" "$@"
