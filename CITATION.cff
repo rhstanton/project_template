@@ -1,33 +1,37 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: Your-Last-Name
-    given-names: Your-First-Name
-    affiliation: "Your Institution"
-    email: your.email@institution.edu
-    orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: Stanton
+    given-names: Richard
+    affiliation: "University of California, Berkeley"
+    orcid: "https://orcid.org/0000-0000-0000-0000"  # Replace with actual ORCID if available
   # Add additional authors as needed:
   # - family-names: Coauthor-Last-Name
   #   given-names: Coauthor-First-Name
   #   affiliation: "Their Institution"
-title: "Your Paper Title - Replication Package"
+title: "Reproducible Research Template"
 version: 1.0.0
-date-released: 2026-01-17
-url: "https://github.com/yourusername/your-project"
-repository-code: "https://github.com/yourusername/your-project"
+date-released: 2026-02-01
+url: "https://github.com/rhstanton/project_template"
+repository-code: "https://github.com/rhstanton/project_template"
 keywords:
   - reproducible research
   - replication package
   - econometrics
-  # Add your domain-specific keywords
+  - provenance tracking
+  - multi-language research
+  - python
+  - julia
+  - stata
 license: MIT
 preferred-citation:
-  type: article
+  type: software
   authors:
-    - family-names: Your-Last-Name
-      given-names: Your-First-Name
-    # Add coauthors
-  title: "Your Paper Title"
+    - family-names: Stanton
+      given-names: Richard
+  title: "Reproducible Research Template"
+  year: 2026
+  url: "https://github.com/rhstanton/project_template"
   journal: "Journal Name"
   year: 2026
   # Add when available:

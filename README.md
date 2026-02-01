@@ -1,12 +1,38 @@
 # Reproducible Research Template
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Julia 1.10+](https://img.shields.io/badge/julia-1.10+-purple.svg)](https://julialang.org/)
+[![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
+[![Tests](https://img.shields.io/badge/tests-166%20passing-brightgreen.svg)](tests/)
+
 **A minimal template for reproducible research with provenance tracking and automated builds**
 
 This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
 
 ---
 
-## � Creating a New Project from This Template
+## 👥 Who Is This For?
+
+This template is designed for:
+
+- **Economists & Social Scientists** conducting empirical research with data analysis
+- **Researchers** who need reproducible, traceable research workflows
+- **Anyone** who wants to:
+  - Track exactly what code produced each figure and table
+  - Use multiple languages (Python, Julia, Stata) in one project
+  - Separate exploratory analysis from publication-ready outputs
+  - Ensure their work can be replicated by reviewers and future researchers
+  - Meet journal requirements for replication packages
+
+**Not a fit if:**
+- You only need a simple Jupyter notebook (this adds structure for complex projects)
+- You don't care about reproducibility or provenance tracking
+- You're doing pure software development (not research)
+
+---
+
+## 🎯 Creating a New Project from This Template
 
 **Option 1: Clone with submodules (recommended):**
 ```bash
@@ -422,22 +448,42 @@ See [examples/](examples/) directory for sample scripts in Python, Julia, and St
 
 ---
 
+## 🤝 Contributing
+
+We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation:
+
+- **Bug reports**: [Open an issue](https://github.com/rhstanton/project_template/issues/new?template=bug_report.md)
+- **Feature requests**: [Open an issue](https://github.com/rhstanton/project_template/issues/new?template=feature_request.md)
+- **Pull requests**: See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
+
+**Development setup:**
+```bash
+git clone https://github.com/rhstanton/project_template.git
+cd project_template
+make environment
+make check  # Run tests, linting, formatting
+```
+
+---
+
 ## 📄 License
 
-MIT License - See `LICENSE` file.
+MIT License - See [LICENSE](LICENSE) file.
+
+**Summary**: Free to use, modify, and distribute. Attribution appreciated but not required.
 
 ---
 
 ## 📚 Citation
 
-If you use this template, please cite:
+If you use this template in your research, please cite:
 
 ```bibtex
-@software{template2026,
+@software{stanton2026template,
   title = {Reproducible Research Template},
-  author = {Your Name},
+  author = {Stanton, Richard},
   year = {2026},
-  url = {https://github.com/yourusername/project_template}
+  url = {https://github.com/rhstanton/project_template}
 }
 ```
 
