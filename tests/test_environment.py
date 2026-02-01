@@ -70,7 +70,7 @@ class TestPythonEnvironment:
                 cmd = [str(runpython), "-c", f"import {package}"]
             else:
                 cmd = [str(python_exe), "-c", f"import {package}"]
-            
+
             result = subprocess.run(cmd, capture_output=True, text=True)
             assert result.returncode == 0, (
                 f"Package {package} not installed: {result.stderr}"
@@ -158,7 +158,7 @@ class TestJuliaEnvironment:
         # NOTE: PythonCall is managed by juliacall in .julia/pyjuliapkg/
         # It should NOT be in env/Project.toml (see docs/julia_python_integration.md)
         # We test juliacall integration separately in test_notebook_integration.py
-        
+
         # Test DataFrames package (should be in env/Project.toml)
         result = subprocess.run(
             [str(runjulia), "-e", "using DataFrames"],
