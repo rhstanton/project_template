@@ -33,6 +33,9 @@
 # Directories to exclude completely
 paper/
 
+# Replication package (created by make journal-package, separate directory)
+replication-package/
+
 # Journal package artifacts (created by make journal-package)
 journal-package/
 journal-package.tar.gz
