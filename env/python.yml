@@ -34,6 +34,7 @@ dependencies:
   - pytest-cov
   # Code quality
   - ruff  # Linter and formatter (includes black-compatible formatting)
+  - black  # Code formatter (used by repro-tools format-check)
   - mypy  # Type checker
   # Julia interoperability
   - pip:
