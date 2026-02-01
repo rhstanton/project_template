@@ -499,6 +499,11 @@ See `CITATION.cff` for structured metadata.
 - **Version file**: [`_version.py`](_version.py)
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
+**Dependencies:**
+- **repro-tools**: 0.2.0 (git submodule at `lib/repro-tools/`)
+  - Provides provenance tracking, CLI utilities, publishing tools
+  - See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for updates
+
 ---
 
 ## 🎯 For Journal Submission
