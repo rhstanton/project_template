@@ -12,9 +12,7 @@ Tests cover:
 """
 
 import subprocess
-import sys
 from pathlib import Path
-from typing import List
 
 import nbformat
 import pytest

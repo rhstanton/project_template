@@ -49,8 +49,8 @@ _script_dir = Path(__file__).resolve().parent
 if "PYTHON_JULIAPKG_PROJECT" not in os.environ:
     os.environ["PYTHON_JULIAPKG_PROJECT"] = str(_script_dir / ".julia")
 
+# ruff: noqa: E402 - Imports must come after environment variable setup
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from repro_tools import auto_build_record, friendly_docopt, setup_environment
 
@@ -80,7 +80,7 @@ def run_julia_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
                     print("Using GPU acceleration")
                 else:
                     print("GPU requested but unavailable; using CPU")
-            except:
+            except Exception:
                 print("GPU requested but CUDA unavailable; using CPU")
         else:
             print("Using CPU (set --use-gpu=1 to enable GPU acceleration)")
