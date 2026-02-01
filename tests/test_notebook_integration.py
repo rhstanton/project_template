@@ -258,9 +258,9 @@ class TestNotebookExecution:
                 "tags", []
             ):
                 assert "injected_value" in cell.source, "Parameter not injected"
-                assert (
-                    "custom_output.txt" in cell.source
-                ), "Custom parameter not injected"
+                assert "custom_output.txt" in cell.source, (
+                    "Custom parameter not injected"
+                )
                 break
         else:
             pytest.fail("Injected parameters cell not found")
@@ -340,9 +340,9 @@ class TestNotebookProvenance:
 
         # Command should reference papermill or notebook
         cmd_str = " ".join(prov.get("command", []))
-        assert (
-            "papermill" in cmd_str or "notebook" in cmd_str.lower()
-        ), "Provenance doesn't record notebook execution"
+        assert "papermill" in cmd_str or "notebook" in cmd_str.lower(), (
+            "Provenance doesn't record notebook execution"
+        )
 
     def test_provenance_includes_inputs(self, repo_root):
         """Test that provenance includes input files."""
@@ -358,9 +358,9 @@ class TestNotebookProvenance:
 
         # Check that data file is included
         input_paths = [inp["path"] for inp in prov["inputs"]]
-        assert any(
-            "panel_data.csv" in path for path in input_paths
-        ), "Data file not in inputs"
+        assert any("panel_data.csv" in path for path in input_paths), (
+            "Data file not in inputs"
+        )
 
     def test_provenance_includes_outputs(self, repo_root):
         """Test that provenance includes all output files."""
@@ -375,12 +375,12 @@ class TestNotebookProvenance:
         assert len(prov["outputs"]) >= 2, "Missing outputs (should have figure + table)"
 
         output_paths = [out["path"] for out in prov["outputs"]]
-        assert any(
-            "correlation.pdf" in path for path in output_paths
-        ), "Figure not in outputs"
-        assert any(
-            "correlation.tex" in path for path in output_paths
-        ), "Table not in outputs"
+        assert any("correlation.pdf" in path for path in output_paths), (
+            "Figure not in outputs"
+        )
+        assert any("correlation.tex" in path for path in output_paths), (
+            "Table not in outputs"
+        )
 
 
 # ==============================================================================
@@ -586,9 +586,9 @@ class TestMakefileIntegration:
         # Find correlation.runner definition
         for line in content.split("\n"):
             if "correlation.runner" in line:
-                assert (
-                    "$(NOTEBOOK)" in line or "$(RUNNOTEBOOK)" in line
-                ), "Notebook doesn't use NOTEBOOK runner"
+                assert "$(NOTEBOOK)" in line or "$(RUNNOTEBOOK)" in line, (
+                    "Notebook doesn't use NOTEBOOK runner"
+                )
                 break
 
     def test_make_correlation_succeeds(self, repo_root):
@@ -660,9 +660,9 @@ class TestNotebookErrorHandling:
         )
 
         assert result.returncode != 0, "Notebook with error should fail"
-        assert (
-            "ValueError" in result.stderr or "error" in result.stderr.lower()
-        ), "Error not reported in stderr"
+        assert "ValueError" in result.stderr or "error" in result.stderr.lower(), (
+            "Error not reported in stderr"
+        )
 
     def test_missing_parameters_cell_fails(self, tmp_path, repo_root):
         """Test that notebook without parameters cell fails with clear error."""

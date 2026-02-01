@@ -129,9 +129,9 @@ class TestPublishedArtifacts:
                             # Build expected path from repo root
                             dst_path = REPO_ROOT / "paper" / output_type / filename
 
-                        assert (
-                            dst_path.exists()
-                        ), f"Published file missing: {dst_path} (artifact: {artifact_name}, type: {output_type})"
+                        assert dst_path.exists(), (
+                            f"Published file missing: {dst_path} (artifact: {artifact_name}, type: {output_type})"
+                        )
 
     def test_published_checksums_match(self):
         """Published files should match their recorded checksums."""
@@ -154,9 +154,9 @@ class TestPublishedArtifacts:
                         if dst_path.exists():
                             actual_hash = sha256_file(dst_path)
                             expected_hash = output_info["dst_sha256"]
-                            assert (
-                                actual_hash == expected_hash
-                            ), f"Checksum mismatch for {dst_path}: {actual_hash} != {expected_hash}"
+                            assert actual_hash == expected_hash, (
+                                f"Checksum mismatch for {dst_path}: {actual_hash} != {expected_hash}"
+                            )
 
 
 class TestGitSafetyChecks:
@@ -353,9 +353,9 @@ class TestPublishingIdempotency:
         content = makefile.read_text()
 
         # Check that Makefile references .publish_stamps
-        assert (
-            ".publish_stamps" in content
-        ), "Makefile should reference .publish_stamps directory"
+        assert ".publish_stamps" in content, (
+            "Makefile should reference .publish_stamps directory"
+        )
 
         # If it exists, verify it's a directory
         if stamps_dir.exists():
