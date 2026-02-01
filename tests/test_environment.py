@@ -72,9 +72,9 @@ class TestPythonEnvironment:
                 cmd = [str(python_exe), "-c", f"import {package}"]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
-            assert result.returncode == 0, (
-                f"Package {package} not installed: {result.stderr}"
-            )
+            assert (
+                result.returncode == 0
+            ), f"Package {package} not installed: {result.stderr}"
 
     def test_repro_tools_installed(self):
         """repro_tools should be installed in editable mode."""

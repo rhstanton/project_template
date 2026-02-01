@@ -103,9 +103,9 @@ class TestValidateConfig:
             }
 
             errors = validate_study_config(config, "test_study")
-            assert errors == [], (
-                f"Aggregation '{agg}' should be valid but got errors: {errors}"
-            )
+            assert (
+                errors == []
+            ), f"Aggregation '{agg}' should be valid but got errors: {errors}"
 
     def test_validate_study_config_creates_output_directories(self, tmp_path):
         """Test validation creates output directories if they don't exist."""
