@@ -170,13 +170,14 @@ try:
         """
     ]
 
-    # Install CUDA.jl if requested (won't add to [deps], uses temporary environment)
+    # Install CUDA.jl if requested into local environment
+    # This will add it to [deps], but we'll move it to [extras] afterwards
     if want_cuda:
         julia_code_parts.append("""
         println()
         println("Installing CUDA.jl for GPU support...")
-        # Install without adding to Project.toml [deps]
-        Pkg.add("CUDA"; preserve=Pkg.Types.PRESERVE_ALL)
+        Pkg.add("CUDA")
+        println("  ✓ CUDA.jl installed to local environment")
         """)
 
     julia_code_parts.append("""
@@ -187,20 +188,6 @@ try:
 
     # Don't verify PythonCall here - it's in a different project (depot vs env)
     # The verification will happen when scripts actually use Julia
-
-    if want_cuda:
-        julia_code_parts.append("""
-        try
-            using CUDA
-            if CUDA.functional()
-                println("  ✓ CUDA.jl (GPU functional)")
-            else
-                println("  ⚠ CUDA.jl installed but GPU not functional")
-            end
-        catch e
-            println("  ⚠ CUDA.jl install failed: ", e)
-        end
-        """)
 
     julia_code = "".join(julia_code_parts)
 
@@ -273,3 +260,43 @@ except Exception as e:
     print("  make environment")
     print()
     sys.exit(1)
+
+# Post-process Project.toml to ensure CUDA stays in [extras], not [deps]
+# This makes the file portable - CUDA is available locally but not required
+if want_cuda:
+    import re
+    
+    project_toml_path = os.path.join(env_dir, "Project.toml")
+    if os.path.exists(project_toml_path):
+        with open(project_toml_path, 'r') as f:
+            content = f.read()
+        
+        # Check if CUDA is in [deps]
+        if re.search(r'^\[deps\].*?^CUDA = ', content, re.MULTILINE | re.DOTALL):
+            print()
+            print("Post-processing Project.toml to keep it portable...")
+            
+            # Remove CUDA line from [deps] section
+            content = re.sub(
+                r'^CUDA = "[^"]+"\n',
+                '',
+                content,
+                flags=re.MULTILINE
+            )
+            
+            # Ensure it's in [extras] (it should already be there from git)
+            if '[extras]' not in content:
+                content += '\n[extras]\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"\n'
+            elif not re.search(r'^\[extras\].*?^CUDA = ', content, re.MULTILINE | re.DOTALL):
+                content = re.sub(
+                    r'(\[extras\])',
+                    r'\1\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"',
+                    content
+                )
+            
+            with open(project_toml_path, 'w') as f:
+                f.write(content)
+            
+            print("  ✓ Moved CUDA from [deps] to [extras]")
+            print("  Project.toml stays portable (CUDA available locally but not required)")
+            print()
