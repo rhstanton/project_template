@@ -38,7 +38,9 @@ else
   SAFE_PATH=""
   IFS=':' read -r -a PARTS <<< "${PATH:-}"
   for P in "${PARTS[@]}"; do
-    if [[ "${P,,}" == *juliaup* ]]; then
+    # Convert to lowercase for case-insensitive match (bash 3.2 compatible)
+    P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
+    if [[ "$P_LOWER" == *juliaup* ]]; then
       continue
     fi
     SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"

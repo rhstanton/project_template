@@ -1,7 +1,15 @@
+# ============================================================================
+# CRITICAL: DO NOT ADD PythonCall TO [deps]!
+# ============================================================================
+# PythonCall is managed by juliacall in .julia/pyjuliapkg/ - adding it here
+# will cause installation failures with "Package PythonCall does not seem to
+# be installed" errors. This is because Julia will look for it in the wrong
+# project. PythonCall should ONLY be in the juliacall-managed environment.
+# ============================================================================
+
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FixedEffectModels = "9d5cd8c9-2029-5cab-9928-427838db53e3"
