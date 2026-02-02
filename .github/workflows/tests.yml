@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ['3.11']
 
     steps:
@@ -22,6 +22,15 @@ jobs:
 
     - name: Check GNU Make version
       run: make --version
+
+    - name: Install GNU Make 4.3+ on macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install make
+        echo "$(brew --prefix)/opt/make/libexec/gnubin" >> $GITHUB_PATH
+
+    - name: Verify Make version
+      run: make --version | head -1
 
     - name: Set up environment
       run: |
