@@ -73,10 +73,13 @@ else
 fi
 
 # Extract and install
-tar -xvj -C "${INSTALL_DIR}" -f "${TEMP_FILE}" bin/micromamba
+tar -xj -C "${INSTALL_DIR}" -f "${TEMP_FILE}" bin/micromamba
 rm "${TEMP_FILE}"
 
-# Make executable
+# Make executable (micromamba is now at ${INSTALL_DIR}/bin/micromamba)
+# Move it to ${INSTALL_DIR}/micromamba for consistency
+mv "${INSTALL_DIR}/bin/micromamba" "${INSTALL_DIR}/micromamba"
+rmdir "${INSTALL_DIR}/bin" 2>/dev/null || true
 chmod +x "${INSTALL_DIR}/micromamba"
 
 echo ""
