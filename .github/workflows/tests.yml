@@ -64,6 +64,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}
-        path: |
-          output/
-          .coverage
+        path: output/
+        if-no-files-found: warn
