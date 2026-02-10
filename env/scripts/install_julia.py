@@ -265,17 +265,17 @@ except Exception as e:
 # This makes the file portable - CUDA is available locally but not required
 if want_cuda:
     import re
-    
+
     project_toml_path = os.path.join(env_dir, "Project.toml")
     if os.path.exists(project_toml_path):
         with open(project_toml_path, 'r') as f:
             content = f.read()
-        
+
         # Check if CUDA is in [deps]
         if re.search(r'^\[deps\].*?^CUDA = ', content, re.MULTILINE | re.DOTALL):
             print()
             print("Post-processing Project.toml to keep it portable...")
-            
+
             # Remove CUDA line from [deps] section
             content = re.sub(
                 r'^CUDA = "[^"]+"\n',
@@ -283,7 +283,7 @@ if want_cuda:
                 content,
                 flags=re.MULTILINE
             )
-            
+
             # Ensure it's in [extras] (it should already be there from git)
             if '[extras]' not in content:
                 content += '\n[extras]\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"\n'
@@ -293,10 +293,10 @@ if want_cuda:
                     r'\1\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"',
                     content
                 )
-            
+
             with open(project_toml_path, 'w') as f:
                 f.write(content)
-            
+
             print("  ✓ Moved CUDA from [deps] to [extras]")
             print("  Project.toml stays portable (CUDA available locally but not required)")
             print()
