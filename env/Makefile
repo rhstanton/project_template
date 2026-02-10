@@ -77,15 +77,16 @@ python-env:
 	fi; \
 	CONDA_TOOL=$$(basename "$$CONDA_CMD"); \
 	echo ">> Using $$CONDA_TOOL at $$CONDA_CMD"; \
-	echo ">> Creating environment from $(PY_YML) -> $(PY_PREFIX)"; \
-	if [ "$$CONDA_TOOL" = "micromamba" ]; then \
-		if [ -d "$(PY_PREFIX)" ]; then \
+	if [ -d "$(PY_PREFIX)" ]; then \
+		echo ">> Updating environment from $(PY_YML) -> $(PY_PREFIX)"; \
+		if [ "$$CONDA_TOOL" = "micromamba" ]; then \
 			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "pip.*additional package manager" | grep -v "Be aware that packages" || true; \
 		else \
-			$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "pip.*additional package manager" | grep -v "Be aware that packages" || true; \
+			$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
 		fi; \
 	else \
-		$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
+		echo ">> Creating environment from $(PY_YML) -> $(PY_PREFIX)"; \
+		$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "pip.*additional package manager" | grep -v "Be aware that packages" || true; \
 	fi
 
 python-check:

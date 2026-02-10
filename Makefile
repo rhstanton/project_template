@@ -22,6 +22,32 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
+# Check Make version (grouped targets require 4.3+)
+MAKE_VERSION := $(shell echo $(MAKE_VERSION) | cut -d. -f1,2)
+MAKE_MAJOR := $(shell echo $(MAKE_VERSION) | cut -d. -f1)
+MAKE_MINOR := $(shell echo $(MAKE_VERSION) | cut -d. -f2)
+
+# Error if Make < 4.3 (common on macOS which ships 3.81)
+ifeq ($(shell test $(MAKE_MAJOR) -lt 4 -o \( $(MAKE_MAJOR) -eq 4 -a $(MAKE_MINOR) -lt 3 \); echo $$?),0)
+  $(error \
+    \
+    ======================================================================== \
+    ERROR: GNU Make $(MAKE_VERSION) detected - version 4.3+ required! \
+    ======================================================================== \
+    This Makefile uses grouped targets (&:) which require Make 4.3+. \
+    \
+    On macOS: \
+      brew install make \
+      gmake environment  # Use gmake instead of make \
+    \
+    On Linux: \
+      sudo apt-get install make  # Most distros already have 4.3+ \
+    \
+    Current make: $(MAKE) \
+    ======================================================================== \
+  )
+endif
+
 # Ensure git submodules are initialized (runs once per make invocation)
 $(shell git submodule update --init --recursive 2>/dev/null || true)
 

@@ -118,6 +118,45 @@ cd make-4.3
 
 ### Environment Setup Errors
 
+#### "warning: overriding commands for target `&`"
+
+**Cause**: Using GNU Make < 4.3 (macOS ships with Make 3.81 from 2006)
+
+**Error messages**:
+```
+Makefile:277: warning: overriding commands for target `&'
+Makefile:277: warning: ignoring old commands for target `&'
+```
+
+**Impact**: The warnings are harmless but indicate Make doesn't understand grouped targets (`&:` syntax). This could cause builds to behave incorrectly (re-running scripts multiple times).
+
+**Solution** (macOS):
+```bash
+# Install modern Make via Homebrew
+brew install make
+
+# Use gmake instead of make
+gmake environment
+gmake all
+```
+
+**Solution** (Linux - if needed):
+```bash
+# Most Linux distros have Make 4.3+, check version:
+make --version
+
+# If < 4.3, update:
+sudo apt-get update && sudo apt-get install make  # Debian/Ubuntu
+# or equivalent for your distro
+```
+
+**Verification**:
+```bash
+# Should show 4.3 or higher
+gmake --version  # macOS
+make --version   # Linux
+```
+
 #### "conda: command not found"
 
 **Cause**: conda/mamba/micromamba not installed
@@ -140,6 +179,28 @@ source ~/.bashrc
 # Then retry:
 make environment
 ```
+
+#### "No prefix found" or "Environment must first be created"
+
+**Cause**: Using mamba/conda for first-time environment setup (fixed in latest version)
+
+**Error message**:
+```
+error    libmamba No prefix found at: /path/to/project/.env
+error    libmamba Environment must first be created with "mamba create -n {env_name} ..."
+```
+
+**Solution** (if using older version of this template):
+```bash
+# Manual workaround:
+mamba env create --prefix ./.env --file env/python.yml
+
+# Or pull latest fixes:
+git pull
+make environment
+```
+
+**Fixed in**: Latest version now correctly uses `env create` for initial setup and `env update` for updates, regardless of which conda-like tool is being used.
 
 #### "No module named 'juliacall'"
 
