@@ -18,10 +18,9 @@ print("=" * 80)
 print()
 
 # Calculate environment directory FIRST (before importing juliacall)
-# This script is in lib/scripts/, so we need to go up to lib/ then across to env/
-script_dir = os.path.dirname(os.path.abspath(__file__))  # lib/scripts/
-lib_dir = os.path.dirname(script_dir)  # lib/
-repo_root = os.path.dirname(lib_dir)  # project root
+# This script lives in env/scripts/, so go up two levels to the project root.
+script_dir = os.path.dirname(os.path.abspath(__file__))  # env/scripts/
+repo_root = os.path.dirname(os.path.dirname(script_dir))  # project root
 env_dir = os.path.join(repo_root, "env")  # env/
 julia_depot = os.path.join(repo_root, ".julia")
 

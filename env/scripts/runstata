@@ -40,7 +40,7 @@ echo "quietly adopath ++ \"${PROJECT_ROOT}/env/scripts\"" >> "$TEMP_DO"
 echo "execute ${DO_FILE}" >> "$TEMP_DO"
 
 # Run Stata, capturing output to detect errors
-# - timeout 10: Kill after 10 seconds to prevent infinite hangs
+# - timeout (default 10s, override with STATA_TIMEOUT): kill hung Stata runs
 # - -q flag: Quiet mode (suppress Stata banner)
 # - execute.ado displays errors with "Error in do-file (return code: ###)"
 # - TERM=dumb prevents Stata from waiting for terminal input
@@ -53,7 +53,7 @@ set +e  # Disable exit on error for stata call
 TEMP_OUT=$(mktemp /tmp/stata_out_XXXXXX.txt)
 trap "rm -f $TEMP_DO $TEMP_OUT" EXIT
 
-TERM=dumb timeout 10 stata-mp -q do "$TEMP_DO" </dev/null 2>&1 | tee "$TEMP_OUT"
+TERM=dumb timeout "${STATA_TIMEOUT:-10}" stata-mp -q do "$TEMP_DO" </dev/null 2>&1 | tee "$TEMP_OUT"
 STATA_EXIT=$?
 
 # Check if output contains error pattern from execute.ado

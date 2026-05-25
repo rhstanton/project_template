@@ -40,6 +40,8 @@ PAPER_DIR = REPO_ROOT / "paper"
 
 DATA_FILES = {
     "housing": DATA_DIR / "housing_panel.csv",
+    # used by notebook analyses (correlation, julia_demo)
+    "panel": DATA_DIR / "panel_data.csv",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════

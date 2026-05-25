@@ -43,7 +43,12 @@
       "Bash(env/scripts/runpython -c \"import juliacall; print\\('  wrapper exepath:', juliacall.CONFIG['exepath']\\)\")",
       "Bash(.env/bin/python -c \"import juliacall; print\\(juliacall.__version__\\)\")",
       "Bash(.env/bin/python -m pip index versions juliacall)",
-      "Bash(.julia/pyjuliapkg/install/bin/julia --version)"
+      "Bash(.julia/pyjuliapkg/install/bin/julia --version)",
+      "Bash(gh run *)",
+      "Bash(gh auth *)",
+      "Bash(gh api *)",
+      "Bash(echo \"make check exit: $?\")",
+      "Bash(.env/bin/ruff format *)"
     ]
   }
 }

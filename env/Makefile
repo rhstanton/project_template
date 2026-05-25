@@ -80,13 +80,13 @@ python-env:
 	if [ -d "$(PY_PREFIX)" ]; then \
 		echo ">> Updating environment from $(PY_YML) -> $(PY_PREFIX)"; \
 		if [ "$$CONDA_TOOL" = "micromamba" ]; then \
-			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "pip.*additional package manager" | grep -v "Be aware that packages" || true; \
+			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
 		else \
 			$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
 		fi; \
 	else \
 		echo ">> Creating environment from $(PY_YML) -> $(PY_PREFIX)"; \
-		$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y 2>&1 | grep -v "pip.*additional package manager" | grep -v "Be aware that packages" || true; \
+		$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
 	fi
 
 python-check:
