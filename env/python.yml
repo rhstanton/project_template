@@ -37,7 +37,12 @@ dependencies:
   - mypy  # Type checker
   # Julia interoperability
   - pip:
-    - juliacall>=0.9.14
+    # Pinned: juliacall (Python) and PythonCall (Julia) use lockstep versioning and
+    # must match exactly. The Julia depot (.julia) ships PythonCall 0.9.31, so an
+    # unbounded juliacall lets `conda env update` bump it and break the bridge
+    # ("empty intersection between PythonCall@0.9.31 and project compatibility ...").
+    # To upgrade, bump this pin AND re-run `make environment` so both sides move together.
+    - juliacall==0.9.31
     # Type stubs for better type checking
     - types-docopt
     - pandas-stubs

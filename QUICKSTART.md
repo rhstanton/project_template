@@ -135,14 +135,14 @@ Installed complete multi-language environment:
 
 Ran all analysis scripts:
 
-1. **`build_price_base.py`**: Housing price analysis
+1. **`run_analysis.py price_base`**: Housing price analysis
    - Input: `data/housing_panel.csv`
    - Outputs:
      - `output/figures/price_base.pdf` (matplotlib figure)
      - `output/tables/price_base.tex` (LaTeX table)
      - `output/provenance/price_base.yml` (build record)
 
-2. **`build_remodel_base.py`**: Remodeling rate analysis
+2. **`run_analysis.py remodel_base`**: Remodeling rate analysis
    - Same structure as above
 
 **Provenance**: Each build records git state + SHA256 hashes of inputs/outputs
@@ -213,8 +213,7 @@ project_template/
 ├── data/                      # Input data (CSV files)
 │   └── housing_panel.csv
 │
-├── build_price_base.py        # Analysis script (figure + table)
-├── build_remodel_base.py      # Analysis script (figure + table)
+├── run_analysis.py            # Unified analysis script (study configs in shared/config.py)
 │
 ├── output/                    # Build outputs (ephemeral)
 │   ├── figures/
@@ -526,10 +525,10 @@ make publish
 ### Customize Template
 
 1. **Update `data/`**: Replace with your data files
-2. **Create analysis scripts**: Follow pattern in `build_price_base.py`
+2. **Add a study**: Add an entry to the `STUDIES` dict in `shared/config.py`
 3. **Update `env/python.yml`**: Add your Python dependencies
 4. **Update `env/Project.toml`**: Add your Julia dependencies
-5. **Update Makefile**: Add new artifacts to `ARTIFACTS` variable
+5. **Update Makefile**: Add the study name to the `ANALYSES` variable (and a pattern block)
 
 ### Set Up Paper Repository
 

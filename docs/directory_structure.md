@@ -10,17 +10,20 @@ project_template/
 │   └── copilot-instructions.md
 ├── .gitignore             # Git exclusions
 ├── .gitmodules            # Git submodule configuration
-├── build_price_base.py    # Analysis scripts
-├── build_remodel_base.py
+├── run_analysis.py        # Unified analysis script (study configs in shared/config.py)
+├── run_did.py             # Standalone DiD analysis (Julia/pyfixest backends)
 ├── data/                  # Input datasets
 ├── docs/                  # Documentation
 ├── env/                   # Environment setup
 │   └── examples/          # Example scripts
 ├── lib/                   # Git submodules
 │   └── repro-tools/       # Reproducibility tools (editable install)
+├── notebooks/             # Notebook-based analyses (papermill)
 ├── output/                # Build outputs (ephemeral)
 ├── paper/                 # Published outputs (permanent)
-├── scripts/               # Shared utilities
+├── scripts/               # Project helper scripts (check_prerequisites.sh)
+├── shared/                # Project configuration
+│   └── config.py          # Study configurations (STUDIES + DEFAULTS)
 ├── Makefile               # Build orchestration
 └── README.md              # This overview
 ```
@@ -31,20 +34,21 @@ project_template/
 
 Analysis scripts that generate figures and tables, located in the project root.
 
-**Naming convention**: `build_<artifact_name>.py`
+The primary script is the unified **`run_analysis.py`**, which takes a study name and reads its
+parameters from the `STUDIES` dict in `shared/config.py`:
 
-**Example**: `build_price_base.py`
+- `env/scripts/runpython run_analysis.py price_base`
+- Produces one figure + one table + one provenance record per study
+- Uses `repro_tools.auto_build_record()` for metadata
 
-Each script:
-- Takes `--data`, `--out-fig`, `--out-table`, `--out-meta` arguments
-- Produces one figure + one table + one provenance record
-- Uses `repro_tools.write_build_record()` for metadata
+`run_did.py` is a standalone difference-in-differences example (Julia `FixedEffectModels` backend,
+with a pyfixest fallback).
 
 **Contents**:
 ```
 project_template/
-├── build_price_base.py        # Builds price_base artifact
-└── build_remodel_base.py      # Builds remodel_base artifact
+├── run_analysis.py        # Unified, config-driven analysis (price_base, remodel_base, ...)
+└── run_did.py             # Standalone DiD analysis (did_example)
 ```
 
 ### `data/`
@@ -342,11 +346,7 @@ __pycache__/
 
 **Build command**:
 ```bash
-env/scripts/runpython analysis/build_price_base.py \
-  --data data/housing_panel.csv \
-  --out-fig output/figures/price_base.pdf \
-  --out-table output/tables/price_base.tex \
-  --out-meta output/provenance/price_base.yml
+env/scripts/runpython run_analysis.py price_base
 ```
 
 **Outputs**:
@@ -430,18 +430,21 @@ notebooks/
 
 ### For Multi-Analysis Projects
 
-Organize by topic:
-```
-analysis/
-├── housing/
-│   ├── build_price_base.py
-│   └── build_remodel_base.py
-└── macro/
-    ├── build_gdp.py
-    └── build_employment.py
+Group studies by topic in `shared/config.py` (and add each name to `ANALYSES` in the Makefile):
+```python
+STUDIES = {
+    # Housing
+    "price_base":   {...},
+    "remodel_base": {...},
+    # Macro
+    "gdp":          {...},
+    "employment":   {...},
+}
 ```
 
-Update Makefile paths accordingly.
+For an analysis that doesn't fit the unified `run_analysis.py` (e.g. a custom regression), add a
+standalone root-level script like `run_did.py` and wire it into the Makefile `ANALYSES` with its own
+pattern block.
 
 ## See Also
 

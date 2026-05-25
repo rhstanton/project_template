@@ -120,7 +120,7 @@ Debug Python scripts with full environment configuration (Julia bridge, etc.).
 
 ### Debug Current File
 
-1. Open any Python file (e.g., `build_price_base.py`)
+1. Open any Python file (e.g., `run_analysis.py`)
 2. Set breakpoints by clicking left of line numbers
 3. Press **F5** or select **Run** → **Start Debugging**
 4. Choose: `Python: Current File`
@@ -134,8 +134,8 @@ Pre-configured debug configurations with correct arguments:
 **Method 1: Debug Panel**
 1. Click Debug icon in left sidebar (or **Ctrl+Shift+D**)
 2. Select configuration from dropdown:
-   - `Python: Debug build_price_base`
-   - `Python: Debug build_remodel_base`
+   - `Python: Debug price_base analysis`
+   - `Python: Debug remodel_base analysis`
 3. Press **F5** to start
 
 **Method 2: Command Palette**
@@ -293,7 +293,7 @@ If publishing fails due to dirty tree or outdated branch, fix via Source Control
 **Import from Scripts:**
 ```python
 # In notebook cell
-from build_price_base import main
+from run_analysis import main
 main()  # Or call specific functions
 ```
 
@@ -414,7 +414,7 @@ After updating environment (e.g., `make environment`):
 
 ### Workflow 1: Build and Test Changes
 
-1. Edit `build_price_base.py`
+1. Edit `shared/config.py` (the STUDIES dict)
 2. **Ctrl+Shift+B** (build all)
 3. Review output in Terminal panel
 4. **Ctrl+Shift+P** → `Tasks: Run Task` → `Test outputs`

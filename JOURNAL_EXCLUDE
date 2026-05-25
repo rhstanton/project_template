@@ -7,6 +7,7 @@
 # Development-only directories
 data-construction/     # Processes proprietary raw data (if applicable)
 notes/                 # Working notes and drafts
+dev-notes/             # Internal development milestone notes (maintainers only)
 paper/                 # Separate paper repository (managed independently)
 
 # Editor-specific configuration files (not needed for replication)

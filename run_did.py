@@ -19,14 +19,12 @@ Options:
   --yvar=<name>         Outcome variable [default: outcome]
   --time-var=<name>     Event time variable [default: relative_year]
   --treat-var=<name>    Treatment indicator [default: treated]
-  --id-var=<name>       Unit identifier [default: property_id]
   --ref-year=<int>      Reference period (omitted) [default: -1]
   --fe-spec=<spec>      Fixed effects spec [default: property_id & year]
   --cluster=<var>       Clustering variable [default: property_id]
 
   --use-julia=<0|1>     Use Julia backend [default: 1]
   --use-gpu=<0|1>       Enable GPU (Julia only) [default: 0]
-  --pyfixest-backend=<name>  pyfixest backend (rust|cupy|jax) [default: rust]
 
   --figure=<path>       Output figure path [default: output/figures/did_example.pdf]
   --table=<path>        Output table path [default: output/tables/did_example.tex]
@@ -34,6 +32,8 @@ Options:
 
   --help                Show this help
 """
+
+from __future__ import annotations
 
 import os
 import sys
@@ -153,7 +153,6 @@ def run_pyfixest_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         sys.exit(1)
 
     print(f"Using pyfixest v{pf.__version__}")
-    print(f"Backend: {config['pyfixest_backend']}")
 
     # Build formula
     time_var = config["time_var"]
@@ -259,7 +258,7 @@ def save_table(coef_df: pd.DataFrame, config: dict) -> None:
     print(f"✓ Table saved: {output_path}")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     args = friendly_docopt(__doc__, version="1.0.0")
     setup_environment()
@@ -270,13 +269,11 @@ def main():
         "yvar": args["--yvar"],
         "time_var": args["--time-var"],
         "treat_var": args["--treat-var"],
-        "id_var": args["--id-var"],
         "ref_year": int(args["--ref-year"]),
         "fe_spec": args["--fe-spec"],
         "cluster": args["--cluster"],
         "use_julia": int(args["--use-julia"]),
         "use_gpu": int(args["--use-gpu"]),
-        "pyfixest_backend": args["--pyfixest-backend"],
         "figure": Path(args["--figure"]),
         "table": Path(args["--table"]),
         "out_meta": Path(args["--out-meta"]),

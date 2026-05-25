@@ -55,7 +55,7 @@ One-page cheat sheet for working with this project in VS Code.
 
 ### Debug Analysis Script
 1. `Ctrl+Shift+D` (Debug panel)
-2. Select `Python: Debug build_price_base`
+2. Select `Python: Debug price_base analysis`
 3. Press `F5`
 
 ### Debug Tests

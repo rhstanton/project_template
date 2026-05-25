@@ -388,7 +388,7 @@ All artifacts from same commit, enforced by `REQUIRE_CURRENT_HEAD=1`.
 ### Scenario 4: Updating One Analysis
 
 ```bash
-# Edit analysis/build_price_base.py
+# Edit shared/config.py (STUDIES dict) or run_analysis.py
 git commit -am "Fix price_base calculation"
 
 make price_base

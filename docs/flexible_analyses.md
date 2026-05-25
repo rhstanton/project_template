@@ -31,15 +31,13 @@ $(OUT_FIG_DIR)/%.pdf $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml &: \
 ```makefile
 # New system - FLEXIBLE
 # Define analysis configuration explicitly
-price_base.script  := build_price_base.py
+price_base.script  := run_analysis.py
 price_base.runner  := $(PYTHON)
 price_base.inputs  := $(DATA)
 price_base.outputs := $(OUT_FIG_DIR)/price_base.pdf \
                       $(OUT_TBL_DIR)/price_base.tex \
                       $(OUT_PROV_DIR)/price_base.yml
-price_base.args    := --data $(DATA) \
-                      --out-fig $(OUT_FIG_DIR)/price_base.pdf \
-                      --out-table $(OUT_TBL_DIR)/price_base.tex
+price_base.args    := price_base
 
 # Macro automatically generates build rules
 $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
@@ -61,7 +59,7 @@ $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 
 ```makefile
 # Income analysis produces 2 figures + 2 tables
-income_effects.script  := analysis/income_analysis.py
+income_effects.script  := income_analysis.py
 income_effects.runner  := $(PYTHON)
 income_effects.inputs  := $(DATA) data/income_supplement.csv
 income_effects.outputs := $(OUT_FIG_DIR)/income_main.pdf \
@@ -230,7 +228,8 @@ $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 
 ### Macro System (New):
 ```makefile
-price_base.script := build_price_base.py
+price_base.script := run_analysis.py
+price_base.args := price_base
 price_base.outputs := fig.pdf table.tex
 ```
 
@@ -305,8 +304,8 @@ $(call DID_ANALYSIS,price_base,price,process_price,--prelags=10)
 **Our approach:**
 ```makefile
 # Simpler and more explicit
-price_base.script  := build_price_base.py
-price_base.args    := --data $(DATA) --prelags=10
+price_base.script  := run_analysis.py
+price_base.args    := price_base
 ```
 
 **Why different:**

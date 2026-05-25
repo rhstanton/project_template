@@ -22,9 +22,8 @@ artifact: price_base
 built_at_utc: '2026-01-17T04:04:49+00:00'
 command:
   - python
-  - build_price_base.py
-  - --data
-  - data/housing_panel.csv
+  - run_analysis.py
+  - price_base
 git:
   is_git_repo: true
   commit: cbb163e7a1b2c3d4e5f6...

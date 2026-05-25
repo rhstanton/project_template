@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git check-ignore *)",
+      "Bash(ln -s AGENTS.md CLAUDE.md)",
+      "Bash(ln -s ../AGENTS.md .github/copilot-instructions.md)",
+      "Bash(git add *)",
+      "Bash(make did_example)",
+      "Bash(git rm *)",
+      "Bash(grep -n \"build_%\\\\|build_\\\\$\\\\*\\\\|build_<\" docs/flexible_analyses.md)",
+      "Bash(make lint *)",
+      "Bash(make format-check *)",
+      "Bash(make type-check *)",
+      "Bash(make test *)",
+      "Bash(.env/bin/python -c \"import papermill; print\\('papermill', papermill.__version__\\)\")",
+      "Bash(command -v micromamba)",
+      "Bash(command -v mamba)",
+      "Bash(command -v conda)",
+      "Bash(.env/bin/python -c \"import importlib.util as u; print\\('papermill spec:', u.find_spec\\('papermill'\\)\\)\")",
+      "Bash(.env/bin/python -c \"import nbformat, nbconvert; print\\('nbformat', nbformat.__version__, '| nbconvert', nbconvert.__version__\\)\")",
+      "Bash(make -C env python-env)",
+      "Bash(env/scripts/runpython -c \"import juliacall; print\\('juliacall OK', juliacall.__version__\\)\")",
+      "Bash(env/scripts/runpython -c \"import juliacall\")",
+      "Bash(.env/bin/python -m pip install 'juliacall==0.9.31')",
+      "Bash(env/scripts/runpython -c \"import juliacall; from juliacall import Main as jl; jl.seval\\('using Statistics'\\); print\\('juliacall', juliacall.__version__, '| Julia bridge OK, mean=', jl.mean\\([1.0,2.0,3.0]\\)\\)\")",
+      "Bash(env/scripts/runpython -m pytest tests/ -rs -q)"
+    ]
+  }
+}

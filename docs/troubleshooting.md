@@ -276,10 +276,10 @@ make -C env julia-install-via-python
 **Solution**: Use environment wrappers (not bare Python):
 ```bash
 # Good:
-env/scripts/runpython build_price_base.py --data ...
+env/scripts/runpython run_analysis.py price_base
 
 # Bad:
-python build_price_base.py --data ...
+python run_analysis.py price_base
 ```
 
 The `runpython` wrapper sets `PYTHONPATH` correctly.
@@ -634,7 +634,7 @@ make cleanall  # Remove .env, .julia, output/
 make -d all  # Show all decisions
 
 # Python verbose mode:
-env/scripts/runpython -v build_price_base.py ...
+env/scripts/runpython -v run_analysis.py price_base
 ```
 
 ### Check environment variables

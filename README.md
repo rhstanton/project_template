@@ -135,7 +135,8 @@ project_template/
 ├── data/              # Input datasets
 ├── env/               # Environment setup (Python/Julia/Stata)
 │   └── examples/      # Sample scripts for testing
-├── lib/               # Git submodules (repro-tools)
+├── lib/               # Git submodule: repro-tools (provenance, CLI, publishing utils)
+├── notebooks/         # Notebook-based analyses (run via papermill)
 ├── output/            # Build outputs (can be deleted/rebuilt)
 │   ├── figures/       # Generated PDFs
 │   ├── tables/        # Generated LaTeX tables
@@ -145,11 +146,9 @@ project_template/
 │   ├── figures/       # Published figures
 │   ├── tables/        # Published tables
 │   └── provenance.yml # Aggregated publication provenance
-├── scripts/           # Shared utilities (provenance.py, publish_artifacts.py)
-└── shared/            # Configuration, CLI and validation utilities
-    ├── config.py      # Study configurations (STUDIES dictionary)
-    ├── cli.py         # Enhanced command-line interface tools
-    └── config_validator.py  # Configuration validation
+├── scripts/           # Project helper scripts (e.g. check_prerequisites.sh)
+└── shared/            # Project configuration
+    └── config.py      # Study configurations (STUDIES + DEFAULTS)
 ```
 
 See `docs/directory_structure.md` for complete details.
@@ -397,7 +396,7 @@ make clean            # Remove all outputs
 - [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md) - Data access documentation
 
 ### Examples
-See [examples/](examples/) directory for sample scripts in Python, Julia, and Stata.
+See [env/examples/](env/examples/) directory for sample scripts in Python, Julia, and Stata.
 
 ---
 
@@ -414,26 +413,6 @@ make publish          # Tracks publication from specific commit
 ```
 
 The `paper/` directory is intended as a **separate git repository** for Overleaf integration.
-
----
-
-## � Documentation
-
-### Quick Start
-- [QUICKSTART.md](QUICKSTART.md) - Get up and running in 5 minutes
-- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
-
-### Detailed Guides
-- [docs/environment.md](docs/environment.md) - Environment setup and management
-- [docs/provenance.md](docs/provenance.md) - Provenance tracking system
-- [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
-- [docs/directory_structure.md](docs/directory_structure.md) - Project organization
-- [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
-- [docs/platform_compatibility.md](docs/platform_compatibility.md) - System requirements and GPU support
-- [docs/troubleshooting.md](docs/troubleshooting.md) - Common issues and solutions
-
-### Examples
-See [examples/](examples/) directory for sample scripts in Python, Julia, and Stata.
 
 ---
 

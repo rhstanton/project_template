@@ -322,12 +322,11 @@ make all            # Rebuild everything
 
 ```
 project_template/
-├── build_price_base.py      # Analysis script (well-commented)
-├── build_remodel_base.py    # Analysis script
+├── run_analysis.py          # Unified analysis script (study configs in shared/config.py)
 ├── data/
 │   └── housing_panel.csv    # Input data
-├── scripts/
-│   └── provenance.py        # Provenance tracking
+├── shared/
+│   └── config.py            # Study configurations (STUDIES + DEFAULTS)
 ├── output/                  # All results go here
 │   ├── figures/             # PDF plots
 │   ├── tables/              # LaTeX tables
@@ -435,11 +434,7 @@ make environment
 conda activate .env
 
 # 3. Run individual analysis
-env/scripts/runpython build_price_base.py \
-  --data data/housing_panel.csv \
-  --out-fig output/figures/price_base.pdf \
-  --out-table output/tables/price_base.tex \
-  --out-meta output/provenance/price_base.yml
+env/scripts/runpython run_analysis.py price_base
 
 # 4. Check output
 ls -lh output/figures/price_base.pdf

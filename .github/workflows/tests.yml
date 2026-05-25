@@ -50,10 +50,9 @@ jobs:
       run: |
         make test
 
-    - name: Build example artifacts
+    - name: Build all artifacts
       run: |
-        make price_base
-        make remodel_base
+        make all
 
     - name: Test outputs exist
       run: |

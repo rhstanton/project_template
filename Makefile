@@ -102,7 +102,7 @@ REPRO_REPORT  := $(PYTHON) -m repro_tools.cli report
 # Think of price_base as an analysis/run, not a single artifact.
 
 # All analyses to run
-ANALYSES := price_base remodel_base correlation julia_demo
+ANALYSES := price_base remodel_base correlation julia_demo did_example
 
 # Input data files
 DATA := data/housing_panel.csv
@@ -238,6 +238,13 @@ julia_demo.runner  := $(NOTEBOOK)
 julia_demo.inputs  := data/panel_data.csv
 julia_demo.outputs := $(OUT_FIG_DIR)/julia_demo.pdf $(OUT_TBL_DIR)/julia_demo.tex $(OUT_PROV_DIR)/julia_demo.yml
 julia_demo.args    := julia_demo
+
+# did_example analysis (Difference-in-Differences; Julia FixedEffectModels backend)
+did_example.script  := run_did.py
+did_example.runner  := $(PYTHON)
+did_example.inputs  := $(DATA)
+did_example.outputs := $(OUT_FIG_DIR)/did_example.pdf $(OUT_TBL_DIR)/did_example.tex $(OUT_PROV_DIR)/did_example.yml
+did_example.args    := --data=$(DATA) --figure=$(OUT_FIG_DIR)/did_example.pdf --table=$(OUT_TBL_DIR)/did_example.tex --out-meta=$(OUT_PROV_DIR)/did_example.yml
 
 # ------------------------------------------------------------------------------
 # Rule Generator Macro
@@ -443,7 +450,7 @@ journal-package:
 	@mkdir -p replication-package/lib
 	@cp -r lib/repro-tools replication-package/lib/
 	@echo "Removing excluded directories..."
-	@cd replication-package && rm -rf data-construction notes paper JOURNAL_EXCLUDE .github .vscode .dir-locals.el .editorconfig .mypy_cache .ruff_cache logs TEMPLATE_USAGE.md COAUTHOR_SETUP.md 2>/dev/null || true
+	@cd replication-package && rm -rf data-construction notes dev-notes paper JOURNAL_EXCLUDE .github .vscode .dir-locals.el .editorconfig .mypy_cache .ruff_cache logs TEMPLATE_USAGE.md COAUTHOR_SETUP.md 2>/dev/null || true
 	@echo "Generating clean Makefile (removing AUTHOR-ONLY sections)..."
 	@sed '/^# BEGIN AUTHOR-ONLY/,/^# END AUTHOR-ONLY/d' Makefile > replication-package/Makefile.tmp
 	@mv replication-package/Makefile.tmp replication-package/Makefile

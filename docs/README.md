@@ -84,13 +84,13 @@ Complete guide to the reproducible research template.
   - Analysis scripts (root level)
   - Shared utilities (`shared/`)
 
-### CLI and Validation
-- **[shared/README.md](../shared/README.md)** - CLI utilities and validation
+### Configuration and Validation
+- **[shared/README.md](../shared/README.md)** - Project configuration (`shared/config.py`)
+  - Generic CLI/validation utilities live in `repro_tools`:
   - `friendly_docopt()` - Enhanced error messages with typo suggestions
   - `setup_environment()` - Auto-detect Jupyter, IPython, terminal
-  - `validate_config()` - Pre-flight configuration validation
+  - `validate_study_config()` - Pre-flight configuration validation
   - `print_config()` - Pretty-printed configuration display
-  - Patterns ported from fire/housing-analysis
 
 ### Testing & Quality Assurance
 - **Automated Testing** - pytest-based test suite (70+ tests)
