@@ -1,5 +1,5 @@
 {
-  description = "Reproducible research template dev shell (optional): julia + micromamba + GNU tools, works on macOS and Linux";
+  description = "Reproducible research template dev shell (optional): julia + uv + GNU tools, works on macOS and Linux";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -28,17 +28,16 @@
           pkgs.git
           pkgs.which
 
-          # Project prerequisites (provided by Nix; Makefile/scripts still create .env, etc.)
+          # Project prerequisites (provided by Nix; Makefile/scripts still create .venv, etc.)
           juliaPkg
-          pkgs.micromamba
+          pkgs.uv
         ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
           # Linux-only locale archive
           pkgs.glibcLocales
         ];
 
         baseShellHook = ''
-          # Micromamba is available; Makefile uses it for environment setup
-          export CONDA=micromamba
+          # uv is available; the Makefile uses it to create .venv from pyproject.toml
 
           # Keep Julia state local to the repo
           export JULIA_PROJECT="$PWD/env"

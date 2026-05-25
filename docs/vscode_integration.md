@@ -41,7 +41,7 @@ When you open this workspace, VS Code will prompt you to install recommended ext
 
 1. Press **Ctrl+Shift+P** (Cmd+Shift+P on macOS)
 2. Type: `Python: Select Interpreter`
-3. Choose: `.env/bin/python` (project-local conda environment)
+3. Choose: `.venv/bin/python` (project-local uv virtualenv)
 
 This should be auto-selected thanks to `.vscode/settings.json`.
 
@@ -194,9 +194,9 @@ env/scripts/runpython your_script.py
 env/scripts/runjulia your_script.jl
 ```
 
-**Or activate conda:**
+**Or activate the virtualenv:**
 ```bash
-conda activate .env
+source .venv/bin/activate
 python your_script.py
 ```
 
@@ -283,7 +283,7 @@ If publishing fails due to dirty tree or outdated branch, fix via Source Control
 
 **Create Notebook:**
 1. **Ctrl+Shift+P** → `Create: New Jupyter Notebook`
-2. Select Python interpreter: `.env/bin/python`
+2. Select Python interpreter: `.venv/bin/python`
 
 **Run Cells:**
 - Click **Run Cell** icon
@@ -318,8 +318,8 @@ print(df)
 `.vscode/settings.json` configures:
 
 **Interpreter:**
-- Uses project-local `.env/bin/python`
-- No conda activation needed (already configured)
+- Uses project-local `.venv/bin/python`
+- No manual activation needed (already configured)
 
 **Formatting:**
 - Black formatter on save
@@ -362,7 +362,7 @@ You don't need to set them manually!
 ### Excluded from Watcher
 
 To improve performance, VS Code ignores changes in:
-- `.env/`, `.julia/`, `.stata/` (environments)
+- `.venv/`, `.julia/`, `.stata/` (environments)
 - `output/`, `paper/` (build outputs)
 - `__pycache__/`, `.pytest_cache/` (caches)
 
@@ -372,7 +372,7 @@ This prevents VS Code from indexing large binary files and temporary outputs.
 
 After updating environment (e.g., `make environment`):
 1. **Reload VS Code**: **Ctrl+Shift+P** → `Developer: Reload Window`
-2. Verify Python interpreter: Should still be `.env/bin/python`
+2. Verify Python interpreter: Should still be `.venv/bin/python`
 
 ---
 
@@ -457,7 +457,7 @@ After updating environment (e.g., `make environment`):
 
 **Fix:**
 1. **Ctrl+Shift+P** → `Python: Select Interpreter`
-2. Choose `.env/bin/python`
+2. Choose `.venv/bin/python`
 3. If not available, run: **Ctrl+Shift+P** → `Tasks: Run Task` → `Setup environment`
 
 ### "Import errors" when running scripts

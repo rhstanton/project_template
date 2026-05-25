@@ -703,7 +703,7 @@ info:
 	@echo "  Primary:   Python 3.11 (pandas, matplotlib, pyyaml, pytest)"
 	@echo "  Backend:   Julia 1.10-1.12 (via juliacall, auto-installed)"
 	@echo "  Optional:  Stata (for Stata examples only, not required)"
-	@echo "  Tools:     GNU Make 4.3+, Git, conda/micromamba"
+	@echo "  Tools:     GNU Make 4.3+, Git, uv"
 	@echo ""
 	@echo "PROVENANCE TRACKING:"
 	@echo "  Build time:    Records git state, input/output SHA256, command, timestamp"

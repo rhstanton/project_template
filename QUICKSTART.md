@@ -17,7 +17,7 @@ cd <your-project>
 make environment
 # Installs:
 #   - Git submodules (repro-tools automatically)
-#   - Python 3.11 conda environment (.env/)
+#   - Python 3.11 uv virtualenv (.venv/)
 #   - Julia via juliacall (.julia/)
 #   - Stata packages if Stata installed (.stata/)
 
@@ -56,7 +56,7 @@ You should see:
 ```
 📦 Initializing git submodules...
 📦 Installing Python environment...
-✅ Python environment created at .env/
+✅ Python environment created at .venv/
 
 📦 Installing Julia via juliacall...
 ✅ Julia installed at .julia/pyjuliapkg/install/
@@ -119,14 +119,14 @@ All expected outputs present!
 
 Installed complete multi-language environment:
 
-- **Python 3.11** via conda (~2GB in `.env/`)
+- **Python 3.11** via uv (~2GB in `.venv/`)
 - **Julia 1.10-1.12** via juliacall (~500MB in `.julia/pyjuliapkg/`)
 - **Python packages**: pandas, matplotlib, juliacall, pyyaml, jinja2, pytest, ruff, mypy
 - **Julia packages**: PythonCall, DataFrames
 - **Stata packages** (if Stata installed): estout, etc.
 
 **Key features**:
-- ✅ Auto-installs micromamba if conda/mamba not found
+- ✅ Auto-installs uv if not found
 - ✅ Julia auto-downloaded (no manual installation)
 - ✅ Single unified Python environment (no CondaPkg duplication)
 - ✅ Project-local packages (no global pollution)
@@ -165,10 +165,10 @@ Published artifacts to `paper/` directory:
 
 **Auto-installed by `make environment`:**
 
-- ✅ **Conda/mamba** - Auto-installs micromamba if not found
-- ✅ **Python 3.11** - Installed via conda
+- ✅ **uv** - Auto-installs uv if not found
+- ✅ **Python 3.11** - Installed via uv
 - ✅ **Julia** - Auto-downloaded by juliacall
-- ✅ **Python/Julia packages** - From `env/python.yml` and `env/Project.toml`
+- ✅ **Python/Julia packages** - From `pyproject.toml` (pinned in `uv.lock`) and `env/Project.toml`
 
 **Only required pre-installed tool:**
 
@@ -206,7 +206,7 @@ Published artifacts to `paper/` directory:
 
 ```
 project_template/
-├── .env/                      # Python conda environment (2GB)
+├── .venv/                     # Python uv virtualenv (2GB)
 ├── .julia/                    # Julia packages (500MB)
 ├── .stata/                    # Stata packages if installed
 │
@@ -237,8 +237,10 @@ project_template/
 │   ├── provenance.py          # Provenance utilities
 │   └── publish_artifacts.py   # Publishing with safety checks
 │
+├── pyproject.toml             # Python dependencies (uv)
+├── uv.lock                    # Pinned Python versions (uv)
+│
 ├── env/                       # Environment specifications
-│   ├── python.yml             # Conda environment
 │   ├── Project.toml           # Julia environment
 │   ├── examples/              # Example scripts
 │   │   ├── sample_python.py
@@ -456,11 +458,11 @@ make --version
 # Linux: sudo apt install make
 ```
 
-### "conda not found"
+### "uv not found"
 
-**Cause**: conda/mamba not installed
+**Cause**: uv not installed
 
-**Fix**: `make environment` auto-installs micromamba
+**Fix**: `make environment` auto-installs uv
 
 ### "ImportError: No module named 'juliacall'"
 
@@ -469,7 +471,7 @@ make --version
 **Fix**:
 ```bash
 make environment  # Install
-conda activate .env  # Activate
+source .venv/bin/activate  # Activate
 ```
 
 ### "Julia not found"
@@ -526,7 +528,7 @@ make publish
 
 1. **Update `data/`**: Replace with your data files
 2. **Add a study**: Add an entry to the `STUDIES` dict in `shared/config.py`
-3. **Update `env/python.yml`**: Add your Python dependencies
+3. **Update `pyproject.toml`**: Add your Python dependencies (then run `uv sync` or `make environment`)
 4. **Update `env/Project.toml`**: Add your Julia dependencies
 5. **Update Makefile**: Add the study name to the `ANALYSES` variable (and a pattern block)
 

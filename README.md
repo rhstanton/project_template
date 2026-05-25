@@ -260,18 +260,18 @@ Adding a new analysis is simple - just add configuration to `config.py`:
 
 ## 🐍 Python Environment
 
-Managed via conda with automatic Julia integration:
+Managed via uv with automatic Julia integration:
 
 ```bash
 # Environment wrapper with Julia bridge
 env/scripts/runpython script.py
 
-# Direct conda activation (alternative)
-conda activate .env
+# Direct activation (alternative)
+source .venv/bin/activate
 python script.py
 ```
 
-**Packages** (see `env/python.yml`):
+**Packages** (see `pyproject.toml`; exact versions pinned in `uv.lock`):
 - pandas, matplotlib, numpy
 - pyyaml (for provenance)
 - juliacall (Python/Julia interop)
@@ -336,7 +336,7 @@ See `env/examples/README.md` for details.
 - **RAM:** 8GB minimum (16GB recommended)
 - **Disk:** 5GB (2GB environment + 3GB cache)
 - **Time:** ~15 minutes total (10 min setup + 5 min execution)
-- **Software:** GNU Make 4.3+, conda/mamba (auto-installed if needed)
+- **Software:** GNU Make 4.3+, uv (auto-installed if needed)
 - **Optional:** Nix (for reproducible dev shell via `flake.nix`)
 
 ---

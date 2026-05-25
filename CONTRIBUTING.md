@@ -117,7 +117,7 @@ All contributions should include tests where applicable:
 ### Environment
 
 This project uses:
-- **Python 3.11** (conda environment in `.env/`)
+- **Python 3.11** (uv-managed virtualenv in `.venv/`)
 - **Julia 1.10+** (auto-installed via juliacall)
 - **GNU Make 4.3+** (for build orchestration)
 - **pytest** (for testing)

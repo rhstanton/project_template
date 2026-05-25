@@ -58,12 +58,12 @@ $ make environment
 Setting up software environment...
 ==========================================================
 
-Checking for conda/mamba/micromamba...
-  ✓ Found conda at /usr/local/bin/conda
+Checking for uv...
+  ✓ Found uv at /usr/local/bin/uv
 
 Creating Python environment...
-  Solving environment: done
-  ✓ Python environment created at .env/
+  Resolved dependencies: done
+  ✓ Python environment created at .venv/
 
 Installing Julia via juliacall...
   ✓ Julia ready at .julia/pyjuliapkg/
@@ -72,7 +72,7 @@ Installing Julia via juliacall...
 ✓ Environment ready!
 ==========================================================
 
-Python 3.11:    .env/bin/python
+Python 3.11:    .venv/bin/python
 Julia:          .julia/pyjuliapkg/install/bin/julia
 
 Next: make all (to build all artifacts)
@@ -271,10 +271,10 @@ For detailed descriptions of each output, see [expected_outputs.md](expected_out
 
 ### Common Issues
 
-**1. "conda: command not found"**
+**1. "uv: command not found"**
 ```bash
 # Auto-installs during make environment
-# Or manually install: https://docs.conda.io/en/latest/miniconda.html
+# Or manually install: https://docs.astral.sh/uv/getting-started/installation/
 ```
 
 **2. "make: *** No rule to make target 'all'"**
@@ -367,10 +367,10 @@ make environment
 ```
 
 This installs:
-- Python 3.11 with conda
+- Python 3.11 with uv
 - Required packages: pandas, matplotlib, pyyaml, juliacall
 - Julia 1.10+ via juliacall
-- All in local `.env/` and `.julia/` directories (no global changes)
+- All in local `.venv/` and `.julia/` directories (no global changes)
 
 ### 2. Quick Verification
 
@@ -431,7 +431,7 @@ cat output/provenance/price_base.yml
 make environment
 
 # 2. Activate environment (optional - scripts use wrappers)
-conda activate .env
+source .venv/bin/activate
 
 # 3. Run individual analysis
 env/scripts/runpython run_analysis.py price_base

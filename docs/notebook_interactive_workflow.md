@@ -24,7 +24,7 @@ Complete guide to developing, running, and integrating Jupyter notebooks in this
 
 ```bash
 # Activate environment
-conda activate .env
+source .venv/bin/activate
 
 # Launch Jupyter Lab
 jupyter lab
@@ -79,7 +79,7 @@ ls output/provenance/my_analysis.yml
 
 ```bash
 # 1. Start Jupyter Lab
-conda activate .env
+source .venv/bin/activate
 jupyter lab
 
 # 2. Develop interactively
@@ -115,7 +115,7 @@ make my_analysis  # Test again
 ### Method 1: Via Jupyter Lab (Recommended for Interactive)
 
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab
 
 # File → New → Notebook → Python 3 (ipykernel)
@@ -134,7 +134,7 @@ jupyter lab
 ### Method 2: Programmatically with nbformat (Recommended for Make Integration)
 
 ```python
-conda activate .env
+source .venv/bin/activate
 python << 'EOF'
 import nbformat as nbf
 
@@ -216,7 +216,7 @@ jupyter lab notebooks/my_analysis.ipynb
 ### Interactive Editing (Jupyter Lab)
 
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab notebooks/my_analysis.ipynb
 ```
 
@@ -255,7 +255,7 @@ code notebooks/my_analysis.ipynb
 ### Programmatic Editing
 
 ```python
-conda activate .env
+source .venv/bin/activate
 python << 'EOF'
 import nbformat as nbf
 
@@ -293,7 +293,7 @@ EOF
 
 **Setup (already done):**
 ```bash
-# juliacall is already installed via env/python.yml
+# juliacall is already installed via pyproject.toml
 # Julia is auto-installed to .julia/pyjuliapkg/
 ```
 
@@ -358,7 +358,7 @@ ls output/figures/julia_demo.pdf
 env/scripts/runjulia -e 'using Pkg; Pkg.add("IJulia")'
 
 # Install kernel for Jupyter
-conda activate .env
+source .venv/bin/activate
 env/scripts/runjulia -e 'using IJulia; installkernel("Julia")'
 
 # Verify kernel installed
@@ -368,7 +368,7 @@ jupyter kernelspec list
 
 **Create pure Julia notebook:**
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab
 
 # File → New → Notebook → Select "Julia 1.xx" kernel
@@ -634,7 +634,7 @@ make julia_demo
 
 ```bash
 # 1. Create notebook with proper metadata
-conda activate .env
+source .venv/bin/activate
 python << 'EOF'
 import nbformat as nbf
 
@@ -733,8 +733,8 @@ with open('notebooks/my_analysis.ipynb', 'w') as f:
 
 **Solution:**
 ```bash
-conda activate .env
-which jupyter  # Should show .env/bin/jupyter
+source .venv/bin/activate
+which jupyter  # Should show .venv/bin/jupyter
 jupyter --version  # Should show version
 
 # If not found:
@@ -751,7 +751,7 @@ make environment  # Reinstall environment
 cd /path/to/project_template
 
 # Activate environment
-conda activate .env
+source .venv/bin/activate
 
 # Launch Jupyter
 jupyter lab
@@ -845,7 +845,7 @@ except ImportError:
     import some_package
 ```
 
-Better: Add to `env/python.yml` and run `make environment`
+Better: Add to `pyproject.toml` and run `uv sync` (or `make environment`)
 
 ### Mixing Julia and Python Visualizations
 

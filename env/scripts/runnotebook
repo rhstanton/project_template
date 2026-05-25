@@ -13,7 +13,7 @@ unset CDPATH
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-PYTHON_BIN="$REPO_ROOT/.env/bin/python"
+PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
 
 # Check if environment is installed
 if [[ ! -x "$PYTHON_BIN" ]]; then
@@ -51,4 +51,4 @@ fi
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 # Execute via papermill
-exec "$REPO_ROOT/.env/bin/papermill" "$@"
+exec "$REPO_ROOT/.venv/bin/papermill" "$@"

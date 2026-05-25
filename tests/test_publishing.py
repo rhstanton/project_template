@@ -35,7 +35,7 @@ class TestPublishingBasics:
 
     def test_publish_script_exists(self):
         """Publishing script should be available via repro_tools."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 

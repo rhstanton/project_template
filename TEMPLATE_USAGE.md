@@ -46,7 +46,7 @@ cp -r project_template my-project
 cd my-project
 
 # DON'T copy lib/repro-tools contents!
-rm -rf .git .env .julia output lib/repro-tools/*
+rm -rf .git .venv .julia output lib/repro-tools/*
 
 # Initialize as new git repo
 git init
@@ -84,25 +84,23 @@ make environment
 
 ### 2. Configure Environments
 
-**env/python.yml**:
-```yaml
-name: my_project  # Change project name
-channels:
-  - conda-forge
-dependencies:
-  - python=3.11
-  # Add your packages:
-  - scikit-learn
-  - statsmodels
-  - seaborn
-  # Keep required packages:
-  - pandas
-  - matplotlib
-  - pyyaml
-  - jinja2
-  - pip:
-    - juliacall>=0.9.14
-    # Add your pip packages
+**pyproject.toml** (exact versions pinned in `uv.lock`):
+```toml
+[project]
+name = "my-project"  # Change project name
+requires-python = ">=3.11"
+dependencies = [
+    # Add your packages:
+    "scikit-learn",
+    "statsmodels",
+    "seaborn",
+    # Keep required packages:
+    "pandas",
+    "matplotlib",
+    "pyyaml",
+    "jinja2",
+    "juliacall>=0.9.14",
+]
 ```
 
 **env/Project.toml** (Julia):
@@ -306,15 +304,15 @@ REQUIRE_CURRENT_HEAD := 1     # Require artifacts from HEAD
 ### Economics/Econometrics
 
 **Additional packages**:
-```yaml
-# env/python.yml
-dependencies:
-  - statsmodels
-  - linearmodels
-  - scikit-learn
-  - pip:
-    - pyfixest  # Fast fixed effects
-    - doubleml  # Causal ML
+```toml
+# pyproject.toml
+dependencies = [
+    "statsmodels",
+    "linearmodels",
+    "scikit-learn",
+    "pyfixest",  # Fast fixed effects
+    "doubleml",  # Causal ML
+]
 ```
 
 **Julia packages**:
@@ -405,25 +403,23 @@ r-env:
 
 ### Add Docker Support
 
-**Create Dockerfile**:
+**The template ships a digest-pinned, uv-based `Dockerfile` at the repo root.** Its essence:
 ```dockerfile
-FROM condaforge/mambaforge:latest
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        make git curl ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.11.0 /uv /uvx /usr/local/bin/
 
 WORKDIR /project
-COPY env/python.yml env/Project.toml ./env/
-COPY env/Makefile ./env/
-
-RUN make -C env python-env
-RUN make -C env julia-install-via-python
-
 COPY . .
-
+RUN make environment        # uv sync (pyproject.toml + uv.lock) + Julia via juliacall
 CMD ["make", "all"]
 ```
 
 **Create .dockerignore**:
 ```
-.env/
+.venv/
 .julia/
 .stata/
 output/
@@ -524,7 +520,7 @@ fig.savefig("output/figures/your_analysis.pdf")
 
 **Add to Makefile**:
 ```makefile
-JUPYTER := .env/bin/jupyter
+JUPYTER := .venv/bin/jupyter
 
 output/figures/your_analysis.pdf: build_your_analysis.ipynb
 	$(JUPYTER) nbconvert --execute --to notebook $<
@@ -615,14 +611,14 @@ A: Yes, but you'll need to:
 - Ensure atomic multi-output builds
 - Add git safety checks for publishing
 
-**Q: Can I use environments other than conda?**
+**Q: Can I use environments other than uv?**
 
-A: Yes (venv, poetry, etc.), but update `env/Makefile` accordingly.
+A: Yes (conda, venv, poetry, etc.), but update `env/Makefile` accordingly.
 
 **Q: Do I need both Python and Julia?**
 
 A: No - remove Julia if not needed:
-1. Remove `juliacall` from `env/python.yml`
+1. Remove `juliacall` from `pyproject.toml`
 2. Delete `env/Project.toml`
 3. Remove Julia examples
 

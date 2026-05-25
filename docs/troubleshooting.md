@@ -10,11 +10,11 @@ Quick solutions to common issues. Use the diagnostic commands below to identify 
 
 ```bash
 # Full environment check
-conda env list
-# Should show .env in repo root
+ls -d .venv
+# Should show .venv in repo root
 
 # Python check
-.env/bin/python --version
+.venv/bin/python --version
 # Should be 3.11.x
 
 # Julia check (if installed)
@@ -22,7 +22,7 @@ ls -la .julia/pyjuliapkg/install/bin/julia
 # Should exist
 
 # Package verification
-.env/bin/python -c "import pandas, matplotlib, juliacall; print('OK')"
+.venv/bin/python -c "import pandas, matplotlib, juliacall; print('OK')"
 # Should print: OK
 ```
 
@@ -157,50 +157,41 @@ gmake --version  # macOS
 make --version   # Linux
 ```
 
-#### "conda: command not found"
+#### "uv: command not found"
 
-**Cause**: conda/mamba/micromamba not installed
+**Cause**: uv not installed
 
 **Solution**: Auto-installs during `make environment`
 
 ```bash
-make -C env python-env
-# Checks for conda/mamba/micromamba
-# Auto-installs micromamba if none found
+make environment
+# Checks for uv
+# Auto-installs uv if not found
 ```
 
 **Manual installation** (if auto-install fails):
 ```bash
-# Micromamba (lightweight, recommended):
-curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-./bin/micromamba shell init -s bash -p ~/.local/share/mamba
+# Install uv (official installer):
+curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
 
 # Then retry:
 make environment
 ```
 
-#### "No prefix found" or "Environment must first be created"
+#### "No virtualenv found" or "lockfile out of date"
 
-**Cause**: Using mamba/conda for first-time environment setup (fixed in latest version)
+**Cause**: `.venv/` not created yet, or `pyproject.toml` changed without re-syncing
 
-**Error message**:
-```
-error    libmamba No prefix found at: /path/to/project/.env
-error    libmamba Environment must first be created with "mamba create -n {env_name} ..."
-```
-
-**Solution** (if using older version of this template):
+**Solution**:
 ```bash
-# Manual workaround:
-mamba env create --prefix ./.env --file env/python.yml
+# Recreate/sync the environment from the lockfile:
+uv sync
 
 # Or pull latest fixes:
 git pull
 make environment
 ```
-
-**Fixed in**: Latest version now correctly uses `env create` for initial setup and `env update` for updates, regardless of which conda-like tool is being used.
 
 #### "No module named 'juliacall'"
 
@@ -208,13 +199,13 @@ make environment
 
 **Solution**:
 ```bash
-make -C env python-env
+uv sync   # or: make environment
 ```
 
 **Or activate and install manually**:
 ```bash
-conda activate .env
-pip install juliacall
+source .venv/bin/activate
+uv pip install juliacall
 ```
 
 #### "Julia not found"
@@ -323,11 +314,11 @@ make all
 
 **Solution**:
 ```bash
-# Check if jinja2 in env/python.yml
-grep jinja2 env/python.yml
+# Check if jinja2 in pyproject.toml
+grep jinja2 pyproject.toml
 
 # If missing, add and reinstall:
-make -C env python-env
+uv sync   # or: make environment
 ```
 
 ---
@@ -415,7 +406,7 @@ env/scripts/runpython -c 'import os; print(os.environ.get("JULIA_CONDAPKG_BACKEN
 **If using Python directly**:
 ```bash
 export JULIA_CONDAPKG_BACKEND=Null
-conda activate .env
+source .venv/bin/activate
 python my_script.py
 ```
 
@@ -450,7 +441,7 @@ This tells juliacall to let Python handle all signals instead of Julia, preventi
 **If running Python directly** (not recommended):
 ```bash
 export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
-conda activate .env
+source .venv/bin/activate
 python my_script.py
 ```
 
@@ -524,7 +515,7 @@ source ~/.zshrc
 
 #### Linux: "GLIBC version too old"
 
-**Cause**: conda packages require GLIBC 2.17+
+**Cause**: prebuilt Python wheels require GLIBC 2.17+
 
 **Check**:
 ```bash
@@ -610,7 +601,7 @@ env/scripts/runjulia -e 'using Pkg; Pkg.precompile()'
 
 **Check usage**:
 ```bash
-du -sh .env .julia output
+du -sh .venv .julia output
 ```
 
 **Clean build outputs**:
@@ -620,7 +611,7 @@ make clean  # Remove output/
 
 **Clean environments** (careful - will need reinstall):
 ```bash
-make cleanall  # Remove .env, .julia, output/
+make cleanall  # Remove .venv, .julia, output/
 ```
 
 ---
@@ -646,7 +637,7 @@ env/scripts/runpython -c 'import os; print("\\n".join(f"{k}={v}" for k,v in sort
 ### Test Python imports
 
 ```bash
-.env/bin/python -c "
+.venv/bin/python -c "
 import sys
 print('Python:', sys.executable)
 print('Version:', sys.version)

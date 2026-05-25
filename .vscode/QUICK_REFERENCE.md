@@ -154,7 +154,7 @@ Publishing automatically checks:
 
 ### "Python interpreter not found"
 - `Ctrl+Shift+P` → "Python: Select Interpreter"
-- Choose `.env/bin/python`
+- Choose `.venv/bin/python`
 
 ### "Import errors"
 - Verify PYTHONPATH set (check settings.json)

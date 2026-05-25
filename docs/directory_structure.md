@@ -187,11 +187,10 @@ Environment configuration for Python, Julia, and Stata.
 ```
 env/
 ├── Makefile                   # Environment build targets
-├── python.yml                 # Conda environment spec
 ├── Project.toml               # Julia dependencies
 ├── stata-packages.txt         # Stata package list
 └── scripts/
-    ├── install_micromamba.sh  # Auto-installer
+    ├── install_uv.sh          # Auto-installer (uv)
     ├── install_julia.py       # Julia setup via juliacall
     ├── runpython              # Python wrapper
     ├── runjulia               # Julia wrapper
@@ -206,7 +205,7 @@ env/
 - `make -C env stata-env`: Just Stata
 
 **Wrapper scripts** configure environment before execution:
-- `runpython`: Sets PYTHONPATH, Julia bridge, conda activation
+- `runpython`: Sets PYTHONPATH, Julia bridge, uv virtualenv activation
 - `runjulia`: Points to `.julia/pyjuliapkg/install/bin/julia`
 - `runstata`: Sets STATA_PACKAGES, uses execute.ado
 
@@ -257,11 +256,11 @@ GitHub-specific files.
 
 ## Hidden Directories (Git-Ignored)
 
-### `.env/`
+### `.venv/`
 
-Conda environment installation (Python packages).
+uv-managed virtualenv (Python packages).
 
-**Created by**: `make environment` → `make -C env python-env`
+**Created by**: `make environment` → `uv sync`
 
 **Size**: ~2GB
 
@@ -326,7 +325,7 @@ Stata packages (if Stata is installed).
 output/
 
 # Environments
-.env/
+.venv/
 .julia/
 .stata/
 

@@ -1,5 +1,68 @@
-# Python development tools configuration
-# Python dependencies managed via env/python.yml (conda), not here.
+# Project + Python dependency configuration (managed by uv).
+# `uv sync` builds .venv from this file and the committed uv.lock.
+
+[project]
+name = "project-template"
+version = "1.0.0"
+description = "Reproducible research template (Python/Julia/Stata)"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    # Core scientific packages. Upper bounds (<next-major) keep `uv lock` from
+    # silently jumping a major version (a surprise pandas 2->3 broke the Julia bridge).
+    "numpy>=2,<3",
+    # pandas<3 specifically: PythonCall (pinned juliacall 0.9.31) cannot convert
+    # pandas 3.x DataFrames to Julia (Tables.jl interface changed in pandas 3.0),
+    # which breaks run_did.py's jl.DataFrame(df). Bump with juliacall/PythonCall.
+    "pandas>=2,<3",
+    "matplotlib>=3,<4",
+    "seaborn>=0.13,<1",
+    "scipy>=1,<2",
+    # Data analysis / databases
+    "pyarrow>=24,<25",
+    "duckdb>=1,<2",
+    "ibis-framework>=12,<13",
+    # Provenance / environment
+    "pyyaml",
+    "jinja2",
+    "tomli",
+    "docopt",
+    # Interactive development + notebook execution
+    "ipython",
+    "notebook",
+    "jupyterlab",
+    "ipywidgets",
+    "papermill>=2.4,<3",
+    "nbformat>=5.9,<6",
+    "nbconvert>=7.0,<8",
+    # Julia interoperability. juliacall (Python) and PythonCall (Julia) are
+    # lockstep-versioned; pinned for reproducibility. 0.9.34 supports Julia 1.12 and
+    # uses a fixed OpenSSL_jll range (resolves with any Python's OpenSSL, incl. uv's
+    # and Debian's). Bump this pin AND re-resolve the .julia depot together.
+    "juliacall==0.9.34",
+    # Reproducibility tools (git submodule, installed editable; see [tool.uv.sources])
+    "repro-tools",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    # Code quality (pinned: a major bump can add lint/type errors that break CI)
+    "ruff>=0.15,<0.16",
+    "mypy>=1.20,<2",
+    # Type stubs
+    "types-docopt",
+    "pandas-stubs",
+    "scipy-stubs",
+]
+
+[tool.uv.sources]
+repro-tools = { path = "lib/repro-tools", editable = true }
+
+[tool.uv]
+# This repo is an application (scripts run via env/scripts wrappers + PYTHONPATH),
+# not a distributable package, so uv installs the dependencies but not the project.
+package = false
 
 # Pytest configuration
 [tool.pytest.ini_options]
@@ -19,30 +82,7 @@ filterwarnings = [
     "ignore::DeprecationWarning",
 ]
 
-# Black configuration (code formatter)
-[tool.black]
-line-length = 88
-target-version = ['py311']
-exclude = '''
-/(
-    \.git
-  | \.env
-  | \.venv
-  | \.julia
-  | \.cache
-  | \.stata
-  | __pycache__
-  | \.pytest_cache
-  | \.mypy_cache
-  | \.ruff_cache
-  | output
-  | paper
-  | env/pyjuliapkg
-  | lib
-)/
-'''
-
-# Ruff configuration (linting and import sorting)
+# Ruff configuration (linting and formatting)
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -73,7 +113,7 @@ select = [
     "C4", # flake8-comprehensions
 ]
 ignore = [
-    "E501",  # line too long (handled by black)
+    "E501",  # line too long (handled by the formatter)
 ]
 
 # Mypy configuration (type checking)

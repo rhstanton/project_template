@@ -16,7 +16,7 @@ Complete guide to the reproducible research template.
 
 ### Environment Setup
 - **[environment.md](environment.md)** - Complete environment installation and management guide
-  - Python 3.11 conda environment
+  - Python 3.11 uv virtualenv
   - Julia installation via juliacall
   - Stata package setup
   - Environment wrappers (`runpython`, `runjulia`, `runstata`)

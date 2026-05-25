@@ -10,19 +10,11 @@ JULIA_ENABLE_CUDA ?= 0
 export JULIA_ENABLE_CUDA
 
 # Paths
-CONDA  ?= conda
-MICROMAMBA ?= micromamba
-
 ENV_DIR := $(strip $(CURDIR))
 REPO_ROOT := $(abspath $(ENV_DIR)/..)
-PY_YML  := $(strip $(ENV_DIR))/python.yml
-PY_PREFIX := $(abspath $(ENV_DIR)/../.env)
-
-# Detect which conda-like tool we're using
-CONDA_TOOL := $(shell basename "$(CONDA)")
-
-# Force conda to use the fast solver by default
-export CONDA_SOLVER := libmamba
+# Python environment is a uv-managed virtualenv (.venv) at the repo root,
+# built from pyproject.toml + uv.lock.
+VENV := $(abspath $(ENV_DIR)/../.venv)
 
 # Julia configuration
 export JULIA_PROJECT := $(strip $(ENV_DIR))
@@ -34,20 +26,20 @@ export PYTHON_JULIACALL_HANDLE_SIGNALS := yes
 export PYTHON_JULIAPKG_PROJECT := $(JULIA_DEPOT_PATH)
 
 .PHONY: python-env python-check python-clean \
-        julia-env julia-install-via-python conda-check \
+        julia-env julia-install-via-python ensure-uv \
         stata-env stata-clean stata-check \
         all-env environment
 
-# Check/install conda (micromamba if needed)
-conda-check:
-	@bash $(ENV_DIR)/scripts/install_micromamba.sh
+# Ensure uv is installed (installs to ~/.local/bin if missing)
+ensure-uv:
+	@command -v uv >/dev/null 2>&1 || bash $(ENV_DIR)/scripts/install_uv.sh
 
 # Install Julia via Python (triggers juliacall auto-install)
 julia-install-via-python:
 	@echo ">> Installing Julia via juliacall..."
 	@cd $(REPO_ROOT) && JULIA_ENABLE_CUDA=$(JULIA_ENABLE_CUDA) env/scripts/runpython env/scripts/install_julia.py
 
-all-env: conda-check python-env julia-install-via-python stata-env
+all-env: python-env julia-install-via-python stata-env
 
 # Main entry point
 environment: all-env
@@ -56,7 +48,7 @@ environment: all-env
 	@echo "Environment setup complete!"
 	@echo "=========================================================================="
 	@echo ""
-	@echo "Python environment: $(PY_PREFIX)"
+	@echo "Python environment: $(VENV)"
 	@echo "Julia binary:       env/pyjuliapkg/install/"
 	@echo "Julia packages:     .julia/packages/"
 	@echo "Stata packages:     .stata/"
@@ -67,35 +59,18 @@ environment: all-env
 	@echo ""
 	@echo "=========================================================================="
 
-# ---------- Python / Conda ----------
-python-env:
-	@echo ">> Detecting conda/mamba/micromamba..."
-	@CONDA_CMD=$$(command -v micromamba || command -v mamba || command -v conda); \
-	if [ -z "$$CONDA_CMD" ]; then \
-		echo "ERROR: No conda-like tool found after conda-check!"; \
-		exit 1; \
-	fi; \
-	CONDA_TOOL=$$(basename "$$CONDA_CMD"); \
-	echo ">> Using $$CONDA_TOOL at $$CONDA_CMD"; \
-	if [ -d "$(PY_PREFIX)" ]; then \
-		echo ">> Updating environment from $(PY_YML) -> $(PY_PREFIX)"; \
-		if [ "$$CONDA_TOOL" = "micromamba" ]; then \
-			$$CONDA_CMD install -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
-		else \
-			$$CONDA_CMD env update --prune -p "$(PY_PREFIX)" -f "$(PY_YML)"; \
-		fi; \
-	else \
-		echo ">> Creating environment from $(PY_YML) -> $(PY_PREFIX)"; \
-		$$CONDA_CMD env create -p "$(PY_PREFIX)" -f "$(PY_YML)" -y; \
-	fi
+# ---------- Python / uv ----------
+python-env: ensure-uv
+	@echo ">> Syncing Python environment with uv -> $(VENV)"
+	@cd $(REPO_ROOT) && uv sync
 
 python-check:
-	@echo ">> checking Python can import juliacall from $(PY_PREFIX)"
+	@echo ">> checking Python can import juliacall from $(VENV)"
 	@cd $(REPO_ROOT) && $(REPO_ROOT)/env/scripts/runpython -c 'import sys; print("PY:", sys.executable); import juliacall; print("OK: juliacall", getattr(juliacall, "__version__", ""))'
 
 python-clean:
-	@echo ">> removing $(PY_PREFIX)"
-	rm -rf "$(PY_PREFIX)"
+	@echo ">> removing $(VENV)"
+	rm -rf "$(VENV)"
 
 # ---------- Julia ----------
 julia-env: julia-install-via-python

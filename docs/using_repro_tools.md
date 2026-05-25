@@ -6,22 +6,24 @@ This document shows how to use the `repro-tools` package conveniently in your re
 
 ### In Your Environment Specification
 
-Add to `env/python.yml`:
+Add to `pyproject.toml`:
 
-```yaml
-name: your_project
-channels:
-  - conda-forge
-dependencies:
-  - python=3.11
-  - pandas
-  - matplotlib
-  - pyyaml
-  - pip:
-    # Install repro-tools in editable mode (for development)
-    - -e ../../../infrastructure/40_lib/python/repro-tools
+```toml
+[project]
+name = "your-project"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas",
+    "matplotlib",
+    "pyyaml",
+    "repro-tools",
     # OR install from PyPI (when published):
-    # - repro-tools>=0.2.0
+    # "repro-tools>=0.2.0",
+]
+
+# Install repro-tools in editable mode (for development)
+[tool.uv.sources]
+repro-tools = { path = "../../../infrastructure/40_lib/python/repro-tools", editable = true }
 ```
 
 ### In Your Python Scripts
@@ -171,7 +173,7 @@ $(PYTHON) -m repro_tools.cli report --format html --output output/report.html
 When starting a new project:
 
 1. **Copy the Makefile snippet** above (lines defining REPRO_* variables)
-2. **Add repro-tools to env/python.yml**
+2. **Add repro-tools to pyproject.toml**
 3. **Add 2 lines to each Python script** (import + enable_auto_provenance)
 4. **You're done!**
 

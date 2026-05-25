@@ -19,7 +19,7 @@ class TestBuildWorkflow:
 
     def test_environment_available(self):
         """Python environment should be available."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 

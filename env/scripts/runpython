@@ -7,7 +7,7 @@ unset CDPATH
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-PYTHON_BIN="$REPO_ROOT/.env/bin/python"
+PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
 if [[ ! -x "$PYTHON_BIN" ]]; then
   echo "❌ Python env not found at: '$PYTHON_BIN'"
   echo "   Run: make environment"

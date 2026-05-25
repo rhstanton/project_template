@@ -74,7 +74,7 @@ Key tests:
 
 ## Dependencies Added
 
-Added to `env/python.yml`:
+Added to `pyproject.toml`:
 - `tomli` - For parsing TOML files (used in environment tests to validate Project.toml)
 
 ## Running the New Tests

@@ -69,19 +69,11 @@ if command -v julia &> /dev/null; then
     echo "   This won't conflict (we use bundled Julia) but may be confusing"
 fi
 
-# Check for conda/mamba/micromamba
-CONDA_FOUND=0
-if command -v conda &> /dev/null; then
-    echo "✓ conda found (will be used)"
-    CONDA_FOUND=1
-elif command -v mamba &> /dev/null; then
-    echo "✓ mamba found (will be used)"
-    CONDA_FOUND=1
-elif command -v micromamba &> /dev/null; then
-    echo "✓ micromamba found (will be used)"
-    CONDA_FOUND=1
+# Check for uv (Python environment manager)
+if command -v uv &> /dev/null; then
+    echo "✓ uv found ($(uv --version 2>/dev/null))"
 else
-    echo "ℹ️  No conda/mamba/micromamba found (will auto-install micromamba)"
+    echo "ℹ️  uv not found (will auto-install to ~/.local/bin)"
 fi
 echo ""
 
@@ -90,8 +82,8 @@ echo "Checking for stale installation artifacts..."
 
 STALE_FOUND=0
 
-if [ -d "$REPO_ROOT/.env" ]; then
-    echo "ℹ️  Found existing Python environment at .env/"
+if [ -d "$REPO_ROOT/.venv" ]; then
+    echo "ℹ️  Found existing Python environment at .venv/"
 fi
 
 if [ -d "$REPO_ROOT/.julia" ]; then
@@ -179,12 +171,12 @@ fi
 echo ""
 
 # ---------- Check Python environment for juliacall ----------
-if [ -d "$REPO_ROOT/.env" ]; then
+if [ -d "$REPO_ROOT/.venv" ]; then
     echo "Checking Python environment for Julia integration..."
-    
+
     # Check if juliacall is installed
-    if [ -f "$REPO_ROOT/.env/bin/python" ]; then
-        JULIACALL_VERSION=$("$REPO_ROOT/.env/bin/python" -c "import juliacall; print(juliacall.__version__)" 2>/dev/null || echo "NOT_INSTALLED")
+    if [ -f "$REPO_ROOT/.venv/bin/python" ]; then
+        JULIACALL_VERSION=$("$REPO_ROOT/.venv/bin/python" -c "import juliacall; print(juliacall.__version__)" 2>/dev/null || echo "NOT_INSTALLED")
         
         if [ "$JULIACALL_VERSION" = "NOT_INSTALLED" ]; then
             echo "⚠️  WARNING: juliacall not installed in Python environment"

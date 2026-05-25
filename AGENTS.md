@@ -37,7 +37,7 @@ env/scripts/runpython -m pytest tests/test_defaults.py::TestName::test_case -v
 
 - **GNU Make 4.3+ is required** and this is a real trap on macOS (ships 3.81). The build uses grouped targets (`&:`) so a single script invocation produces figure + table + provenance atomically. With old Make, `make all` silently misbehaves. Install via `brew install make` and run `gmake`.
 - **Never invoke `python`/`julia`/`stata` directly.** Always use the wrappers in `env/scripts/` (`runpython`, `runjulia`, `runstata`, `runnotebook`). `runpython` sets `PYTHONPATH` to the repo root (so `from shared import config` and `import repro_tools` resolve), points juliacall at the bundled Julia in `.julia/`, and disables CondaPkg (`JULIA_CONDAPKG_BACKEND=Null`) to avoid a duplicate Python.
-- Python lives in a conda env at `.env/`. Julia auto-installs to `.julia/` via juliacall. Stata packages install locally to `.stata/`. None are global.
+- Python lives in a uv-managed virtualenv at `.venv/`. Julia auto-installs to `.julia/` via juliacall. Stata packages install locally to `.stata/`. None are global.
 
 ## Architecture
 

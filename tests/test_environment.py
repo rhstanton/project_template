@@ -9,7 +9,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 
@@ -19,7 +18,7 @@ class TestPythonEnvironment:
 
     def test_python_env_exists(self):
         """Python environment directory should exist."""
-        env_dir = REPO_ROOT / ".env"
+        env_dir = REPO_ROOT / ".venv"
         if not env_dir.exists():
             pytest.skip("Python environment not installed (run 'make environment')")
 
@@ -27,7 +26,7 @@ class TestPythonEnvironment:
 
     def test_python_executable_exists(self):
         """Python executable should exist in environment."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 
@@ -36,7 +35,7 @@ class TestPythonEnvironment:
 
     def test_python_version(self):
         """Python should be version 3.11."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 
@@ -51,7 +50,7 @@ class TestPythonEnvironment:
 
     def test_required_packages_installed(self):
         """Required Python packages should be installed."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         runpython = REPO_ROOT / "env" / "scripts" / "runpython"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
@@ -78,7 +77,7 @@ class TestPythonEnvironment:
 
     def test_repro_tools_installed(self):
         """repro_tools should be installed in editable mode."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
 
@@ -95,18 +94,18 @@ class TestPythonEnvironment:
         assert result.returncode == 0, f"repro_tools not installed: {result.stderr}"
         assert len(result.stdout.strip()) > 0  # Version string should be present
 
-    def test_python_yml_exists(self):
-        """Python environment spec should exist."""
-        python_yml = REPO_ROOT / "env" / "python.yml"
-        assert python_yml.exists(), "env/python.yml not found"
+    def test_pyproject_exists(self):
+        """Python environment spec (pyproject.toml) should exist and define deps."""
+        import tomllib
 
-        # Validate YAML structure
-        with open(python_yml) as f:
-            config = yaml.safe_load(f)
+        pyproject = REPO_ROOT / "pyproject.toml"
+        assert pyproject.exists(), "pyproject.toml not found"
 
-        assert "name" in config
-        assert "dependencies" in config
-        assert isinstance(config["dependencies"], list)
+        with open(pyproject, "rb") as f:
+            config = tomllib.load(f)
+
+        assert "project" in config
+        assert isinstance(config["project"].get("dependencies"), list)
 
 
 class TestJuliaEnvironment:
@@ -363,16 +362,21 @@ class TestEnvironmentUpdate:
     """Test environment update scenarios."""
 
     def test_python_env_can_be_updated(self):
-        """Python environment should support updates."""
-        python_exe = REPO_ROOT / ".env" / "bin" / "python"
+        """Python environment should support listing packages via uv."""
+        import shutil
+
+        python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
+        if shutil.which("uv") is None:
+            pytest.skip("uv not on PATH")
 
-        # Test that we can run pip list (basic operation)
+        # uv manages the venv (no pip inside it); `uv pip list` is the basic operation.
         result = subprocess.run(
-            [str(python_exe), "-m", "pip", "list"],
+            ["uv", "pip", "list", "--python", str(python_exe)],
             capture_output=True,
             text=True,
+            cwd=REPO_ROOT,
         )
         assert result.returncode == 0
 
@@ -394,7 +398,7 @@ class TestEnvironmentIsolation:
 
     def test_python_env_is_local(self):
         """Python environment should be local to repo, not global."""
-        env_dir = REPO_ROOT / ".env"
+        env_dir = REPO_ROOT / ".venv"
         if not env_dir.exists():
             pytest.skip("Python environment not installed")
 
@@ -423,22 +427,21 @@ class TestEnvironmentIsolation:
 class TestEnvironmentReproducibility:
     """Test that environment setup is reproducible."""
 
-    def test_python_yml_pins_python_version(self):
-        """Python version should be pinned in python.yml."""
-        python_yml = REPO_ROOT / "env" / "python.yml"
-        if not python_yml.exists():
-            pytest.skip("env/python.yml not found")
+    def test_pyproject_pins_python_version(self):
+        """Python version should be constrained in pyproject.toml."""
+        import tomllib
 
-        with open(python_yml) as f:
-            config = yaml.safe_load(f)
+        pyproject = REPO_ROOT / "pyproject.toml"
+        if not pyproject.exists():
+            pytest.skip("pyproject.toml not found")
 
-        # Find python dependency
-        deps = config.get("dependencies", [])
-        python_deps = [d for d in deps if isinstance(d, str) and d.startswith("python")]
+        with open(pyproject, "rb") as f:
+            config = tomllib.load(f)
 
-        assert len(python_deps) > 0, "Python not specified in dependencies"
-        # Should specify version like "python=3.11"
-        assert "=" in python_deps[0] or "3.11" in python_deps[0]
+        requires_python = config.get("project", {}).get("requires-python", "")
+        assert "3.11" in requires_python, (
+            "Python 3.11 not constrained in requires-python"
+        )
 
     def test_project_toml_has_compat_section(self):
         """Project.toml should have [compat] section for version constraints."""

@@ -132,7 +132,7 @@ Tests for environment setup and configuration:
   - Python version verification (3.11)
   - Required packages (pandas, matplotlib, pyyaml, juliacall)
   - repro_tools installation
-  - python.yml validation
+  - pyproject.toml validation
 
 - **TestJuliaEnvironment**: Julia setup via juliacall
   - Julia depot existence

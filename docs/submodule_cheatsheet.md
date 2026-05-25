@@ -209,7 +209,7 @@ This means the submodule has newer commits. Options:
 # Verify submodule is working
 git submodule status
 ls -la lib/repro-tools/src/repro_tools/
-conda run -p .env pip show repro-tools
+uv pip show repro-tools
 ```
 
 Should show:

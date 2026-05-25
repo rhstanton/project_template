@@ -30,9 +30,9 @@ Steps to reproduce the behavior:
 
 - OS: [e.g., Ubuntu 22.04, macOS 13, Windows 11 + WSL]
 - GNU Make version: [output of `make --version`]
-- Python version: [output of `.env/bin/python --version`]
+- Python version: [output of `.venv/bin/python --version`]
 - Julia version (if relevant): [output of `env/scripts/runjulia --version`]
-- Installation method: [conda/micromamba/other]
+- Installation method: [uv/other]
 
 **Environment setup:**
 - [ ] Ran `make environment` successfully

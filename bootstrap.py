@@ -80,26 +80,25 @@ def remove_stata_files(repo_root: Path) -> None:
             print(f"  ⚠ Not found: {file_path}")
 
 
-def update_python_yml(repo_root: Path, remove_julia: bool) -> None:
-    """Update env/python.yml to remove Julia dependencies if requested."""
+def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
+    """Remove the juliacall dependency from pyproject.toml if requested."""
     if not remove_julia:
         return
 
-    print("\n📝 Updating env/python.yml...")
-    python_yml = repo_root / "env" / "python.yml"
+    print("\n📝 Updating pyproject.toml...")
+    pyproject = repo_root / "pyproject.toml"
 
-    if not python_yml.exists():
-        print("  ⚠ env/python.yml not found")
+    if not pyproject.exists():
+        print("  ⚠ pyproject.toml not found")
         return
 
-    content = python_yml.read_text()
+    content = pyproject.read_text()
 
-    # Remove juliacall from pip dependencies
-    # Match the juliacall line (with indentation)
-    content = re.sub(r"\n\s+- juliacall.*?\n", "\n", content)
+    # Remove the juliacall dependency line (keeps the rest of dependencies intact)
+    content = re.sub(r'\n\s*"juliacall[^"\n]*",', "\n", content)
 
-    python_yml.write_text(content)
-    print("  ✓ Removed juliacall dependency")
+    pyproject.write_text(content)
+    print("  ✓ Removed juliacall dependency (run `uv lock` to refresh the lockfile)")
 
 
 def update_env_makefile(
@@ -293,7 +292,7 @@ def interactive_mode(repo_root: Path) -> None:
 
     if remove_julia:
         remove_julia_files(repo_root)
-        update_python_yml(repo_root, remove_julia=True)
+        update_pyproject(repo_root, remove_julia=True)
 
     if remove_stata:
         remove_stata_files(repo_root)
@@ -371,7 +370,7 @@ def main():
     # Apply requested changes
     if args.remove_julia:
         remove_julia_files(repo_root)
-        update_python_yml(repo_root, remove_julia=True)
+        update_pyproject(repo_root, remove_julia=True)
 
     if args.remove_stata:
         remove_stata_files(repo_root)

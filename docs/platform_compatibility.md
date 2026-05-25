@@ -11,9 +11,9 @@ This document covers platform-specific configuration, GPU support, and cross-pla
 **Requirements**:
 
 - GNU Make 4.3+ (for grouped targets)
-- Python 3.11 (via conda)
+- Python 3.11 (via uv)
 - Git 2.0+
-- GLIBC 2.17+ (for conda packages)
+- GLIBC 2.17+ (for prebuilt Python wheels)
 
 **Installation**:
 ```bash
@@ -79,7 +79,7 @@ wsl --install -d Ubuntu-22.04
 
 - GNU Make 4.3+ availability
 - Path handling differences
-- Conda environment activation
+- Virtualenv activation
 - Git line ending issues
 
 ## GPU Configuration
@@ -139,7 +139,7 @@ This affects Python package selection (e.g., JAX and CuPy with cuda12 vs cuda13 
 | `GPU_CUDA_MAJOR` | (unset) | CUDA major version for Python wheels (12 or 13) |
 | `DEFAULT_USE_GPU` | `0` | Default computation device (0=CPU, 1=GPU) |
 | `JULIA_CONDAPKG_BACKEND` | `Null` | Disable CondaPkg duplicate Python |
-| `JULIA_PYTHONCALL_EXE` | `.env/bin/python` | Python executable for PythonCall |
+| `JULIA_PYTHONCALL_EXE` | `.venv/bin/python` | Python executable for PythonCall |
 | `JULIA_PROJECT` | `env/` | Julia environment location |
 | `JULIA_DEPOT_PATH` | `.julia/` | Local package depot (not `~/.julia/`) |
 
@@ -261,26 +261,22 @@ make -C env julia-install-via-python
 - Slightly different dependency resolution
 - Must regenerate on new platform
 
-### Conda Environment Portability
+### Python Environment Portability
 
-**Recommendation**: Use `python.yml` (cross-platform) not `environment.yml` (platform-specific)
+**Recommendation**: Declare dependencies in `pyproject.toml` and commit `uv.lock` for reproducible, cross-platform resolution.
 
-```yaml
-# env/python.yml (cross-platform)
-name: project_template
-channels:
-  - conda-forge
-dependencies:
-  - python=3.11
-  - pandas
-  - matplotlib
+```toml
+# pyproject.toml (cross-platform)
+[project]
+name = "project_template"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas",
+    "matplotlib",
+]
 ```
 
-**Not recommended**:
-```bash
-# Don't do this (creates platform-specific lock):
-conda env export > environment.yml
-```
+`uv.lock` records exact versions and hashes; `uv sync` reproduces the same environment on any supported platform.
 
 ## Julia Precompilation Issues
 
@@ -343,14 +339,14 @@ env/scripts/runjulia -e 'using Pkg; Pkg.precompile()'
 
 ## Environment Activation
 
-### Via conda
+### Via virtualenv
 
 ```bash
 # Activate (works on all platforms):
-conda activate .env
+source .venv/bin/activate
 
 # Deactivate:
-conda deactivate
+deactivate
 ```
 
 ### Via Makefile
@@ -401,11 +397,12 @@ uname -s
 # Darwin → macOS
 ```
 
-### Check conda environment
+### Check Python environment
 
 ```bash
-conda env list
-# Should show .env in repo root
+ls -d .venv
+# Should show .venv in repo root
+.venv/bin/python --version
 ```
 
 ### Check Julia installation
@@ -426,7 +423,7 @@ env/scripts/runpython -c 'import os; print(os.environ["JULIA_CONDAPKG_BACKEND"])
 
 ```bash
 # Python packages:
-conda list
+uv pip list
 
 # Julia packages:
 env/scripts/runjulia -e 'using Pkg; Pkg.status()'
@@ -462,36 +459,36 @@ jobs:
 
 ### Docker
 
-Not included in template, but you can containerize:
+The template ships a **digest-pinned, uv-based `Dockerfile`** at the repo root:
 
-```dockerfile
-FROM condaforge/mambaforge:latest
-
-WORKDIR /project
-COPY . .
-
-RUN make environment
-CMD ["make", "all"]
+```bash
+docker build -t project-template-repro .
+docker run --rm -v "$PWD/output:/project/output" project-template-repro
 ```
+
+It builds the environment with uv (`pyproject.toml` + `uv.lock`) and juliacall, then
+reproduces all artifacts. On Debian (Python links OpenSSL 3.0) juliapkg installs Julia
+1.11 automatically. Stata is omitted (commercial license). For a reviewer-standard
+`linux/amd64` image on Apple Silicon, add `--platform linux/amd64` to the build.
 
 ## Security Considerations
 
 ### Local-Only Environments
 
-The template installs packages to `.env/` and `.julia/` **within the repo**, not globally.
+The template installs packages to `.venv/` and `.julia/` **within the repo**, not globally.
 
 **Benefits**:
 
 - No pollution of global environment
 - Full control over versions
-- Easy cleanup (`rm -rf .env .julia`)
+- Easy cleanup (`rm -rf .venv .julia`)
 - Reproducible across machines
 
 **Caveat**: Each project needs its own environment (~2GB disk space per project)
 
 ### Git Secrets
 
-Never commit to `.env/` or `.julia/` directories (they're in `.gitignore`).
+Never commit to `.venv/` or `.julia/` directories (they're in `.gitignore`).
 
 Also check that `paper/` (if separate repo) doesn't leak credentials.
 
@@ -516,8 +513,8 @@ Python uses `__pycache__/`. Safe to delete but will slow down subsequent runs.
 
 The environment requires ~2GB. To reduce:
 
-1. **Remove unused packages** from `env/python.yml`
-2. **Clean conda cache**: `conda clean --all`
+1. **Remove unused packages** from `pyproject.toml` (then `uv sync`)
+2. **Clean uv cache**: `uv cache clean`
 3. **Remove old Julia depot**: `rm -rf ~/.julia` (if you use local depot)
 
 ---

@@ -152,13 +152,17 @@ This tells git:
 - Track the `main` branch
 - Update to latest when running `git submodule update --remote`
 
-### 2. Editable Install (`env/python.yml`)
+### 2. Editable Install (`pyproject.toml`)
 
-```yaml
-dependencies:
-  - pip:
-    - juliacall>=0.9.14
-    - -e ../lib/repro-tools  # Editable install
+```toml
+[project]
+dependencies = [
+    "juliacall>=0.9.14",
+    "repro-tools",
+]
+
+[tool.uv.sources]
+repro-tools = { path = "lib/repro-tools", editable = true }
 ```
 
 The `-e` flag installs repro-tools in "editable" or "development" mode:
@@ -201,7 +205,7 @@ git submodule update --init --recursive
 ```bash
 make environment  # Reinstall environment
 # OR
-conda run -p .env pip install -e lib/repro-tools
+uv pip install -e lib/repro-tools
 ```
 
 ### "fatal: not a git repository" in lib/repro-tools

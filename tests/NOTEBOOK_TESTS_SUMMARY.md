@@ -352,7 +352,7 @@ These tests are designed to run in CI/CD:
 **Expected runtime:** ~30 seconds
 
 **Dependencies:**
-- Python environment (`.env/`)
+- Python environment (`.venv/`)
 - Julia via juliacall (`.julia/`)
 - Git repository (for provenance tests)
 - Sample data files

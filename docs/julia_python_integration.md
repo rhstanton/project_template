@@ -39,7 +39,7 @@ Julia is **automatically installed** via the `juliacall` Python package:
 
 ```bash
 make environment
-# → Installs conda environment with juliacall
+# → Installs uv virtualenv with juliacall
 # → juliacall downloads Julia to .julia/pyjuliapkg/install/
 # → No manual Julia installation needed
 ```
@@ -56,8 +56,8 @@ Critical variables for Julia/Python bridge:
 # Disable CondaPkg (use main Python environment)
 export JULIA_CONDAPKG_BACKEND=Null
 
-# Point PythonCall to conda Python
-export JULIA_PYTHONCALL_EXE="$REPO_ROOT/.env/bin/python"
+# Point PythonCall to the uv virtualenv Python
+export JULIA_PYTHONCALL_EXE="$REPO_ROOT/.venv/bin/python"
 
 # Julia project location
 export JULIA_PROJECT="$REPO_ROOT/env"
@@ -84,7 +84,7 @@ These are set automatically by:
 **Problem**: By default, PythonCall.jl uses CondaPkg to create its own isolated conda environment at `env/.CondaPkg/.pixi/`.
 
 This creates redundancy:
-- Main Python: `.env/` (~2GB)
+- Main Python: `.venv/` (~2GB)
 - CondaPkg Python: `env/.CondaPkg/.pixi/` (~500MB)
 - Two separate Python installations with duplicate packages
 
@@ -107,9 +107,9 @@ Standard Python scripts:
 env/scripts/runpython my_script.py
 ```
 
-Or activate conda environment:
+Or activate the virtualenv directly (the `env/scripts/run*` wrappers are preferred):
 ```bash
-conda activate .env
+source .venv/bin/activate
 python my_script.py
 ```
 
@@ -174,22 +174,23 @@ df = pd.DataFrame(Dict("x" => [1,2,3], "y" => [4,5,6]))
 
 ### Python Packages
 
-Managed via `env/python.yml`:
+Managed via `pyproject.toml` (exact versions pinned in `uv.lock`):
 
-```yaml
-dependencies:
-  - python=3.11
-  - pandas
-  - matplotlib
-  - pyyaml
-  - jinja2
-  - pip:
-    - juliacall>=0.9.14
+```toml
+[project]
+requires-python = ">=3.11"
+dependencies = [
+    "pandas",
+    "matplotlib",
+    "pyyaml",
+    "jinja2",
+    "juliacall>=0.9.14",
+]
 ```
 
 Install/update:
 ```bash
-make -C env python-env
+uv sync        # or: make environment
 ```
 
 ### Julia Packages
@@ -287,7 +288,7 @@ Sets up Julia bridge before running Python:
 #!/usr/bin/env bash
 # Find repo root
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-PYTHON_BIN="$REPO_ROOT/.env/bin/python"
+PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
 
 # Julia/Python bridge configuration
 export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
@@ -310,7 +311,7 @@ exec "$PYTHON_BIN" -u "$@"
 - `JULIA_PROJECT`: Points to `env/` for user packages (DataFrames, etc.)
 - `JULIA_DEPOT_PATH`: Local package depot (not `~/.julia/`)
 - `JULIA_CONDAPKG_BACKEND=Null`: Disables CondaPkg to avoid duplicate Python environments
-- `JULIA_PYTHONCALL_EXE`: Points to conda Python so PythonCall uses correct interpreter
+- `JULIA_PYTHONCALL_EXE`: Points to the uv virtualenv Python so PythonCall uses correct interpreter
 
 ### runjulia
 
@@ -383,11 +384,12 @@ The template is configured for CPU-only operation. To add GPU support:
    ```
 
 3. **Install CUDA-enabled Python packages** (optional):
-   ```yaml
-   # env/python.yml
-   pip:
-     - torch  # with CUDA support
-     - jax[cuda12]
+   ```toml
+   # pyproject.toml
+   dependencies = [
+       "torch",  # with CUDA support
+       "jax[cuda12]",
+   ]
    ```
 
 **Note**: GPU support not included by default to keep template simple and portable.

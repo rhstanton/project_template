@@ -35,7 +35,7 @@ jupyter lab notebooks/my_analysis.ipynb
 
 **Important**: Activate environment first:
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab
 ```
 
@@ -284,7 +284,7 @@ See [docs/vscode_integration.md](vscode_integration.md) for details.
 
 **Solution**:
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab
 ```
 
@@ -306,7 +306,7 @@ Or use `runnotebook` wrapper which handles this.
 
 **Solution**:
 - Use `runnotebook` wrapper (handles `PYTHONPATH`)
-- Or activate environment: `conda activate .env`
+- Or activate environment: `source .venv/bin/activate`
 
 ### Provenance file not generated
 

@@ -9,7 +9,7 @@ This document summarizes the comprehensive Jupyter notebook integration added to
 ### 1. Core Infrastructure
 
 ✅ **Environment**:
-- Added `seaborn` to `env/python.yml` for statistical visualizations
+- Added `seaborn` to `pyproject.toml` for statistical visualizations
 - `papermill`, `nbformat`, `nbconvert` already included in environment
 - `notebook` and `jupyterlab` for interactive development
 
@@ -94,7 +94,7 @@ cp notebooks/template_analysis.ipynb notebooks/my_analysis.ipynb
 
 **2. Test interactively:**
 ```bash
-conda activate .env
+source .venv/bin/activate
 jupyter lab notebooks/my_analysis.ipynb
 ```
 
