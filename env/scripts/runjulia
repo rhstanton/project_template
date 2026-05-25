@@ -17,12 +17,12 @@ set -euo pipefail
 unset CDPATH
 
 # --- config (override via env if you like) ---
-# Prefer the bundled Julia installed by make environment; fallback to juliaup
+# Use the bundled Julia installed by `make environment`. Do NOT fall back to a
+# global juliaup Julia — the project must use its own repo-local Julia. An explicit
+# JULIA_BIN override is still honored; otherwise a missing bundle errors below.
 BUNDLED_JULIA="$(cd "$(dirname "$0")/../.." && pwd)/.julia/pyjuliapkg/install/bin/julia"
 if [ -x "$BUNDLED_JULIA" ]; then
   JULIA_BIN="${JULIA_BIN:-$BUNDLED_JULIA}"
-else
-  JULIA_BIN="${JULIA_BIN:-${HOME}/.juliaup/bin/julia}"
 fi
 REQUIRED_VERSION_MIN="${REQUIRED_VERSION_MIN:-1.12.0}"
 # Use the in-repo env/ folder as the Julia project by default
@@ -36,8 +36,8 @@ JULIA_DEPOT_PATH="${JULIA_DEPOT_PATH:-$REPO_DEPOT_DEFAULT}"
 PROJECT_ABS="$(cd "$ROOT_DIR/$JULIA_ENV_DIR" && pwd)"
 
 # --- sanity checks ---
-if ! command -v "$JULIA_BIN" >/dev/null 2>&1; then
-  echo "❌ Julia not found. Set JULIA_BIN or install juliaup." >&2
+if [ -z "${JULIA_BIN:-}" ] || ! command -v "$JULIA_BIN" >/dev/null 2>&1; then
+  echo "❌ Bundled Julia not found. Run: make environment   (or set JULIA_BIN)." >&2
   exit 127
 fi
 

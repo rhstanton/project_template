@@ -29,23 +29,25 @@ export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
 # Add repo root to PYTHONPATH so scripts can import from scripts/
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
-# Prefer the bundled Julia inside the repo
+# Always strip juliaup from PATH so a global juliaup Julia can never be used,
+# whether or not a bundled Julia exists yet. The project is self-contained and
+# must use its own repo-local Julia (bundled, or installed locally by juliacall).
+SAFE_PATH=""
+IFS=':' read -r -a PARTS <<< "${PATH:-}"
+for P in "${PARTS[@]}"; do
+  # Convert to lowercase for case-insensitive match (bash 3.2 compatible)
+  P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
+  if [[ "$P_LOWER" == *juliaup* ]]; then
+    continue
+  fi
+  SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
+done
+export PATH="$SAFE_PATH"
+
+# Prefer the bundled Julia inside the repo (juliacall installs it locally if absent).
 BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
 if [[ -x "$BUNDLED_JULIA" ]]; then
   export PYTHON_JULIAPKG_EXE="$BUNDLED_JULIA"
-else
-  # If no bundled Julia yet, strip juliaup from PATH so juliacall installs locally
-  SAFE_PATH=""
-  IFS=':' read -r -a PARTS <<< "${PATH:-}"
-  for P in "${PARTS[@]}"; do
-    # Convert to lowercase for case-insensitive match (bash 3.2 compatible)
-    P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
-    if [[ "$P_LOWER" == *juliaup* ]]; then
-      continue
-    fi
-    SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
-  done
-  export PATH="$SAFE_PATH"
 fi
 
 exec "$PYTHON_BIN" -u "$@"

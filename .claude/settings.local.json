@@ -33,7 +33,17 @@
       "Bash(env/scripts/runnotebook notebooks/julia_demo.ipynb /tmp/jd_exec.ipynb -p study julia_demo)",
       "Bash(make check *)",
       "Bash(echo \"make check exit code: $?\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(make -C env python-clean)",
+      "Bash(make environment *)",
+      "Bash(echo \"=== ENV REBUILD FINISHED at $\\(date\\) \\(exit $?\\) ===\")",
+      "Bash(.env/bin/python -c \"import pandas,juliacall,papermill,numpy; print\\('pandas',pandas.__version__,'| juliacall',juliacall.__version__,'| papermill',papermill.__version__,'| numpy',numpy.__version__\\)\")",
+      "Bash(.env/bin/python -)",
+      "Bash(env/scripts/runpython -c \"import juliacall; from juliacall import Main as jl; print\\('exepath:', juliacall.CONFIG.get\\('exepath'\\)\\); print\\('1+1 =', jl.seval\\('1+1'\\)\\)\")",
+      "Bash(env/scripts/runpython -c \"import juliacall; print\\('  wrapper exepath:', juliacall.CONFIG['exepath']\\)\")",
+      "Bash(.env/bin/python -c \"import juliacall; print\\(juliacall.__version__\\)\")",
+      "Bash(.env/bin/python -m pip index versions juliacall)",
+      "Bash(.julia/pyjuliapkg/install/bin/julia --version)"
     ]
   }
 }

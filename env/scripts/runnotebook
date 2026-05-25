@@ -29,22 +29,22 @@ export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
 export JULIA_CONDAPKG_BACKEND=Null
 export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
 
-# Prefer the bundled Julia inside the repo (same as runpython); otherwise strip
-# juliaup from PATH so juliacall doesn't pick up a global juliaup Julia.
+# Always strip juliaup from PATH so a global juliaup Julia can never be used
+# (same hardening as runpython); then prefer the repo's bundled Julia.
+SAFE_PATH=""
+IFS=':' read -r -a PARTS <<< "${PATH:-}"
+for P in "${PARTS[@]}"; do
+  P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
+  if [[ "$P_LOWER" == *juliaup* ]]; then
+    continue
+  fi
+  SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
+done
+export PATH="$SAFE_PATH"
+
 BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
 if [[ -x "$BUNDLED_JULIA" ]]; then
   export PYTHON_JULIAPKG_EXE="$BUNDLED_JULIA"
-else
-  SAFE_PATH=""
-  IFS=':' read -r -a PARTS <<< "${PATH:-}"
-  for P in "${PARTS[@]}"; do
-    P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
-    if [[ "$P_LOWER" == *juliaup* ]]; then
-      continue
-    fi
-    SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
-  done
-  export PATH="$SAFE_PATH"
 fi
 
 # Add repo root to PYTHONPATH for imports

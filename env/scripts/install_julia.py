@@ -43,21 +43,22 @@ os.environ["PYTHON_JULIAPKG_PROJECT"] = julia_depot
 os.environ["JULIA_CONDAPKG_BACKEND"] = "Null"
 os.environ["JULIA_PYTHONCALL_EXE"] = sys.executable
 
+# Always drop juliaup from PATH so juliacall can never reuse a global juliaup
+# Julia. The project must be self-contained: either the bundled Julia, or a fresh
+# Julia that juliacall installs into .julia/pyjuliapkg/.
+path_parts = os.environ.get("PATH", "").split(os.pathsep)
+filtered = [p for p in path_parts if "juliaup" not in p.lower()]
+if filtered != path_parts:
+    os.environ["PATH"] = os.pathsep.join(filtered)
+    print("Removed juliaup from PATH (project uses repo-local Julia only)")
+
 # Prefer the bundled Julia in .julia/pyjuliapkg/install/bin/julia
 bundled_julia = os.path.join(julia_depot, "pyjuliapkg", "install", "bin", "julia")
 if os.path.isfile(bundled_julia):
     os.environ["PYTHON_JULIAPKG_EXE"] = bundled_julia
     print(f"Using bundled Julia at {bundled_julia}")
 else:
-    # Drop juliaup from PATH so juliacall installs into pyjuliapkg instead of
-    # reusing a global juliaup copy.
-    path_parts = os.environ.get("PATH", "").split(os.pathsep)
-    filtered = [p for p in path_parts if "juliaup" not in p.lower()]
-    if filtered != path_parts:
-        os.environ["PATH"] = os.pathsep.join(filtered)
-        print(
-            "No bundled Julia found; removing juliaup from PATH to force local install"
-        )
+    print("No bundled Julia yet; juliacall will install one into .julia/pyjuliapkg/")
 
 # Let juliacall download Julia to project-local location
 # This ensures zero prerequisites - no need for system Julia or juliaup!
