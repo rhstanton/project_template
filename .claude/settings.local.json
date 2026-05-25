@@ -23,7 +23,17 @@
       "Bash(env/scripts/runpython -c \"import juliacall\")",
       "Bash(.env/bin/python -m pip install 'juliacall==0.9.31')",
       "Bash(env/scripts/runpython -c \"import juliacall; from juliacall import Main as jl; jl.seval\\('using Statistics'\\); print\\('juliacall', juliacall.__version__, '| Julia bridge OK, mean=', jl.mean\\([1.0,2.0,3.0]\\)\\)\")",
-      "Bash(env/scripts/runpython -m pytest tests/ -rs -q)"
+      "Bash(env/scripts/runpython -m pytest tests/ -rs -q)",
+      "Bash(make clean *)",
+      "Bash(make all *)",
+      "Bash(env/scripts/runpython run_did.py --data data/housing_panel.csv --figure /tmp/d.pdf --table /tmp/d.tex --out-meta /tmp/d.yml)",
+      "Bash(.env/bin/python -c \"import pandas,numpy,pyarrow; print\\('pandas',pandas.__version__,'| numpy',numpy.__version__,'| pyarrow',pyarrow.__version__\\)\")",
+      "Bash(conda install *)",
+      "Bash(.env/bin/python -c \"import pandas; print\\('pandas', pandas.__version__\\)\")",
+      "Bash(env/scripts/runnotebook notebooks/julia_demo.ipynb /tmp/jd_exec.ipynb -p study julia_demo)",
+      "Bash(make check *)",
+      "Bash(echo \"make check exit code: $?\")",
+      "Read(//tmp/**)"
     ]
   }
 }

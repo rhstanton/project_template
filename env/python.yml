@@ -8,7 +8,10 @@ dependencies:
   - pip
   # Core scientific packages
   - numpy
-  - pandas
+  # Pinned <3: PythonCall (pinned juliacall 0.9.31) cannot convert pandas 3.x
+  # DataFrames to Julia (the Tables.jl interface changed in pandas 3.0), which
+  # breaks run_did.py's jl.DataFrame(df). Bump together with juliacall/PythonCall.
+  - pandas<3
   - matplotlib
   - seaborn  # Statistical data visualization
   - scipy
