@@ -8,7 +8,7 @@
 
 **A minimal template for reproducible research in Python, Julia, and Stata — use all three or just one — with provenance tracking and automated builds**
 
-This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results. It ships with Python, Julia, and Stata wired together — Julia runs standalone *or* straight from Python (via `juliacall`) — and **one `bootstrap.py` command prunes it to whatever subset you need** (Python is the one constant).
+This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results. It ships with Python, Julia, and Stata wired together — Julia runs standalone *or* from within Python (via `juliacall`) — and **one `bootstrap.py` command prunes it to whatever subset you need** (Python is the one constant).
 
 ```mermaid
 flowchart LR
