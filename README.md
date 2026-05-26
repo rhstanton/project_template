@@ -74,15 +74,9 @@ docker run --rm -v "$PWD/output:/project/output" my-project   # runs `make all` 
 
 ---
 
-## 🏃 Running: Locally or with Docker
+## 🏃 Local vs. Docker: which to use?
 
-The **Quick Start above runs locally** — uv builds a `.venv` on your machine (fastest; best for day-to-day work). You can also run everything in a **pinned Docker image** — fully isolated and OS-pinned (best for replication packages, sandboxing untrusted/agent code, and avoiding "works on my machine" drift). Both build from the *same* sources (`pyproject.toml` + `uv.lock`, `env/Project.toml`, `Makefile`); Docker just wraps the same `make environment` / `make all`.
-
-**Run with Docker:**
-```bash
-docker build -t project-template-repro .                                   # build the environment into the image
-docker run --rm -v "$PWD/output:/project/output" project-template-repro    # reproduce all artifacts -> ./output
-```
+Both build paths in **Get started** use the *same* sources (`pyproject.toml` + `uv.lock`, `env/Project.toml`, `Makefile`) — Docker just wraps the same `make environment` / `make all` in a pinned, fully isolated image (best for replication packages, sandboxing untrusted/agent code, and avoiding "works on my machine" drift). Which to pick:
 
 | | Local (native) | Docker |
 |---|---|---|
