@@ -10,6 +10,8 @@
 
 This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
 
+> **Starting a project?** Click **"Use this template"** (top of this page) to get your own repo, then follow **[QUICKSTART](QUICKSTART.md)**. The bundled example analyses are runnable demos — keep them to learn the workflow, then drop any you don't need with `make remove-analysis NAME=<name>`.
+
 ---
 
 ## 👥 Who Is This For?

@@ -47,6 +47,12 @@ journal-package.zip
 # Build marker (internal make state)
 .make_build_marker
 
+# Maintainer-only notes — kept locally, never shared (see also .dockerignore)
+dev-notes/
+docs/NOTEBOOK_SUPPORT_IMPLEMENTATION.md
+tests/NOTEBOOK_TESTS_SUMMARY.md
+tests/TEST_IMPROVEMENTS.md
+
 # Environment directories (generated, platform-specific)
 .venv/
 .env/
