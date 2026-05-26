@@ -106,20 +106,17 @@ For exact reproducibility:
 
 **Use case**: Projects that need conda-forge binary packages or non-Python (R, system libs) dependencies beyond Julia/Stata.
 
-#### pixi (Future Consideration)
+#### pixi (the conda-world analogue to uv — the main "what if" alternative)
 
-**What it is**: Modern conda-compatible package manager (Rust-based, from Prefix.dev)
+**What it is**: A Rust-based environment manager from Prefix.dev — effectively "uv for the conda ecosystem." It installs **conda-forge** packages (so it *can* manage system libraries, R, and even Julia itself, which uv cannot) **and** PyPI packages — and it **uses uv internally** for the PyPI side. It produces a cross-platform `pixi.lock` and has a built-in task runner. In short, it's the *modern* conda option; if we ever needed conda-forge, pixi (not classic conda) is what we'd reach for.
 
-**Potential advantages**:
-- ✅ **Multi-language** (Python + Julia + R + system libs)
-- ✅ Fast, with good lockfiles (`pixi.lock` with exact hashes)
-- ✅ Drop-in replacement for conda (uses conda-forge)
-- ✅ Built-in task runner (could simplify Makefile)
+**Why uv instead, today**: every dependency here is on PyPI, Julia comes via juliacall, and Stata is external — so conda-forge's breadth isn't needed and uv is simpler.
 
-**Why not used**:
-- ⚠️ Newer tool (less mature ecosystem)
-- ⚠️ Pulls in the conda-forge stack we no longer need for Python-only deps
-- ⚠️ Additional learning curve for users
+**Would migrating be cheap since pixi uses uv internally? No.** "Uses uv internally" makes the *dependency resolution* cheap, but that was never the cost. Switching means redoing the same plumbing the conda→uv migration touched: `env/Makefile`, the `run*` wrappers (interpreter path → `.pixi/envs/…`), the installer script, `check_prerequisites.sh`, `flake.nix`, CI, tests, `.gitignore`, the `Dockerfile`, the repro-tools submodule's `common.mk`, and a full doc sweep. The `pyproject.toml` dependency list carries over (pixi reads it), but `uv.lock` → a regenerated `pixi.lock`. That's roughly the effort of the conda→uv migration — for **~no gain if pixi only replaces the Python layer**.
+
+**When pixi would actually be worth it** (the real win a Python-only swap does *not* deliver): managing **Python and Julia together from conda-forge** — one lockfile across both languages, and likely **eliminating the `juliacall`/OpenSSL→Julia-version coupling** documented in [julia_python_integration.md](julia_python_integration.md) (conda-forge would manage OpenSSL coherently for both, so no `<=python` mismatch / macOS-1.11-vs-Linux-1.12 split). That is a **Julia-bridge rearchitecture** (move off juliacall's `juliapkg` to conda-forge Julia + PythonCall) and would still keep Make for grouped-target builds — a multi-day, higher-risk change. **Reconsider pixi if** you hit that Julia/OpenSSL coupling again, or need a conda-forge-only system package.
+
+Because pixi speaks `pyproject.toml` and uses uv, a *future* uv→pixi move is cheaper than the old conda→pixi would have been — so staying on uv now loses nothing.
 
 #### Nix (Already Supported as Optional)
 
