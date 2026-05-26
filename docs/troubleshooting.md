@@ -720,6 +720,6 @@ git log -p Makefile
 
 ## Version
 
-This troubleshooting guide is for **template v2.0.0**.
+This troubleshooting guide is for **template v2.0.1**.
 
 See [CHANGELOG.md](../CHANGELOG.md) for version history.

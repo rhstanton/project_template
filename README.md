@@ -41,6 +41,16 @@ This template is designed for:
 
 ---
 
+## ⚙️ Requirements
+
+- **OS:** Linux or macOS (Windows via WSL 2)
+- **RAM:** 8 GB minimum (16 GB recommended)
+- **Disk:** ~2.5 GB installed (2 GB Python env + ~0.5 GB Julia); keep ~5 GB free for build cache/outputs
+- **Software:** GNU Make 4.3+ (uv & Julia auto-installed) — *or* just Docker
+- **Optional:** Nix (reproducible dev shell via `flake.nix`)
+
+---
+
 ## 🚀 Get started
 
 This is a **GitHub template**. Click **"Use this template"** at the top of the page to create your **own repo** (its own history), then **set up** the project:
@@ -260,6 +270,23 @@ Adding a new analysis is simple - just add configuration to `config.py`:
 
 ---
 
+## 📦 For Journal Submission
+
+**Authors preparing replication packages:**
+
+```bash
+make journal-package    # Creates clean replication package
+```
+
+This creates a fresh git repository excluding:
+- Development files (`.github/`, `.vscode/`, etc.)
+- Author-only directories (`data-construction/`, `notes/`, `paper/`)
+- Internal documentation (`TEMPLATE_USAGE.md`, etc.)
+
+See `JOURNAL_EXCLUDE` for complete list and [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editor instructions.
+
+---
+
 ## 🐍 Python Environment
 
 Managed via uv with automatic Julia integration:
@@ -329,17 +356,6 @@ make sample-stata      # Stata example (if installed)
 ```
 
 See `env/examples/README.md` for details.
-
----
-
-## ⚙️ System Requirements
-
-- **OS:** Linux or macOS (Windows requires WSL)
-- **RAM:** 8GB minimum (16GB recommended)
-- **Disk:** 5GB (2GB environment + 3GB cache)
-- **Time:** ~15 minutes total (10 min setup + 5 min execution)
-- **Software:** GNU Make 4.3+, uv (auto-installed if needed)
-- **Optional:** Nix (for reproducible dev shell via `flake.nix`)
 
 ---
 
@@ -475,7 +491,7 @@ See `CITATION.cff` for structured metadata.
 
 ## 🏷️ Version
 
-**Current version: 2.0.0**
+**Current version: 2.0.1**
 
 - **Check version**: `env/scripts/runpython run_analysis.py --version` or `make info`
 - **Version file**: [`_version.py`](_version.py)
@@ -486,20 +502,4 @@ See `CITATION.cff` for structured metadata.
   - Provides provenance tracking, CLI utilities, publishing tools
   - See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for updates
 
----
-
-## 🎯 For Journal Submission
-
-**Authors preparing replication packages:**
-
-```bash
-make journal-package    # Creates clean replication package
-```
-
-This creates a fresh git repository excluding:
-- Development files (`.github/`, `.vscode/`, etc.)
-- Author-only directories (`data-construction/`, `notes/`, `paper/`)
-- Internal documentation (`TEMPLATE_USAGE.md`, etc.)
-
-See `JOURNAL_EXCLUDE` for complete list and [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editor instructions.
 

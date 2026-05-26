@@ -48,7 +48,7 @@ make publish
 ```
 
 **Total time**: ~5-10 minutes
-**Total disk**: ~2.5GB (2GB environment + 500MB Julia)
+**Total disk**: ~2.5 GB installed (2 GB env + ~0.5 GB Julia); keep ~5 GB free
 
 ### Build with Docker instead
 
@@ -243,7 +243,7 @@ Published artifacts to `paper/` directory:
 **Minimum**:
 - CPU: x86_64 or ARM64 (Apple Silicon)
 - RAM: 8GB
-- Disk: 5GB free (2GB environment + 3GB cache)
+- Disk: 5GB free (~2.5GB installed + headroom)
 - OS: Linux, macOS 11+, or Windows 10+ with WSL 2
 
 **Recommended**:
@@ -630,6 +630,6 @@ See [docs/platform_compatibility.md](docs/platform_compatibility.md) for details
 
 ## Version
 
-This quickstart is for **template v2.0.0**.
+This quickstart is for **template v2.0.1**.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.

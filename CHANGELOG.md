@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-05-26
+
+### Changed
+- **Documentation polish** (no code changes). Clarified the README **Get started** flow — split *Setup* (clone/`cd`/optional bootstrap) from *Build*, with Docker explicitly replacing the `make` steps. De-duplicated the *Local vs. Docker* section (kept the comparison table, dropped the repeated commands). Moved *For Journal Submission* up beside the workflows. Reconciled the disk-footprint figure across README/QUICKSTART (installed ~2.5 GB vs ~5 GB free). Fixed a mismatched example name in *Adding New Analyses* and surfaced Docker + "Use this template" in QUICKSTART.
+
 ## [2.0.0] - 2026-05-26
 
 > **Breaking:** the Python environment is now managed by **uv** (was conda; `.env/` → `.venv/`) and the template **requires Python ≥3.12** (drops 3.11). Projects upgrading from 1.x must re-create their environment with `make environment`.

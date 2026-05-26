@@ -416,7 +416,7 @@ When making significant changes:
 
 ---
 
-**Template version**: 2.0.0
+**Template version**: 2.0.1
 
 ---
 

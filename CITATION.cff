@@ -10,7 +10,7 @@ authors:
   #   given-names: Coauthor-First-Name
   #   affiliation: "Their Institution"
 title: "Reproducible Research Template"
-version: 2.0.0
+version: 2.0.1
 date-released: 2026-05-26
 url: "https://github.com/rhstanton/project_template"
 repository-code: "https://github.com/rhstanton/project_template"

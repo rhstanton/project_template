@@ -613,4 +613,4 @@ VS Code tasks are **wrappers around Make targets**. When you run a task:
 
 ---
 
-**Version**: 2.0.0
+**Version**: 2.0.1
