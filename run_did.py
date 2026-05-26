@@ -311,7 +311,7 @@ def save_table(coef_df: pd.DataFrame, config: dict) -> None:
 
 def main() -> None:
     """Main entry point"""
-    args = friendly_docopt(__doc__, version="1.0.0")
+    args = friendly_docopt(__doc__, version="2.0.0")
     setup_environment()
 
     # Build configuration

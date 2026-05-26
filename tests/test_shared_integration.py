@@ -2,6 +2,8 @@
 
 import subprocess
 
+from _version import __version__
+
 
 class TestRunAnalysisIntegration:
     """Test run_analysis.py with new shared utilities."""
@@ -28,7 +30,7 @@ class TestRunAnalysisIntegration:
         )
 
         assert result.returncode == 0
-        assert "run_analysis 1.0" in result.stdout
+        assert f"run_analysis {__version__}" in result.stdout
 
     def test_run_analysis_unknown_option_suggests(self):
         """Test that unknown options provide suggestions."""

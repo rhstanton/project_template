@@ -416,8 +416,7 @@ When making significant changes:
 
 ---
 
-**Last updated**: January 16, 2026
-**Template version**: 1.0.0
+**Template version**: 2.0.0
 
 ---
 

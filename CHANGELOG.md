@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-26
+
+> **Breaking:** the Python environment is now managed by **uv** (was conda; `.env/` → `.venv/`) and the template **requires Python ≥3.12** (drops 3.11). Projects upgrading from 1.x must re-create their environment with `make environment`.
+
 ### Added
+- **Turned the repo into a usable GitHub template.** Marked it a template repository; reworked the README (build→publish Mermaid diagram + a single "Get started" section), QUICKSTART, and TEMPLATE_USAGE to document starting your **own** repo ("Use this template", or clone + reset history) and always cloning `--recursive`. The Makefile now fails with a clear, actionable message when the `lib/repro-tools/` submodule isn't checked out (previously a silent no-op).
+- **`make remove-analysis NAME=<name>`** (`scripts/remove_analysis.py`): cleanly removes an analysis everywhere it's wired in — `ANALYSES` + its Makefile block, `config.py` `STUDIES`, the example script, and `output/` artifacts — dry-run by default, and never deletes the shared `run_analysis.py` engine. Lets you keep the example analyses to learn the workflow, then drop them safely.
+- **"Developing under Docker"** guide ([docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)): three edit/run loops (rebuild, selective source mount, whole-repo + named volumes) plus a VS Code devcontainer recipe.
+- Moved maintainer-only notes (`dev-notes/`, internal `.md`s) out of the tracked tree (kept locally); corrected the documented publish variable to `PUBLISH_ANALYSES` and fixed stale README facts (repro-tools version, formatter, Julia version).
 - **GPU (CUDA) acceleration in `run_did.py` now actually works, and auto-selects per machine.** *Why:* the previous `--use-gpu=1` only printed "Using GPU acceleration" — it never passed `method=:CUDA` to `reg()`, so the regression always ran on CPU; and CUDA.jl was installed into `env/Project.toml` `[extras]`, which `using` cannot load.
   - `--use-gpu` now defaults to `auto`: it uses the GPU when CUDA.jl is functional and falls back to CPU otherwise (modes `1`/`0` force prefer/disable). CUDA is imported before FixedEffectModels so the FixedEffects CUDA extension registers, and `double_precision=true` is kept so GPU results match the Float64 CPU path (reproducible regardless of machine).
   - `JULIA_ENABLE_CUDA=1 make environment` now installs CUDA.jl into a gitignored, machine-local env (`.julia/gpu-env`) that `run_did.py` layers onto `JULIA_LOAD_PATH` only when present. Result: a GPU box installs and uses CUDA automatically while a Mac stays CPU-only, with no manual edits and no committed-file churn. Removed the now-unused CUDA `[extras]`/`[targets]` from `env/Project.toml` and dead post-processing from `env/scripts/install_julia.py`.
