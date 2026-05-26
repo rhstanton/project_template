@@ -252,9 +252,11 @@ Adding a new analysis is simple - just add configuration to `config.py`:
 
 3. **Build and publish**:
    ```bash
-   make my_artifact
-   make publish PUBLISH_ANALYSES="my_artifact"
+   make my_new_study
+   make publish PUBLISH_ANALYSES="my_new_study"
    ```
+
+(The inverse — removing an analysis everywhere it's wired in — is `make remove-analysis NAME=<name>`.)
 
 ---
 
