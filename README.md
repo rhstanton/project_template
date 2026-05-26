@@ -43,21 +43,28 @@ This template is designed for:
 
 ## 🚀 Get started
 
-This is a **GitHub template**. Click **"Use this template"** at the top of the page to create your **own repo** (its own history), then clone it **with submodules** and build:
+This is a **GitHub template**. Click **"Use this template"** at the top of the page to create your **own repo** (its own history), then **set up** the project:
 
 ```bash
 git clone --recursive https://github.com/<you>/my-project.git   # your repo + the repro-tools submodule
 cd my-project
 python bootstrap.py --interactive   # (optional) drop Julia/Stata, rename
-make environment                    # install Python/Julia/(Stata)   (~10–15 min)
-make verify                         # smoke test (~1 min)
-make all                            # build every figure + table + provenance → output/
-make publish                        # copy output/ → paper/ with provenance + git safety checks
 ```
 
-**Prefer an isolated container?** Clone your repo as above, then — instead of the `make` steps — build and run with Docker (no local Make, uv, or Julia needed; just git + Docker):
+Then **build the artifacts** — pick one path (both run from inside `my-project`, so the clone + `cd` above are needed either way):
+
+**Locally** (uv; fastest, best for day-to-day work):
 ```bash
-docker build -t my-project . && docker run --rm -v "$PWD/output:/project/output" my-project
+make environment   # install Python/Julia/(Stata)   (~10–15 min)
+make verify        # smoke test (~1 min)
+make all           # build every figure + table + provenance → output/
+make publish       # copy output/ → paper/ with provenance + git safety checks
+```
+
+**In Docker** (isolated; needs only git + Docker — no local Make/uv/Julia). This replaces the `make` steps above:
+```bash
+docker build -t my-project .
+docker run --rm -v "$PWD/output:/project/output" my-project   # runs `make all` in the container → ./output
 ```
 
 - **Full 5-minute walkthrough:** [QUICKSTART.md](QUICKSTART.md) · **local vs. Docker:** [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)
