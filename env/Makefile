@@ -5,7 +5,9 @@ SHELL := /bin/bash
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-# Optional Julia GPU support: set JULIA_ENABLE_CUDA=1 to install CUDA.jl
+# Optional Julia GPU support. Set JULIA_ENABLE_CUDA=1 to install CUDA.jl into a
+# gitignored, machine-local env (.julia/gpu-env); default 0 = CPU only. run_did.py
+# auto-detects that env and uses the GPU at runtime when it is present.
 JULIA_ENABLE_CUDA ?= 0
 export JULIA_ENABLE_CUDA
 

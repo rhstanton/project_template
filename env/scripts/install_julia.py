@@ -74,8 +74,12 @@ print()
 want_cuda = os.environ.get("JULIA_ENABLE_CUDA") == "1"
 if want_cuda:
     print("GPU support requested (JULIA_ENABLE_CUDA=1)")
-    print("Note: CUDA.jl is optional and loaded at runtime when available.")
-    print("It will be installed on-demand if you have a CUDA-capable GPU.")
+    print(
+        "CUDA.jl will be installed into a gitignored, machine-local env (.julia/gpu-env)."
+    )
+    print(
+        "run_did.py auto-detects and uses it at runtime; no other machine is affected."
+    )
 else:
     print("GPU support not requested (JULIA_ENABLE_CUDA unset/0)")
     print("Julia will use CPU-only backends.")
@@ -146,6 +150,13 @@ try:
     # juliacall may have set this to the depot project
     julia_env.pop("JULIA_PROJECT", None)
     julia_env.pop("JULIAPKG_PROJECT", None)
+    # CRITICAL: Also drop JULIA_LOAD_PATH. runpython exports it as
+    # "env:.julia:@stdlib" (an explicit list with no `@` token), which would
+    # shadow Pkg.activate(): the activated GPU env (.julia/gpu-env) would not be
+    # on the load path, so precompiling CUDA there fails with
+    # "Missing source file for CUDA". Clearing it lets Julia use its default load
+    # path, where `@` resolves to whatever Pkg.activate() selected.
+    julia_env.pop("JULIA_LOAD_PATH", None)
 
     julia_env["JULIA_CONDAPKG_BACKEND"] = "Null"
     julia_env["JULIA_PYTHONCALL_EXE"] = sys.executable
@@ -170,14 +181,37 @@ try:
         """
     ]
 
-    # Install CUDA.jl if requested into local environment
-    # This will add it to [deps], but we'll move it to [extras] afterwards
+    # Install CUDA.jl into a SEPARATE, gitignored environment under the depot
+    # (.julia/gpu-env) instead of env/Project.toml. This keeps the committed Julia
+    # project portable — no CUDA dependency, so instantiating on a non-GPU machine
+    # (e.g. a Mac) never pulls it in — and leaves the working tree clean. At runtime
+    # run_did.py layers this env onto JULIA_LOAD_PATH when it exists, so `using CUDA`
+    # resolves on a GPU machine and is simply absent everywhere else.
+    gpu_env_dir = os.path.join(julia_depot, "gpu-env")
     if want_cuda:
-        julia_code_parts.append("""
+        julia_code_parts.append(f"""
         println()
-        println("Installing CUDA.jl for GPU support...")
+        println("Installing CUDA.jl into GPU environment: {gpu_env_dir}")
+        Pkg.activate("{gpu_env_dir}")
         Pkg.add("CUDA")
-        println("  ✓ CUDA.jl installed to local environment")
+        # Precompiling CUDA immediately after a fresh download can transiently
+        # fail ("Missing source file ...") while package artifacts are still
+        # settling on disk. Retry a few times — it succeeds once writes finish.
+        let precompiled = false
+            for attempt in 1:3
+                try
+                    Pkg.precompile()
+                    precompiled = true
+                    break
+                catch err
+                    @warn "CUDA precompile attempt $attempt/3 failed; retrying in 5s" exception=err
+                    sleep(5)
+                end
+            end
+            precompiled || error("CUDA.jl failed to precompile after 3 attempts")
+        end
+        Pkg.activate("{env_dir}")  # switch back to the main env project
+        println("  ✓ CUDA.jl installed (this machine only; gitignored)")
         """)
 
     julia_code_parts.append("""
@@ -261,41 +295,5 @@ except Exception as e:
     print()
     sys.exit(1)
 
-# Post-process Project.toml to ensure CUDA stays in [extras], not [deps]
-# This makes the file portable - CUDA is available locally but not required
-if want_cuda:
-    import re
-
-    project_toml_path = os.path.join(env_dir, "Project.toml")
-    if os.path.exists(project_toml_path):
-        with open(project_toml_path, "r") as f:
-            content = f.read()
-
-        # Check if CUDA is in [deps]
-        if re.search(r"^\[deps\].*?^CUDA = ", content, re.MULTILINE | re.DOTALL):
-            print()
-            print("Post-processing Project.toml to keep it portable...")
-
-            # Remove CUDA line from [deps] section
-            content = re.sub(r'^CUDA = "[^"]+"\n', "", content, flags=re.MULTILINE)
-
-            # Ensure it's in [extras] (it should already be there from git)
-            if "[extras]" not in content:
-                content += '\n[extras]\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"\n'
-            elif not re.search(
-                r"^\[extras\].*?^CUDA = ", content, re.MULTILINE | re.DOTALL
-            ):
-                content = re.sub(
-                    r"(\[extras\])",
-                    r'\1\nCUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"',
-                    content,
-                )
-
-            with open(project_toml_path, "w") as f:
-                f.write(content)
-
-            print("  ✓ Moved CUDA from [deps] to [extras]")
-            print(
-                "  Project.toml stays portable (CUDA available locally but not required)"
-            )
-            print()
+# Note: CUDA.jl is installed into the separate gitignored env (.julia/gpu-env)
+# above, so env/Project.toml is never modified and needs no portability fix-up.

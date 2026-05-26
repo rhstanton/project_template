@@ -24,7 +24,9 @@ Options:
   --cluster=<var>       Clustering variable [default: property_id]
 
   --use-julia=<0|1>     Use Julia backend [default: 1]
-  --use-gpu=<0|1>       Enable GPU (Julia only) [default: 0]
+  --use-gpu=<mode>      GPU backend (Julia only): auto|0|1. auto = use the GPU
+                        when CUDA.jl is functional, else CPU; 1 = prefer GPU and
+                        warn if unavailable; 0 = force CPU. [default: auto]
 
   --figure=<path>       Output figure path [default: output/figures/did_example.pdf]
   --table=<path>        Output table path [default: output/tables/did_example.tex]
@@ -49,10 +51,63 @@ _script_dir = Path(__file__).resolve().parent
 if "PYTHON_JULIAPKG_PROJECT" not in os.environ:
     os.environ["PYTHON_JULIAPKG_PROJECT"] = str(_script_dir / ".julia")
 
+# If a GPU environment exists (created by `JULIA_ENABLE_CUDA=1 make environment`
+# on a CUDA machine), layer it onto the Julia load path so `using CUDA` resolves.
+# It lives under the gitignored depot, so on a machine without it (e.g. a Mac)
+# this is a no-op and the analysis stays CPU-only — no manual switching needed.
+_gpu_env = _script_dir / ".julia" / "gpu-env"
+if (_gpu_env / "Project.toml").is_file():
+    _load_path = os.environ.get("JULIA_LOAD_PATH")
+    _entries = _load_path.split(os.pathsep) if _load_path else ["@", "@v#.#", "@stdlib"]
+    if str(_gpu_env) not in _entries:
+        _entries.append(str(_gpu_env))
+    os.environ["JULIA_LOAD_PATH"] = os.pathsep.join(_entries)
+
 # ruff: noqa: E402 - Imports must come after environment variable setup
 import matplotlib.pyplot as plt
 import pandas as pd
 from repro_tools import auto_build_record, friendly_docopt, setup_environment
+
+
+def _resolve_gpu_backend(jl, mode: str) -> bool:
+    """Decide whether the regression should run on the GPU (``method=:CUDA``).
+
+    ``mode`` is one of:
+      - "auto" — use the GPU when CUDA.jl is functional, otherwise CPU (quiet);
+      - "1"    — prefer the GPU and warn loudly if it is unavailable;
+      - "0"    — force CPU and never import CUDA.
+
+    On success CUDA.jl is imported here, i.e. *before* FixedEffectModels, so the
+    FixedEffects CUDA package extension registers correctly.
+    """
+    if mode == "0":
+        print("GPU disabled (--use-gpu=0); running on CPU.")
+        return False
+
+    try:
+        jl.seval("using CUDA")
+    except Exception as exc:
+        note = "CUDA.jl is not installed in this environment"
+        if mode == "1":
+            print(f"⚠️  GPU requested (--use-gpu=1) but {note}: {exc}")
+            print("    Install it with: JULIA_ENABLE_CUDA=1 make environment")
+        else:
+            print(f"{note}; running on CPU.")
+            print("    (Enable the GPU with: JULIA_ENABLE_CUDA=1 make environment)")
+        return False
+
+    if not bool(jl.seval("CUDA.functional()")):
+        note = "CUDA.jl is installed but no functional GPU was found"
+        prefix = "⚠️  GPU requested (--use-gpu=1) but " if mode == "1" else ""
+        print(f"{prefix}{note}; running on CPU.")
+        return False
+
+    try:
+        device = str(jl.seval("string(CUDA.name(CUDA.device()))"))
+    except Exception:
+        device = "GPU"
+    print(f"✓ GPU acceleration enabled (method=:CUDA, Float64) on {device}")
+    return True
 
 
 def run_julia_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
@@ -64,6 +119,10 @@ def run_julia_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         print("Falling back to pyfixest backend")
         return run_pyfixest_did(df, config)
 
+    # Resolve the GPU backend first so CUDA.jl is imported before
+    # FixedEffectModels (required for the FixedEffects CUDA extension to load).
+    use_gpu = _resolve_gpu_backend(jl, config["use_gpu"])
+
     # Load Julia packages
     try:
         jl.seval("using FixedEffectModels, DataFrames")
@@ -71,20 +130,6 @@ def run_julia_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
         # Get version
         fem_version = str(jl.seval("string(pkgversion(FixedEffectModels))"))
         print(f"Using Julia FixedEffectModels v{fem_version}")
-
-        # GPU check
-        if config["use_gpu"] == 1:
-            try:
-                jl.seval("using CUDA")
-                if jl.seval("CUDA.functional()"):
-                    print("Using GPU acceleration")
-                else:
-                    print("GPU requested but unavailable; using CPU")
-            except Exception:
-                print("GPU requested but CUDA unavailable; using CPU")
-        else:
-            print("Using CPU (set --use-gpu=1 to enable GPU acceleration)")
-
     except Exception as e:
         print(f"❌ Julia setup error: {e}")
         print("Falling back to pyfixest backend")
@@ -124,12 +169,18 @@ def run_julia_did(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 
     print(f"Regression formula = {formula_str}")
 
-    # Run regression
-    # reg() signature: reg(df, formula, vcov)
+    # Run regression. On the GPU, pass method=:CUDA and keep double_precision=true
+    # so the demeaning stays Float64 and results match the CPU path (otherwise
+    # FixedEffectModels defaults to Float32 on CUDA). Signature: reg(df, formula, vcov).
+    reg_kwargs: dict = {}
+    if use_gpu:
+        reg_kwargs["method"] = jl.Symbol("CUDA")
+        reg_kwargs["double_precision"] = True
     result = jl.reg(
         jl_df,
         jl.seval(f"@formula({formula_str})"),
         jl.seval(f"Vcov.cluster(:{cluster})"),
+        **reg_kwargs,
     )
 
     # Extract coefficients
@@ -273,11 +324,14 @@ def main() -> None:
         "fe_spec": args["--fe-spec"],
         "cluster": args["--cluster"],
         "use_julia": int(args["--use-julia"]),
-        "use_gpu": int(args["--use-gpu"]),
+        "use_gpu": str(args["--use-gpu"]).strip().lower(),
         "figure": Path(args["--figure"]),
         "table": Path(args["--table"]),
         "out_meta": Path(args["--out-meta"]),
     }
+
+    if config["use_gpu"] not in {"auto", "0", "1"}:
+        sys.exit(f"--use-gpu must be one of auto|0|1 (got {args['--use-gpu']!r})")
 
     print("\n" + "=" * 70)
     print("DIFFERENCE-IN-DIFFERENCES ANALYSIS")

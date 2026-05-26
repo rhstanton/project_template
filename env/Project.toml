@@ -15,8 +15,7 @@ OpenSSL_jll = "3.0.0 - 3.6"
 StatsModels = "0.7"
 julia = "1.9, 1.10, 1.11, 1.12"
 
-[extras]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-
-[targets]
-gpu = ["CUDA"]
+# GPU support (CUDA.jl) is intentionally NOT a dependency here. It is installed
+# on demand by `JULIA_ENABLE_CUDA=1 make environment` into a separate, gitignored
+# env (.julia/gpu-env) so this project stays portable (a non-GPU machine such as a
+# Mac never installs it) and run_did.py uses it automatically when present.

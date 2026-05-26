@@ -90,54 +90,55 @@ The template defaults to CPU-only operation for maximum compatibility:
 
 ```bash
 make environment
-# → Installs CPU-only packages
-# → Julia configured for CPU
-# → No CUDA dependencies
+# → No CUDA dependencies installed
+# → Julia and Python run on CPU
 ```
 
-**Default setting**: `DEFAULT_USE_GPU=0`
+This is the right setup on any machine without an NVIDIA GPU, including Apple
+Silicon Macs.
 
-### Enabling GPU Support
+### Enabling GPU Support (Julia / CUDA)
 
-To enable CUDA GPU support:
-
-**1. Set environment variables BEFORE `make environment`:**
+GPU acceleration is available for the Julia regression backend
+(`FixedEffectModels.jl` via CUDA.jl), used by `run_did.py`. Install it with a
+single environment variable:
 
 ```bash
-export GPU_CUDA_MAJOR=12      # CUDA version (12 or 13)
-export JULIA_ENABLE_CUDA=1    # Enable Julia CUDA (auto-set if GPU_CUDA_MAJOR is provided)
-
-make environment
+JULIA_ENABLE_CUDA=1 make environment
 ```
 
-**Note:** Setting `GPU_CUDA_MAJOR` automatically enables `JULIA_ENABLE_CUDA`, so you typically only need to set one variable.
+**What this does:**
 
-**2. What this does:**
+- Installs CUDA.jl into a separate, **gitignored, machine-local** Julia
+  environment at `.julia/gpu-env/`. The committed `env/Project.toml` is *not*
+  modified, so the project stays portable (a non-GPU machine such as a Mac never
+  installs CUDA) and the working tree stays clean for `make publish`.
+- `run_did.py` automatically layers `.julia/gpu-env` onto `JULIA_LOAD_PATH` when
+  that directory exists, so `using CUDA` resolves only where it was installed.
 
-- Installs CUDA.jl for Julia
-- Installs CUDA-aware Python packages (JAX, CuPy) on Linux x86_64
-- Sets GPU as default computation device
-- Configures Julia precompilation for GPU
+There is no Python GPU stack (PyTorch/JAX/CuPy) in the template — GPU support is
+Julia-only. CUDA.jl ships its own CUDA runtime via artifacts, so a system CUDA
+toolkit / `LD_LIBRARY_PATH` is not required (only a working NVIDIA driver).
 
-**3. CUDA version selection:**
+### Selecting the device at runtime
 
-```bash
-# For CUDA 12.x:
-export GPU_CUDA_MAJOR=12
+`run_did.py` chooses the device with `--use-gpu`:
 
-# For CUDA 13.x:
-export GPU_CUDA_MAJOR=13
-```
+| Value | Behaviour |
+|-------|-----------|
+| `auto` (default) | Use the GPU when CUDA.jl is functional, else fall back to CPU |
+| `1` | Prefer the GPU; warn if unavailable, then use CPU |
+| `0` | Force CPU; never import CUDA |
 
-This affects Python package selection (e.g., JAX and CuPy with cuda12 vs cuda13 wheels).
+Because the default is `auto`, the same command runs on the GPU on a CUDA machine
+and on the CPU everywhere else — no flags or manual edits needed. The GPU path
+keeps `double_precision=true` (Float64), so results match the CPU path.
 
 ### Environment Variables Reference
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `JULIA_ENABLE_CUDA` | `$(if $(GPU_CUDA_MAJOR),1,0)` | Install CUDA.jl (auto-enabled if GPU_CUDA_MAJOR set) |
-| `GPU_CUDA_MAJOR` | (unset) | CUDA major version for Python wheels (12 or 13) |
-| `DEFAULT_USE_GPU` | `0` | Default computation device (0=CPU, 1=GPU) |
+| `JULIA_ENABLE_CUDA` | `0` | Install CUDA.jl into `.julia/gpu-env` during `make environment` |
 | `JULIA_CONDAPKG_BACKEND` | `Null` | Disable CondaPkg duplicate Python |
 | `JULIA_PYTHONCALL_EXE` | `.venv/bin/python` | Python executable for PythonCall |
 | `JULIA_PROJECT` | `env/` | Julia environment location |
@@ -145,45 +146,24 @@ This affects Python package selection (e.g., JAX and CuPy with cuda12 vs cuda13 
 
 ### GPU Verification
 
-After installation with GPU support:
+After `JULIA_ENABLE_CUDA=1 make environment`:
 
 ```bash
-# Test Julia CUDA
-env/scripts/runjulia -e 'using CUDA; @show CUDA.functional()'
-# Should print: CUDA.functional() = true
-
-# Test Python GPU access (if using PyTorch)
-env/scripts/runpython -c 'import torch; print(torch.cuda.is_available())'
-# Should print: True
+env/scripts/runpython run_did.py --use-gpu=1
+# Expect: ✓ GPU acceleration enabled (method=:CUDA, Float64) on <your GPU>
 ```
+
+Check the driver directly with `nvidia-smi` (CUDA.jl needs a working NVIDIA
+driver; a system `nvcc` is optional).
 
 ### GPU Troubleshooting
 
-**CUDA not found:**
+**CUDA reports not functional, or precompilation fails:** confirm the driver
+works (`nvidia-smi`), then rebuild the GPU environment from scratch:
+
 ```bash
-# Check NVIDIA driver
-nvidia-smi
-
-# Check CUDA installation
-nvcc --version
-ls /usr/local/cuda/
-```
-
-**Julia CUDA precompilation fails:**
-```bash
-# Clear cache and retry
-rm -rf .julia/compiled
-make -C env julia-install-via-python
-```
-
-**Python can't find CUDA:**
-```bash
-# Check LD_LIBRARY_PATH
-echo $LD_LIBRARY_PATH
-# Should include /usr/local/cuda/lib64
-
-# Add if missing:
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+rm -rf .julia/gpu-env .julia/compiled
+JULIA_ENABLE_CUDA=1 make environment
 ```
 
 ## Cross-Platform File Sharing

@@ -196,9 +196,10 @@ Published artifacts to `paper/` directory:
 - Disk: 10GB free
 - OS: Ubuntu 22.04 LTS or macOS 13+
 
-**For GPU support** (optional):
-- NVIDIA GPU with CUDA 12.x or 13.x
-- Set `JULIA_ENABLE_CUDA=1` and `GPU_CUDA_MAJOR=12` before `make environment`
+**For GPU support** (optional, Julia/CUDA only):
+- NVIDIA GPU with a working driver (CUDA.jl bundles its own runtime)
+- Run `JULIA_ENABLE_CUDA=1 make environment` (installs CUDA.jl into the gitignored
+  `.julia/gpu-env`); `run_did.py` then uses the GPU automatically via `--use-gpu=auto`
 
 ---
 

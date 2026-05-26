@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **GPU (CUDA) acceleration in `run_did.py` now actually works, and auto-selects per machine.** *Why:* the previous `--use-gpu=1` only printed "Using GPU acceleration" — it never passed `method=:CUDA` to `reg()`, so the regression always ran on CPU; and CUDA.jl was installed into `env/Project.toml` `[extras]`, which `using` cannot load.
+  - `--use-gpu` now defaults to `auto`: it uses the GPU when CUDA.jl is functional and falls back to CPU otherwise (modes `1`/`0` force prefer/disable). CUDA is imported before FixedEffectModels so the FixedEffects CUDA extension registers, and `double_precision=true` is kept so GPU results match the Float64 CPU path (reproducible regardless of machine).
+  - `JULIA_ENABLE_CUDA=1 make environment` now installs CUDA.jl into a gitignored, machine-local env (`.julia/gpu-env`) that `run_did.py` layers onto `JULIA_LOAD_PATH` only when present. Result: a GPU box installs and uses CUDA automatically while a Mac stays CPU-only, with no manual edits and no committed-file churn. Removed the now-unused CUDA `[extras]`/`[targets]` from `env/Project.toml` and dead post-processing from `env/scripts/install_julia.py`.
 - **Migrated the Python environment manager from conda/micromamba to [uv](https://docs.astral.sh/uv/).** *Why:* much faster installs and a real cross-platform lockfile for reproducibility; nothing in the stack required conda's cross-language packages (Julia is handled by juliacall, Stata is external).
   - `pyproject.toml` + committed `uv.lock` replace `env/python.yml`; `make environment` now runs `uv sync` into `.venv/` (was conda `.env/`).
   - Added `env/scripts/install_uv.sh` (replaces `install_micromamba.sh`); updated `env/Makefile`, the `run*` wrappers, `flake.nix`, CI (`astral-sh/setup-uv`), `bootstrap.py`, and tests to `.venv`/`pyproject.toml`.
