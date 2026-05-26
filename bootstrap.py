@@ -3,10 +3,17 @@
 Bootstrap script for customizing project_template after cloning.
 
 This script helps you customize the template by removing unwanted languages
-and optionally renaming the project.
+and optionally renaming the project. Python is always kept — it's the substrate
+the whole harness runs on — so "one language" means Python-only.
+
+Removing a language also removes the example analyses that depend on it (e.g.
+julia_demo and did_example need Julia), so `make all` still builds cleanly
+afterwards. This is the only safe way to drop a language; deleting files by hand
+leaves the build referencing a backend that's gone.
 
 Usage:
     python bootstrap.py --remove-julia --remove-stata
+    python bootstrap.py --python-only
     python bootstrap.py --rename "My Research Project"
     python bootstrap.py --interactive
     python bootstrap.py --help
@@ -18,8 +25,8 @@ Examples:
     # Remove Stata support (keeps Python and Julia)
     python bootstrap.py --remove-stata
 
-    # Remove both (Python-only project)
-    python bootstrap.py --remove-julia --remove-stata
+    # Python-only project (same as --remove-julia --remove-stata)
+    python bootstrap.py --python-only
 
     # Rename project
     python bootstrap.py --rename "Housing Market Analysis"
@@ -37,6 +44,33 @@ import argparse
 import re
 import sys
 from pathlib import Path
+
+# Example analyses whose backend is a specific language. Dropping the language
+# must also drop these, or `make all` will try to build an analysis whose runtime
+# is gone (e.g. julia_demo's `import juliacall`). Stata ships only a sample .do
+# file — no analysis — so its list is empty.
+JULIA_ANALYSES: tuple[str, ...] = ("julia_demo", "did_example")
+STATA_ANALYSES: tuple[str, ...] = ()
+
+
+def remove_language_analyses(repo_root: Path, names: tuple[str, ...]) -> None:
+    """Remove example analyses that depend on a now-removed language.
+
+    Delegates to scripts/remove_analysis.py, which drops each analysis from the
+    Makefile (ANALYSES line + pattern block), its shared/config.py STUDIES entry,
+    its example script, and its built artifacts — leaving a project that still
+    builds with `make all`. Analyses already absent are skipped (idempotent).
+    """
+    if not names:
+        return
+
+    sys.path.insert(0, str(repo_root / "scripts"))
+    from remove_analysis import parse_analyses, remove_analysis
+
+    present = set(parse_analyses((repo_root / "Makefile").read_text()))
+    for name in names:
+        if name in present:
+            remove_analysis(name, root=repo_root, apply=True)
 
 
 def remove_julia_files(repo_root: Path) -> None:
@@ -293,9 +327,11 @@ def interactive_mode(repo_root: Path) -> None:
     if remove_julia:
         remove_julia_files(repo_root)
         update_pyproject(repo_root, remove_julia=True)
+        remove_language_analyses(repo_root, JULIA_ANALYSES)
 
     if remove_stata:
         remove_stata_files(repo_root)
+        remove_language_analyses(repo_root, STATA_ANALYSES)
 
     update_env_makefile(repo_root, remove_julia, remove_stata)
     update_main_makefile(repo_root, remove_julia, remove_stata)
@@ -335,6 +371,11 @@ def main():
         help="Remove Stata support (files, dependencies, targets)",
     )
     parser.add_argument(
+        "--python-only",
+        action="store_true",
+        help="Shorthand for --remove-julia --remove-stata (Python-only project)",
+    )
+    parser.add_argument(
         "--rename",
         metavar="NAME",
         help="Rename project (updates README, QUICKSTART, config.py)",
@@ -346,6 +387,11 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # --python-only is just a shorthand for removing both optional languages.
+    if args.python_only:
+        args.remove_julia = True
+        args.remove_stata = True
 
     # Find repository root
     repo_root = Path(__file__).parent.resolve()
@@ -371,9 +417,11 @@ def main():
     if args.remove_julia:
         remove_julia_files(repo_root)
         update_pyproject(repo_root, remove_julia=True)
+        remove_language_analyses(repo_root, JULIA_ANALYSES)
 
     if args.remove_stata:
         remove_stata_files(repo_root)
+        remove_language_analyses(repo_root, STATA_ANALYSES)
 
     if args.remove_julia or args.remove_stata:
         update_env_makefile(repo_root, args.remove_julia, args.remove_stata)

@@ -6,9 +6,9 @@
 [![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 
-**A minimal template for reproducible research with provenance tracking and automated builds**
+**A minimal template for reproducible research in Python, Julia, and Stata — use all three or just one — with provenance tracking and automated builds**
 
-This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
+This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results. It ships with Python, Julia, and Stata wired together; **one `bootstrap.py` command prunes it to whatever subset you need** (Python is the one constant).
 
 ```mermaid
 flowchart LR
@@ -18,6 +18,15 @@ flowchart LR
 ```
 
 *Every build stamps the git commit and the SHA256 of each input and output; `make publish` is the only sanctioned path from `output/` to `paper/`.*
+
+> **🧩 One, two, or three languages — your choice.** Start with Python + Julia + Stata, then run a single command to drop what you don't need and get a project that still builds cleanly:
+> ```bash
+> python bootstrap.py --python-only      # just Python
+> python bootstrap.py --remove-stata     # Python + Julia
+> python bootstrap.py --remove-julia     # Python + Stata
+> python bootstrap.py --interactive      # choose interactively
+> ```
+> Python is always kept (the harness runs on it). Dropping a language also removes the example analyses that need it, so nothing breaks. See [Get started](#-get-started).
 
 ---
 
@@ -29,7 +38,7 @@ This template is designed for:
 - **Researchers** who need reproducible, traceable research workflows
 - **Anyone** who wants to:
   - Track exactly what code produced each figure and table
-  - Use multiple languages (Python, Julia, Stata) in one project
+  - Use one, two, or three languages (Python, Julia, Stata) — pick your stack with one `bootstrap.py` command
   - Separate exploratory analysis from publication-ready outputs
   - Ensure their work can be replicated by reviewers and future researchers
   - Meet journal requirements for replication packages
@@ -58,7 +67,7 @@ This is a **GitHub template**. Click **"Use this template"** at the top of the p
 ```bash
 git clone --recursive https://github.com/<you>/my-project.git   # your repo + the repro-tools submodule
 cd my-project
-python bootstrap.py --interactive   # (optional) drop Julia/Stata, rename
+python bootstrap.py --interactive   # choose languages (Python ± Julia ± Stata), rename — see note below
 ```
 
 Then **build the artifacts** — pick one path (both run from inside `my-project`, so the clone + `cd` above are needed either way):
@@ -78,6 +87,7 @@ docker run --rm -v "$PWD/output:/project/output" my-project   # runs `make all` 
 ```
 
 - **Full 5-minute walkthrough:** [QUICKSTART.md](QUICKSTART.md) · **local vs. Docker:** [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)
+- **One, two, or three languages?** Python is always included (the harness runs on it); Julia and Stata are optional. Run `bootstrap.py` once, *before* `make environment`, to prune the template to your stack: `--python-only`, or `--remove-julia` / `--remove-stata`, or `--interactive` to choose. It also drops the example analyses that need the removed language (e.g. `julia_demo`, `did_example`), so `make all` still builds cleanly.
 - The bundled **example analyses are runnable demos** — keep them to learn the workflow, then remove any with `make remove-analysis NAME=<name>`.
 - **Starting your own repo without the button** (clone + reset history): [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)
 - **Cloned without `--recursive`?** `lib/repro-tools/` is empty — run `git submodule update --init --recursive`. Update it later with `make update-submodules` (or `make update-environment` to also reinstall); see [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md). Never copy `lib/repro-tools/` by hand — let git manage the submodule.
@@ -127,7 +137,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Reproducible builds**: GNU Make orchestration with grouped targets
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
-- **Multi-language support**: Python, Julia, Stata
+- **Multi-language support**: Python, Julia, Stata — keep all three or drop any with `bootstrap.py` (Python is always kept)
 - **Jupyter Notebook support**: Parameterized notebooks via papermill with full provenance
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
 - **Code quality tools**: Integrated linting (ruff), formatting (ruff), and type checking (mypy)

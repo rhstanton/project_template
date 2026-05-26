@@ -62,13 +62,19 @@ make environment
 
 ### Then customize with `bootstrap.py`
 
-After cloning, run the bootstrap script **once** inside your new project to automate the common customizations — selecting languages and renaming:
+After cloning, run the bootstrap script **once** inside your new project (before `make environment`) to automate the common customizations — selecting languages and renaming:
 
 ```bash
 python bootstrap.py --interactive
 # or non-interactively, e.g.:
-python bootstrap.py --remove-stata --rename "My Project"
+python bootstrap.py --python-only                  # Python only
+python bootstrap.py --remove-stata --rename "My Project"   # Python + Julia
+python bootstrap.py --remove-julia                 # Python + Stata
 ```
+
+**Python is always kept** — the whole harness (`repro_tools`, `run_analysis.py`, the test suite, the Make plumbing) runs on it — so "one language" means Python-only. Julia and Stata are the two you can drop.
+
+Dropping a language removes its environment plumbing **and** the example analyses that depend on it (e.g. `--remove-julia` also removes `julia_demo` and `did_example`), so `make all` still builds cleanly afterwards — it delegates to `make remove-analysis` for each. This is the only safe way to drop a language; deleting files by hand leaves the build referencing a backend that's gone.
 
 The manual checklist below covers anything `bootstrap.py` doesn't.
 
@@ -629,10 +635,7 @@ A: Yes (conda, venv, poetry, etc.), but update `env/Makefile` accordingly.
 
 **Q: Do I need both Python and Julia?**
 
-A: No - remove Julia if not needed:
-1. Remove `juliacall` from `pyproject.toml`
-2. Delete `env/Project.toml`
-3. Remove Julia examples
+A: No — Python is required (the harness runs on it), but Julia is optional. Drop it with `python bootstrap.py --remove-julia`, which removes the `juliacall` dependency, `env/Project.toml`, the Julia wrappers/examples, **and** the Julia-backed example analyses (`julia_demo`, `did_example`) so `make all` still builds. (Likewise `--remove-stata`, or `--python-only` for both.) Don't remove these by hand — the pieces are spread across the Makefile, `shared/config.py`, and `pyproject.toml`, and a partial removal breaks the build.
 
 **Q: Can I add more output types (not just PDF/TEX)?**
 

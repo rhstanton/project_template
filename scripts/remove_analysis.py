@@ -138,20 +138,14 @@ def test_references(root: Path, name: str) -> list[Path]:
     return hits
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Cleanly remove an example/analysis from the project."
-    )
-    parser.add_argument("name", help="Analysis name (as listed in ANALYSES)")
-    parser.add_argument(
-        "--apply",
-        action="store_true",
-        help="Actually remove it (default is a dry run that only prints the plan)",
-    )
-    args = parser.parse_args()
+def remove_analysis(name: str, *, root: Path | None = None, apply: bool = False) -> int:
+    """Cleanly remove one analysis everywhere it's wired in.
 
-    root = repo_root()
-    name = args.name
+    Programmatic entry point shared by the CLI (`main`) and `bootstrap.py`.
+    Returns 0 on success (or dry run), 1 if `name` is not in ANALYSES.
+    """
+    if root is None:
+        root = repo_root()
     makefile_path = root / "Makefile"
     config_path = root / "shared" / "config.py"
 
@@ -184,8 +178,8 @@ def main() -> int:
     config = config_path.read_text()
     new_config, has_study = remove_study_entry(config, name)
 
-    mode = "APPLYING" if args.apply else "DRY RUN (use --apply to execute)"
-    tag = "" if args.apply else "[would] "
+    mode = "APPLYING" if apply else "DRY RUN (use --apply to execute)"
+    tag = "" if apply else "[would] "
     print(f"\n=== remove-analysis: {name} — {mode} ===\n")
 
     print(f"{tag}Makefile: drop '{name}' from ANALYSES and remove its pattern block")
@@ -219,7 +213,7 @@ def main() -> int:
             "⚠️  If you'd published this analysis, re-run `make publish` to refresh paper/."
         )
 
-    if not args.apply:
+    if not apply:
         print("\nDry run only — nothing changed. Re-run with --apply to remove.\n")
         return 0
 
@@ -238,6 +232,20 @@ def main() -> int:
     if tests:
         print("   Remember to clean up the test references listed above.\n")
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Cleanly remove an example/analysis from the project."
+    )
+    parser.add_argument("name", help="Analysis name (as listed in ANALYSES)")
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Actually remove it (default is a dry run that only prints the plan)",
+    )
+    args = parser.parse_args()
+    return remove_analysis(args.name, apply=args.apply)
 
 
 if __name__ == "__main__":
