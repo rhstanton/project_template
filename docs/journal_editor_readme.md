@@ -72,7 +72,7 @@ Installing Julia via juliacall...
 ✓ Environment ready!
 ==========================================================
 
-Python 3.11:    .venv/bin/python
+Python 3.12:    .venv/bin/python
 Julia:          .julia/pyjuliapkg/install/bin/julia
 
 Next: make all (to build all artifacts)
@@ -92,7 +92,7 @@ $ make verify
 ========================================
 
 1. Checking Python environment...
-   Python 3.11.x ✓
+   Python 3.12.x ✓
 
 2. Checking key packages...
    pandas ✓
@@ -210,7 +210,7 @@ $ ls output/tables/*.tex | wc -l
 ## System Requirements
 
 **Software:**
-- Python 3.11 (installed automatically via `make environment`)
+- Python 3.12 (installed automatically via `make environment`)
 - Julia 1.10+ (installed automatically via juliacall)
 - GNU Make 4.3+ (on macOS: `brew install make`, then use `gmake`)
 
@@ -367,7 +367,7 @@ make environment
 ```
 
 This installs:
-- Python 3.11 with uv
+- Python 3.12 with uv
 - Required packages: pandas, matplotlib, pyyaml, juliacall
 - Julia 1.10+ via juliacall
 - All in local `.venv/` and `.julia/` directories (no global changes)

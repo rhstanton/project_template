@@ -88,7 +88,7 @@ make environment
 ```toml
 [project]
 name = "my-project"  # Change project name
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     # Add your packages:
     "scikit-learn",

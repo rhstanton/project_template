@@ -15,7 +15,7 @@ ls -d .venv
 
 # Python check
 .venv/bin/python --version
-# Should be 3.11.x
+# Should be 3.12.x
 
 # Julia check (if installed)
 ls -la .julia/pyjuliapkg/install/bin/julia

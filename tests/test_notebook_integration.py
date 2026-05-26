@@ -59,7 +59,7 @@ def sample_notebook(notebook_dir, tmp_path):
             "language": "python",
             "name": "python3",
         },
-        "language_info": {"name": "python", "version": "3.11"},
+        "language_info": {"name": "python", "version": "3.12"},
     }
 
     # Add markdown cell

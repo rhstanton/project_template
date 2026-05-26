@@ -195,7 +195,7 @@ def update_readme(
         print(f"  ✓ Updated title to '{new_name}'")
 
     # Update language list
-    languages = ["Python 3.11"]
+    languages = ["Python 3.12"]
     if not remove_julia:
         languages.append("Julia 1.10-1.12")
     if not remove_stata:

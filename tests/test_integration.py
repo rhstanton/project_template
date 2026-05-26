@@ -29,7 +29,7 @@ class TestBuildWorkflow:
             text=True,
         )
         assert result.returncode == 0
-        assert "Python 3.11" in result.stdout or "Python 3.11" in result.stderr
+        assert "Python 3.12" in result.stdout or "Python 3.12" in result.stderr
 
     def test_data_files_exist(self):
         """Required data files should exist."""

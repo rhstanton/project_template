@@ -103,11 +103,11 @@ The Julia/Python bridge has a few non-obvious version constraints. They were har
 
 - **`juliacall` (Python) and `PythonCall` (Julia) are lockstep-versioned** — they must match exactly. `juliacall` is pinned in `pyproject.toml` (currently `==0.9.34`); the matching `PythonCall` is installed into the `.julia` depot by juliacall's `juliapkg`. **Never bump one side alone:** change the `juliacall` pin, then re-resolve the depot so both move together (see "Upgrading" below).
 
-- **The Julia version is derived from the Python interpreter's OpenSSL.** juliapkg's rule `OpenSSL_jll = "<=python"` pins the Julia-side OpenSSL to ≤ the OpenSSL that Python's `ssl` links against, and Julia ≥1.12 requires OpenSSL ≥3.5. uv's CPython links **OpenSSL 3.0 on macOS** (→ juliapkg installs **Julia 1.11**) but **OpenSSL 3.5 on Linux**, including the Docker image (→ **Julia 1.12**). So the Julia version differs by platform — each is deterministic, and results match to display precision. If a fresh `make environment` ever fails with `ERROR: Unsatisfiable requirements detected for package OpenSSL_jll`, this rule is why: let juliapkg install the Julia it wants for that Python; do **not** force a newer bundled Julia than the Python's OpenSSL allows.
+- **The Julia version is derived from the Python interpreter's OpenSSL — this is why the project requires Python 3.12.** juliapkg's rule `OpenSSL_jll = "<=python"` pins the Julia-side OpenSSL to ≤ the OpenSSL that Python's `ssl` links against, and Julia ≥1.12 requires OpenSSL ≥3.5. uv's CPython for **Python 3.12 links OpenSSL 3.5 on both macOS and Linux**, so juliapkg installs **Julia 1.12 everywhere** — local builds and the Docker image now run the identical Julia version. (Under the old Python 3.11, macOS CPython linked OpenSSL 3.0, capping macOS at **Julia 1.11** while Linux/Docker got 1.12 — a platform split that bumping to 3.12 removed.) If a fresh `make environment` ever fails with `ERROR: Unsatisfiable requirements detected for package OpenSSL_jll`, this rule is why: let juliapkg install the Julia it wants for that Python; do **not** force a newer bundled Julia than the Python's OpenSSL allows, and do not drop below Python 3.12.
 
 - **`pandas<3` is required** (pinned in `pyproject.toml`). PythonCall 0.9.x cannot convert a pandas-3.0 DataFrame to a Julia DataFrame — `jl.DataFrame(df)` raises `ArgumentError: ... doesn't satisfy the Tables.jl AbstractRow interface` — which breaks `run_did.py`. Lift this only together with a PythonCall version that supports pandas 3.
 
-- **`env/Project.toml` holds only packages that are used.** `Arrow`/`RDatasets` were removed (unused, and `Arrow` fails to precompile on Julia 1.11). Keep it lean: everything here is installed and precompiled on every environment build.
+- **`env/Project.toml` holds only packages that are used.** `Arrow`/`RDatasets` were removed (unused; `Arrow` also had precompile trouble on the Julia version in use at the time). Keep it lean: everything here is installed and precompiled on every environment build.
 
 ### Upgrading the Julia stack safely
 
@@ -197,7 +197,7 @@ Managed via `pyproject.toml` (exact versions pinned in `uv.lock`):
 
 ```toml
 [project]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "pandas",
     "matplotlib",

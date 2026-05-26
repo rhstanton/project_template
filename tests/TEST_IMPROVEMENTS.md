@@ -20,7 +20,7 @@ Covers:
 - ✅ Reproducibility verification (version pinning)
 
 Key tests:
-- Python 3.11 installation
+- Python 3.12 installation
 - Required packages (pandas, matplotlib, pyyaml, juliacall, repro_tools)
 - Julia 1.10+ via juliacall
 - Julia packages (PythonCall, DataFrames)

@@ -5,7 +5,7 @@
 name = "project-template"
 version = "1.0.0"
 description = "Reproducible research template (Python/Julia/Stata)"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     # Core scientific packages. Upper bounds (<next-major) keep `uv lock` from
     # silently jumping a major version (a surprise pandas 2->3 broke the Julia bridge).
@@ -85,7 +85,7 @@ filterwarnings = [
 # Ruff configuration (linting and formatting)
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 exclude = [
     ".git",
     ".env",
@@ -118,7 +118,7 @@ ignore = [
 
 # Mypy configuration (type checking)
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false

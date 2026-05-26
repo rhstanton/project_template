@@ -11,7 +11,7 @@ Add to `pyproject.toml`:
 ```toml
 [project]
 name = "your-project"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "pandas",
     "matplotlib",

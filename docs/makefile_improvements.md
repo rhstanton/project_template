@@ -148,7 +148,7 @@ Verifies all dependencies are available:
 ```bash
 $ make check-deps
 Checking dependencies...
-  Python: Python 3.11.14
+  Python: Python 3.12.14
   Julia:  julia version 1.12.4
   Data files: ✓ data/housing_panel.csv
 

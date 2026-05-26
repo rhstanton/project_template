@@ -17,7 +17,7 @@ cd <your-project>
 make environment
 # Installs:
 #   - Git submodules (repro-tools automatically)
-#   - Python 3.11 uv virtualenv (.venv/)
+#   - Python 3.12 uv virtualenv (.venv/)
 #   - Julia via juliacall (.julia/)
 #   - Stata packages if Stata installed (.stata/)
 
@@ -71,7 +71,7 @@ You should see:
 
 You should see:
 ```
-✅ Python environment: OK (3.11.x)
+✅ Python environment: OK (3.12.x)
 ✅ Python packages: pandas, matplotlib, juliacall, pyyaml, papermill, seaborn, pytest, ruff, mypy
 ✅ Julia: OK (1.10+)
 ✅ Julia packages: PythonCall, DataFrames
@@ -119,7 +119,7 @@ All expected outputs present!
 
 Installed complete multi-language environment:
 
-- **Python 3.11** via uv (~2GB in `.venv/`)
+- **Python 3.12** via uv (~2GB in `.venv/`)
 - **Julia 1.10-1.12** via juliacall (~500MB in `.julia/pyjuliapkg/`)
 - **Python packages**: pandas, matplotlib, juliacall, pyyaml, jinja2, pytest, ruff, mypy
 - **Julia packages**: PythonCall, DataFrames
@@ -166,7 +166,7 @@ Published artifacts to `paper/` directory:
 **Auto-installed by `make environment`:**
 
 - ✅ **uv** - Auto-installs uv if not found
-- ✅ **Python 3.11** - Installed via uv
+- ✅ **Python 3.12** - Installed via uv
 - ✅ **Julia** - Auto-downloaded by juliacall
 - ✅ **Python/Julia packages** - From `pyproject.toml` (pinned in `uv.lock`) and `env/Project.toml`
 

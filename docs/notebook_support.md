@@ -339,7 +339,7 @@ nb.metadata = {
         'name': 'python',
         'nbconvert_exporter': 'python',
         'pygments_lexer': 'ipython3',
-        'version': '3.11'
+        'version': '3.12'
     }
 }
 ```

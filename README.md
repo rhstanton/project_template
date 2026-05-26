@@ -1,7 +1,7 @@
 # Reproducible Research Template
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![Julia 1.10+](https://img.shields.io/badge/julia-1.10+-purple.svg)](https://julialang.org/)
 [![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
 [![Tests](https://img.shields.io/badge/tests-166%20passing-brightgreen.svg)](tests/)

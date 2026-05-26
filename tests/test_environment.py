@@ -34,7 +34,7 @@ class TestPythonEnvironment:
         assert python_exe.is_file()
 
     def test_python_version(self):
-        """Python should be version 3.11."""
+        """Python should be version 3.12."""
         python_exe = REPO_ROOT / ".venv" / "bin" / "python"
         if not python_exe.exists():
             pytest.skip("Python environment not installed")
@@ -46,7 +46,7 @@ class TestPythonEnvironment:
         )
         assert result.returncode == 0
         version_str = result.stdout + result.stderr
-        assert "Python 3.11" in version_str
+        assert "Python 3.12" in version_str
 
     def test_required_packages_installed(self):
         """Required Python packages should be installed."""
@@ -439,8 +439,8 @@ class TestEnvironmentReproducibility:
             config = tomllib.load(f)
 
         requires_python = config.get("project", {}).get("requires-python", "")
-        assert "3.11" in requires_python, (
-            "Python 3.11 not constrained in requires-python"
+        assert "3.12" in requires_python, (
+            "Python 3.12 not constrained in requires-python"
         )
 
     def test_project_toml_has_compat_section(self):

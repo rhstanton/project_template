@@ -11,7 +11,7 @@ This document covers platform-specific configuration, GPU support, and cross-pla
 **Requirements**:
 
 - GNU Make 4.3+ (for grouped targets)
-- Python 3.11 (via uv)
+- Python 3.12 (via uv)
 - Git 2.0+
 - GLIBC 2.17+ (for prebuilt Python wheels)
 
@@ -269,7 +269,7 @@ make -C env julia-install-via-python
 # pyproject.toml (cross-platform)
 [project]
 name = "project_template"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "pandas",
     "matplotlib",
@@ -467,8 +467,8 @@ docker run --rm -v "$PWD/output:/project/output" project-template-repro
 ```
 
 It builds the environment with uv (`pyproject.toml` + `uv.lock`) and juliacall, then
-reproduces all artifacts. On Debian (Python links OpenSSL 3.0) juliapkg installs Julia
-1.11 automatically. Stata is omitted (commercial license). For a reviewer-standard
+reproduces all artifacts. On Debian (Python links OpenSSL 3.5) juliapkg installs Julia
+1.12 automatically. Stata is omitted (commercial license). For a reviewer-standard
 `linux/amd64` image on Apple Silicon, add `--platform linux/amd64` to the build.
 
 ## Security Considerations

@@ -19,7 +19,8 @@
 # Notes:
 #  - Stata is omitted (commercial license); no shipped artifact needs it.
 #  - On Debian, uv's CPython links OpenSSL 3.5, so juliapkg installs Julia 1.12.
-#    (A macOS host's uv CPython links OpenSSL 3.0 -> Julia 1.11; both reproduce.)
+#    (Python 3.12's CPython links OpenSSL 3.5 on macOS too, so local hosts also get
+#    Julia 1.12 -- local and image now run the identical Julia version.)
 #  - linux/amd64 on Apple Silicon: add --platform linux/amd64 (emulated, slower).
 FROM debian:bookworm-slim@sha256:0104b334637a5f19aa9c983a91b54c89887c0984081f2068983107a6f6c21eeb
 

@@ -129,7 +129,7 @@ Tests for environment setup and configuration:
 
 - **TestPythonEnvironment**: Python installation
   - Environment directory existence
-  - Python version verification (3.11)
+  - Python version verification (3.12)
   - Required packages (pandas, matplotlib, pyyaml, juliacall)
   - repro_tools installation
   - pyproject.toml validation
@@ -210,7 +210,7 @@ Tests for publishing functionality and safety:
 ## Test Requirements
 
 Tests require:
-- Python 3.11+
+- Python 3.12+
 - pytest and pytest-cov (installed via `make environment`)
 - tomli (for parsing TOML files)
 - Working repository with git initialized
