@@ -34,21 +34,24 @@ This template is designed for:
 
 ## 🎯 Creating a New Project from This Template
 
-**Option 1: Clone with submodules (recommended):**
+A real project should live in **its own git repository**, not inherit this template's history. The quickest route is GitHub's **"Use this template"** button (it creates a fresh repo with its own history); then clone *your* repo **with submodules** and customize:
+
 ```bash
-git clone --recursive https://github.com/rhstanton/project_template.git my-project
+git clone --recursive https://github.com/<you>/my-project.git
 cd my-project
+python bootstrap.py --interactive   # choose languages, rename
 make environment
 ```
 
-**Option 2: Clone normally (submodules auto-initialize):**
-```bash
-git clone https://github.com/rhstanton/project_template.git my-project
-cd my-project
-make environment  # Automatically initializes git submodules
-```
+Starting from this repo directly and resetting history yourself? See the step‑by‑step in **[QUICKSTART.md](QUICKSTART.md)** ("Starting your own project") and **[TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)**.
 
-**⚠️ IMPORTANT:** When creating a new project, do **NOT** manually copy the `lib/repro-tools/` directory. Let git handle it as a submodule. The Makefile automatically initializes it when you run `make environment`.
+**Already cloned without `--recursive`?** `lib/repro-tools/` will be empty. Populate it with:
+```bash
+git submodule update --init --recursive
+```
+(`make environment` also attempts this automatically, and now stops with a clear message if the submodule is still missing.)
+
+**⚠️ IMPORTANT:** Never manually copy the `lib/repro-tools/` directory — let git manage it as a submodule.
 
 **Updating repro-tools:**
 - Quick update: `make update-submodules` (updates submodule only)
@@ -461,9 +464,9 @@ We welcome contributions! Whether you're fixing bugs, adding features, or improv
 - **Feature requests**: [Open an issue](https://github.com/rhstanton/project_template/issues/new?template=feature_request.md)
 - **Pull requests**: See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
-**Development setup:**
+**Development setup** (contributing to the template itself):
 ```bash
-git clone https://github.com/rhstanton/project_template.git
+git clone --recursive https://github.com/rhstanton/project_template.git
 cd project_template
 make environment
 make check  # Run tests, linting, formatting

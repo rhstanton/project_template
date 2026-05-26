@@ -60,6 +60,18 @@ make environment
 
 **IMPORTANT:** Never manually copy the `lib/repro-tools/` directory contents. Always let git handle submodules.
 
+### Then customize with `bootstrap.py`
+
+After cloning, run the bootstrap script **once** inside your new project to automate the common customizations — selecting languages and renaming:
+
+```bash
+python bootstrap.py --interactive
+# or non-interactively, e.g.:
+python bootstrap.py --remove-stata --rename "My Project"
+```
+
+The manual checklist below covers anything `bootstrap.py` doesn't.
+
 ---
 
 ## Customization Checklist

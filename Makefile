@@ -48,8 +48,32 @@ ifeq ($(shell test $(MAKE_MAJOR) -lt 4 -o \( $(MAKE_MAJOR) -eq 4 -a $(MAKE_MINOR
   )
 endif
 
-# Ensure git submodules are initialized (runs once per make invocation)
-$(shell git submodule update --init --recursive 2>/dev/null || true)
+# Ensure the repro-tools submodule is checked out. The `include` further down
+# (and most targets) depend on it, so this must succeed before parsing continues.
+# If it's missing, try to fetch it automatically; if that still fails (e.g. the
+# repo was cloned without --recursive and you're offline), stop with a clear
+# message instead of a cryptic include failure or `import repro_tools` error.
+REPRO_TOOLS_MK := lib/repro-tools/src/repro_tools/lib/common.mk
+ifeq ($(wildcard $(REPRO_TOOLS_MK)),)
+  $(info Initializing git submodule lib/repro-tools ...)
+  $(shell git submodule update --init --recursive >/dev/null 2>&1)
+endif
+ifeq ($(wildcard $(REPRO_TOOLS_MK)),)
+  $(error \
+    \
+    ======================================================================== \
+    ERROR: the repro-tools submodule is not checked out (lib/repro-tools/ is empty). \
+    ======================================================================== \
+    This project depends on the repro-tools submodule. Fetch it with: \
+    \
+      git submodule update --init --recursive \
+    \
+    Next time, clone with submodules in one step: \
+    \
+      git clone --recursive <url> \
+    ======================================================================== \
+  )
+endif
 
 # ==============================================================================
 # Environment Variables
@@ -312,6 +336,16 @@ $(foreach analysis,$(ANALYSES),$(eval $(call make-analysis-rule,$(analysis))))
 # Ensure output directories exist
 $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR) $(OUT_EXEC_NB_DIR):
 	@mkdir -p $@
+
+# Remove an example/analysis everywhere it's wired in (Makefile block + ANALYSES,
+# config.py STUDIES, example script, output/ artifacts). Dry-run by default;
+# pass APPLY=1 to execute. See scripts/remove_analysis.py for what it won't touch.
+#   make remove-analysis NAME=julia_demo            # preview
+#   make remove-analysis NAME=julia_demo APPLY=1    # do it
+.PHONY: remove-analysis
+remove-analysis:
+	@test -n "$(NAME)" || { echo "Usage: make remove-analysis NAME=<analysis> [APPLY=1]"; exit 1; }
+	@python3 scripts/remove_analysis.py "$(NAME)" $(if $(APPLY),--apply,)
 
 # ==============================================================================
 # Publishing

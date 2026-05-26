@@ -73,6 +73,125 @@ What happens:
 
 ---
 
+## Developing under Docker
+
+The section above *reproduces* artifacts (build once, run, collect `output/`). This section is for the other case: actually **iterating** inside the container — running tests, rebuilding artifacts, editing source. You'd want this for **sandboxing** (e.g. letting a coding agent run without host access), when you're **on Linux** (no VM penalty), or to **debug a Docker-only issue**.
+
+There are three loops, from simplest to most seamless. **Loop A is the recommended default.** All of them start from the image you built with `docker build -t project-template-repro .`.
+
+> **The one rule that makes Docker dev confusing if you miss it:** the Python env (`/project/.venv`) and Julia depot (`/project/.julia`) are **baked into the image as Linux binaries**. Never bind-mount your host repo over `/project` — your host's `.venv`/`.julia` (macOS, or absent) would shadow them and nothing would import. The loops below are exactly the ways to get live source edits *without* shadowing those two paths.
+
+### Loop A — edit → rebuild → run (recommended)
+
+No live mounts; you rebuild between change sets. The rebuild is fast because only the final source layer is rebuilt (the Python and Julia layers stay cached — see [layer ordering](#layer-ordering-for-fast-rebuilds-the-decision) below).
+
+```bash
+# 1. Build once.
+docker build -t project-template-repro .
+
+# 2. Edit run_analysis.py / shared/config.py / a notebook on your host, then:
+docker build -t project-template-repro .                                  # seconds: only the COPY . . layer rebuilds
+docker run --rm -v "$PWD/output:/project/output" project-template-repro   # re-runs `make all`, writes ./output
+
+# Repeat step 2 for each change set.
+```
+
+To run something other than the default `make all && make test-outputs`, append a command — it overrides the image's `CMD`:
+
+```bash
+docker run --rm -v "$PWD/output:/project/output" project-template-repro make verify
+docker run --rm -v "$PWD/output:/project/output" project-template-repro make test
+docker run --rm -v "$PWD/output:/project/output" project-template-repro make price_base
+```
+
+Or drop into an interactive shell and work there (the whole toolchain is present):
+
+```bash
+docker run --rm -it -v "$PWD/output:/project/output" project-template-repro bash
+# inside the container — note these see the source as of the last `docker build`:
+make verify                                              # smoke test
+make all                                                 # build all artifacts -> /project/output (= host ./output)
+make test                                                # full pytest suite
+env/scripts/runpython -m pytest tests/test_defaults.py -v
+exit                                                     # --rm deletes the container; the image is unchanged
+```
+
+### Loop B — live source mount (no rebuild between edits)
+
+For a tight inner loop: edit on the host, immediately re-run inside the container, **no rebuild**. The trick is to bind-mount **only the specific source files/dirs you edit** — never the whole repo (that would shadow `.venv`/`.julia`; see the rule above).
+
+```bash
+docker run --rm -it \
+  -v "$PWD/output:/project/output" \
+  -v "$PWD/run_analysis.py:/project/run_analysis.py" \
+  -v "$PWD/run_did.py:/project/run_did.py" \
+  -v "$PWD/shared:/project/shared" \
+  -v "$PWD/notebooks:/project/notebooks" \
+  -v "$PWD/tests:/project/tests" \
+  project-template-repro bash
+# now host edits to any of those paths are visible immediately inside the container:
+make all          # picks up your edits — no rebuild
+make test
+```
+
+Add a `-v "$PWD/<path>:/project/<path>"` line for any other top-level file or dir you actively edit (e.g. `Makefile`). **Do not** add a `-v` for `.venv`, `.julia`, `env/`, or the whole repo — those must stay the image's Linux builds.
+
+### Loop C — full live dev (whole repo mounted, env in named volumes)
+
+The most seamless option: the **entire repo is live** (no enumerating mounts), yet `.venv`/`.julia` are protected because two **named volumes** sit on top of exactly those paths and are seeded from the image. This is the model a VS Code Dev Container uses.
+
+```bash
+docker run --rm -it \
+  -v "$PWD:/project" \
+  -v project-template-venv:/project/.venv \
+  -v project-template-julia:/project/.julia \
+  project-template-repro bash
+# every file under /project is now live AND .venv/.julia are the image's Linux builds:
+make all
+make test
+```
+
+Why this works (and why it's safe):
+
+- `-v "$PWD:/project"` makes every file live — including `output/`, so results land on the host with no separate mount.
+- The two named volumes target **more specific paths** (`/project/.venv`, `/project/.julia`), so they win over the repo bind mount at exactly those subpaths. On first use Docker **seeds each empty named volume from the image's content** at that path — i.e. the baked Linux env — then persists it across runs.
+
+**Gotcha — named volumes are sticky.** Once seeded they persist. If you later rebuild the image with new Python/Julia deps, the volumes keep the *old* env. Re-seed by deleting them:
+
+```bash
+docker volume rm project-template-venv project-template-julia   # next run re-seeds from the new image
+```
+
+**Turning Loop C into a VS Code Dev Container.** Create `.devcontainer/devcontainer.json` (not shipped — this is the exact recipe):
+
+```json
+{
+  "name": "project-template",
+  "build": { "dockerfile": "../Dockerfile" },
+  "workspaceFolder": "/project",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/project,type=bind",
+  "mounts": [
+    "source=project-template-venv,target=/project/.venv,type=volume",
+    "source=project-template-julia,target=/project/.julia,type=volume"
+  ],
+  "overrideCommand": true
+}
+```
+
+Then in VS Code: **Dev Containers: Reopen in Container**. `overrideCommand: true` keeps the container idling on a shell instead of running the image's `make all` `CMD`, so you can work interactively. (The same named-volume re-seed gotcha applies: `docker volume rm …` after a dependency change.)
+
+### Which loop?
+
+| | Live edits without rebuild? | Mounts to manage | Best for |
+|---|---|---|---|
+| **A** edit → rebuild → run | No (rebuild ~seconds) | `output/` only | Most work; simplest, nothing to get wrong |
+| **B** selective source mount | Yes, for mounted paths | One `-v` per edited path | A tight loop on a known set of files |
+| **C** whole repo + named volumes | Yes, everything | repo + 2 named volumes | Full in-container dev / VS Code Dev Container |
+
+All three keep the slow env build cached or baked, so your feedback loop is the analysis run itself, not an environment rebuild.
+
+---
+
 ## How the two paths relate
 
 - **They share specs, not built binaries.** Both build from `pyproject.toml`/`uv.lock`/`env/Project.toml`. They do **not** share `.venv/` or `.julia/` — those contain OS/architecture‑specific binaries and are rebuilt independently in each environment (which is why they're git‑ignored). The container can't reuse your host's `.venv`, and vice‑versa.
@@ -136,9 +255,7 @@ The three layers and what invalidates each:
 
 **Trade-off:** a slightly longer Dockerfile vs. a flat one — worth it because we may iterate under Docker. For a strictly build-once replication image, a flat `COPY . . && make environment` would also have been fine.
 
-### Developing under Docker
-
-With the caching split, an **edit → `docker build` → `docker run`** loop is fast (only layer 3 rebuilds). For *live* edits without rebuilding, mount **only your source** (specific files/dirs) — do **not** mount the whole repo over `/project`, which would shadow the in-image `.venv`/`.julia` (Linux-built) with your host's. A `.devcontainer` that keeps the venv in a named volume (so it isn't shadowed) is the cleaner route for a full in-container dev setup; not shipped here, but straightforward to add.
+This caching split is what makes iterating under Docker practical: editing analysis source rebuilds only layer 3 (seconds), reusing the baked env. For the concrete edit/run loops that build on this — including live source mounts and a VS Code Dev Container recipe — see **[Developing under Docker](#developing-under-docker)** above.
 
 ## Caveats & notes
 

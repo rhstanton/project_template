@@ -9,9 +9,11 @@
 ## TL;DR - Copy-Paste Commands
 
 ```bash
-# 1. Clone or create project from template
-git clone --recursive <your-repo-url>
+# 1. Start YOUR project from the template (its own repo — see "Starting your own
+#    project" below). Then, from inside your project:
+git clone --recursive <your-repo-url>   # YOUR repo, cloned WITH --recursive
 cd <your-project>
+python bootstrap.py --interactive        # choose languages, rename
 
 # 2. Install environment (~5 minutes)
 make environment
@@ -45,6 +47,46 @@ make publish
 
 **Total time**: ~5-10 minutes
 **Total disk**: ~2.5GB (2GB environment + 500MB Julia)
+
+---
+
+## Starting your own project
+
+This repo is a **template**. Your project should be **its own git repository** — don't just keep working inside a clone of the template, or you'd be committing to the template's history and remote. Pick one:
+
+**A. GitHub "Use this template" (recommended).** On the template's GitHub page, click **Use this template → Create a new repository**. You get a fresh repo — your own history and remote — containing every file *except* the template's commit history. Then clone **your** repo with submodules:
+
+```bash
+git clone --recursive https://github.com/<you>/my-project.git
+cd my-project
+```
+
+**B. Clone, then detach (no GitHub, or local-only).**
+
+```bash
+git clone --recursive https://github.com/rhstanton/project_template.git my-project
+cd my-project
+rm -rf .git && git init                       # drop the template's history
+git submodule add https://github.com/rhstanton/repro-tools.git lib/repro-tools
+git add . && git commit -m "Initial commit from template"
+git remote add origin <your-new-repo-url>     # point at YOUR remote
+```
+
+**Then customize** — run the bootstrap script once, inside your new project:
+
+```bash
+python bootstrap.py --interactive
+#   • keep or drop Julia / Stata
+#   • rename the project
+```
+
+Non-interactive equivalent, for example:
+
+```bash
+python bootstrap.py --remove-stata --rename "Housing Market Analysis"
+```
+
+> **Always clone with `--recursive`** (or run `git submodule update --init --recursive`) so `lib/repro-tools/` is populated — the build depends on it, and `make environment` stops with a clear error if it's missing. Full customization checklist: **[TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)**.
 
 ---
 
