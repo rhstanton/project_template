@@ -138,6 +138,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata — keep all three or drop any with `bootstrap.py` (Python is always kept)
+- **Julia two ways**: run Julia standalone (`runjulia script.jl`) *or* call it from Python via `juliacall` — both are wired up out of the box (the `julia_demo` notebook calls Julia from Python; `run_did.py` runs its regression in Julia with a Python fallback)
 - **Jupyter Notebook support**: Parameterized notebooks via papermill with full provenance
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
 - **Code quality tools**: Integrated linting (ruff), formatting (ruff), and type checking (mypy)
@@ -322,12 +323,14 @@ python script.py
 
 ## 📚 Julia Environment
 
-**Pure Julia**:
+Julia works **two ways** here, and you can use either or both — they share the same repo-local Julia install and `env/Project.toml`:
+
+**Pure Julia** — run a `.jl` script standalone:
 ```bash
 env/scripts/runjulia script.jl
 ```
 
-**Python/Julia interop** (via juliacall):
+**Python/Julia interop** — call Julia from inside a Python script or notebook (via juliacall):
 ```python
 from juliacall import Main as jl
 jl.seval("using DataFrames")
