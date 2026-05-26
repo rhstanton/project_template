@@ -14,6 +14,12 @@ Complete guide to the reproducible research template.
 
 ## 📖 Core Documentation
 
+### Running the Project
+- **[running_locally_vs_docker.md](running_locally_vs_docker.md)** - Local (uv) vs. Docker
+  - How to run each, step by step
+  - How the two relate (shared specs, separate built envs)
+  - Why pick one over the other, and caveats
+
 ### Environment Setup
 - **[environment.md](environment.md)** - Complete environment installation and management guide
   - Python 3.11 uv virtualenv

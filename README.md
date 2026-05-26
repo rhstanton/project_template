@@ -93,6 +93,31 @@ make examples      # Run example scripts
 
 ---
 
+## 🏃 Running: Locally or with Docker
+
+The **Quick Start above runs locally** — uv builds a `.venv` on your machine (fastest; best for day-to-day work). You can also run everything in a **pinned Docker image** — fully isolated and OS-pinned (best for replication packages, sandboxing untrusted/agent code, and avoiding "works on my machine" drift). Both build from the *same* sources (`pyproject.toml` + `uv.lock`, `env/Project.toml`, `Makefile`); Docker just wraps the same `make environment` / `make all`.
+
+**Run with Docker:**
+```bash
+docker build -t project-template-repro .                                   # build the environment into the image
+docker run --rm -v "$PWD/output:/project/output" project-template-repro    # reproduce all artifacts -> ./output
+```
+
+| | Local (native) | Docker |
+|---|---|---|
+| Setup | `make environment` | `docker build .` |
+| Build artifacts | `make all` | `docker run -v "$PWD/output:/project/output" …` |
+| Speed | Fast (native) | Slower on macOS (Linux VM) |
+| Isolation / OS pinning | Runs on your host | Fully isolated; OS + libs pinned by digest |
+| Reproducibility | High (`uv.lock`) | Highest (also pins OS/toolchain) |
+| Stata | ✅ if installed | ❌ omitted (commercial license) |
+| Prerequisites | GNU Make 4.3+ (uv & Julia auto-installed) | Docker only |
+| Best for | Developing & iterating | Replication, sandboxing, CI parity |
+
+**Rule of thumb: develop locally, ship/verify with Docker.** Full guide — prerequisites, how the two relate, why pick one over the other, and caveats — is in **[docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)**.
+
+---
+
 ## � VS Code Users: No Command Line Required!
 
 **Prefer working in VS Code?** Everything works through the UI:
@@ -380,6 +405,7 @@ make clean            # Remove all outputs
 - [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
 
 ### Detailed Guides
+- [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md) - Local (uv) vs. Docker: how to run each, differences, and when to use which
 - [docs/environment.md](docs/environment.md) - Environment setup and management
 - [docs/provenance.md](docs/provenance.md) - Provenance tracking system
 - [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
