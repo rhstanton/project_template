@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Migrated the Python environment manager from conda/micromamba to [uv](https://docs.astral.sh/uv/).** *Why:* much faster installs and a real cross-platform lockfile for reproducibility; nothing in the stack required conda's cross-language packages (Julia is handled by juliacall, Stata is external).
+  - `pyproject.toml` + committed `uv.lock` replace `env/python.yml`; `make environment` now runs `uv sync` into `.venv/` (was conda `.env/`).
+  - Added `env/scripts/install_uv.sh` (replaces `install_micromamba.sh`); updated `env/Makefile`, the `run*` wrappers, `flake.nix`, CI (`astral-sh/setup-uv`), `bootstrap.py`, and tests to `.venv`/`pyproject.toml`.
+  - Removed `env/python.yml` and `env/scripts/install_micromamba.sh`.
+- **Digest-pinned Docker replication image** (`Dockerfile` + `.dockerignore`): a Debian base + pinned uv builds the full environment and reproduces every artifact. Layered so editing analysis source rebuilds only the final `COPY`. Guide: [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md).
+- **New doc [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md):** running natively vs. in Docker, where the env is stored, the macOS↔VM boundary, and when to use which.
+- **Julia bridge updates:** bumped `juliacall`/`PythonCall` to `0.9.34`; pinned `pandas<3` (PythonCall cannot convert pandas-3 DataFrames to Julia); removed unused `Arrow`/`RDatasets` from `env/Project.toml`. The Julia version now depends on the Python interpreter's OpenSSL (uv's CPython: macOS OpenSSL 3.0 → Julia 1.11; Linux/Docker OpenSSL 3.5 → Julia 1.12) — see [docs/julia_python_integration.md](docs/julia_python_integration.md) "Version coupling & gotchas".
 - **Jupyter Notebook support** for reproducible analysis:
   - Added `papermill` and `seaborn` to `env/python.yml` dependencies
   - Created `env/scripts/runnotebook` wrapper with Julia/Python bridge configuration

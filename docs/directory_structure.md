@@ -337,6 +337,8 @@ __pycache__/
 .DS_Store
 ```
 
+> **Note — the real `.gitignore` uses an allowlist**, not the simple denylist sketched above: it starts with `*` (ignore everything) followed by `!`-prefixed exceptions. The consequence: **a new top-level file is ignored until you whitelist it** — `uv.lock`, `Dockerfile`, and `.dockerignore` each needed a `!<name>` entry. If `git add .` silently skips a new file, add a `!<file>` line to `.gitignore`; diagnose with `git check-ignore -v <file>`.
+
 ## Typical File Paths
 
 ### During Analysis

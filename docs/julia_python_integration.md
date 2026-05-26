@@ -97,6 +97,25 @@ This creates redundancy:
 - ✅ Consistent packages everywhere
 - ✅ Simpler debugging
 
+## Version coupling & gotchas
+
+The Julia/Python bridge has a few non-obvious version constraints. They were hard-won — read this before changing `juliacall`, `PythonCall`, `pandas`, or Julia.
+
+- **`juliacall` (Python) and `PythonCall` (Julia) are lockstep-versioned** — they must match exactly. `juliacall` is pinned in `pyproject.toml` (currently `==0.9.34`); the matching `PythonCall` is installed into the `.julia` depot by juliacall's `juliapkg`. **Never bump one side alone:** change the `juliacall` pin, then re-resolve the depot so both move together (see "Upgrading" below).
+
+- **The Julia version is derived from the Python interpreter's OpenSSL.** juliapkg's rule `OpenSSL_jll = "<=python"` pins the Julia-side OpenSSL to ≤ the OpenSSL that Python's `ssl` links against, and Julia ≥1.12 requires OpenSSL ≥3.5. uv's CPython links **OpenSSL 3.0 on macOS** (→ juliapkg installs **Julia 1.11**) but **OpenSSL 3.5 on Linux**, including the Docker image (→ **Julia 1.12**). So the Julia version differs by platform — each is deterministic, and results match to display precision. If a fresh `make environment` ever fails with `ERROR: Unsatisfiable requirements detected for package OpenSSL_jll`, this rule is why: let juliapkg install the Julia it wants for that Python; do **not** force a newer bundled Julia than the Python's OpenSSL allows.
+
+- **`pandas<3` is required** (pinned in `pyproject.toml`). PythonCall 0.9.x cannot convert a pandas-3.0 DataFrame to a Julia DataFrame — `jl.DataFrame(df)` raises `ArgumentError: ... doesn't satisfy the Tables.jl AbstractRow interface` — which breaks `run_did.py`. Lift this only together with a PythonCall version that supports pandas 3.
+
+- **`env/Project.toml` holds only packages that are used.** `Arrow`/`RDatasets` were removed (unused, and `Arrow` fails to precompile on Julia 1.11). Keep it lean: everything here is installed and precompiled on every environment build.
+
+### Upgrading the Julia stack safely
+
+1. Bump the `juliacall` pin in `pyproject.toml`, then `uv lock && uv sync`.
+2. `rm .julia/Manifest.toml` and run `make environment`, so juliapkg re-resolves `PythonCall` to the version matching the installed Julia (a stale Manifest causes an "empty intersection" resolve error).
+3. `make all` (exercises `run_did.py`'s pandas→Julia conversion) and `make check`.
+4. Rebuild the Docker image and confirm it still reproduces the artifacts.
+
 ## Usage Patterns
 
 ### 1. Pure Python
