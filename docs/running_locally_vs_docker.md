@@ -76,7 +76,7 @@ What happens:
 ## How the two paths relate
 
 - **They share specs, not built binaries.** Both build from `pyproject.toml`/`uv.lock`/`env/Project.toml`. They do **not** share `.venv/` or `.julia/` — those contain OS/architecture‑specific binaries and are rebuilt independently in each environment (which is why they're git‑ignored). The container can't reuse your host's `.venv`, and vice‑versa.
-- **The Julia version is consistent.** Under uv, the Python interpreter links OpenSSL 3.0 on both a typical Linux/macOS host *and* in the Debian image, so juliapkg selects **Julia 1.11** in both — results match across local and Docker.
+- **The Julia version is platform-dependent, but deterministic per platform.** juliapkg derives the allowed Julia version from the Python interpreter's OpenSSL: uv's CPython links OpenSSL 3.0 on **macOS** (→ **Julia 1.11**) but OpenSSL 3.5 on **Linux**, including the Debian image (→ **Julia 1.12**). So a macOS host and the Docker image don't run the *identical* Julia — but each is locked and deterministic, and the produced figures/tables match to display precision (verified). The Docker image is the canonical reproducible artifact (always Linux + Julia 1.12).
 - **You can use both, interchangeably.** They don't conflict: `.dockerignore` excludes your local `.venv/`, `.julia/`, and `output/`, so the image always builds a clean environment regardless of your working tree.
 
 ---
@@ -100,6 +100,45 @@ What happens:
 Rule of thumb: **develop locally, ship/verify with Docker.**
 
 ---
+
+## How the Docker image is built — storage, the macOS boundary, and layer caching
+
+This section records *why* the `Dockerfile` is structured the way it is — both the file-storage/performance reasoning and the layer ordering — so the choices are clear a year from now.
+
+### Docker on macOS runs a Linux VM
+
+Containers are Linux, so on macOS Docker (Docker Desktop / colima) runs a lightweight **Linux VM**. All images and containers live on **the VM's virtual disk**, not directly on your Mac. "The boundary" is the macOS ↔ VM line; crossing it (via the file-sharing layer, VirtioFS / gRPC-FUSE) is **slow for many small files** — exactly the access pattern of importing thousands of Python/Julia files.
+
+### Where each thing is stored, and whether it crosses the boundary
+
+| What | Stored in | Crosses the boundary at run time? |
+|---|---|---|
+| `.venv` (Python env, multi-GB) | **image layer** (VM disk) | **No** — read VM-native |
+| `.julia` (Julia depot + precompiled cache) | **image layer** (VM disk) | **No** — read VM-native |
+| analysis source (`run_analysis.py`, …) | image layer (VM disk) | No |
+| `output/` (figures / tables / provenance) | **bind mount** → your Mac | Yes — but only ~15 small files |
+
+The environment is **baked into the image** during `docker build`, so at run time it's read at full VM speed. The only bind mount is `-v "$PWD/output:/project/output"`, so only the handful of small result files cross the boundary. `.dockerignore` keeps the build context lean (it excludes `.venv/`, `.julia/`, `output/`, …), so the host→VM transfer at build is small and one-time.
+
+**The anti-pattern we avoid:** `docker run -v "$PWD:/project"` (mounting the whole repo) and building `.venv` on that mount — then every `import` would `stat`/`open` files **across the boundary** (often 5–20× slower on macOS), and a host `.venv` (macOS binaries) wouldn't even run in the Linux container. We deliberately copy source into the image and build the env in the image instead.
+
+### Layer ordering for fast rebuilds (the decision)
+
+**Decision (2026-05):** order the `Dockerfile` so the expensive, slow-changing steps are their own layers *before* the analysis source is copied.
+
+**Why:** Docker caches each layer by a key that includes its inputs; for `COPY . .` that key is a hash of the **entire** source tree. So a flat `COPY . . && make environment` re-runs the ~15–25 min `uv sync` + Julia precompile whenever **any** file changes — painful if you develop under Docker. The split keeps the env layers cached across source edits.
+
+The three layers and what invalidates each:
+
+1. **Python env** — `COPY pyproject.toml uv.lock` + `lib/repro-tools`, then `uv sync`. Rebuilds only when **dependencies** change.
+2. **Julia depot** — `COPY env`, then `make -C env julia-install-via-python`. Rebuilds only when **`env/`** changes (e.g. `env/Project.toml`).
+3. **Analysis source** — `COPY . .`. Editing `run_analysis.py`, `shared/config.py`, a notebook, etc. rebuilds **only this** layer (seconds), reusing the cached env.
+
+**Trade-off:** a slightly longer Dockerfile vs. a flat one — worth it because we may iterate under Docker. For a strictly build-once replication image, a flat `COPY . . && make environment` would also have been fine.
+
+### Developing under Docker
+
+With the caching split, an **edit → `docker build` → `docker run`** loop is fast (only layer 3 rebuilds). For *live* edits without rebuilding, mount **only your source** (specific files/dirs) — do **not** mount the whole repo over `/project`, which would shadow the in-image `.venv`/`.julia` (Linux-built) with your host's. A `.devcontainer` that keeps the venv in a named volume (so it isn't shadowed) is the cleaner route for a full in-container dev setup; not shipped here, but straightforward to add.
 
 ## Caveats & notes
 
