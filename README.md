@@ -2,15 +2,22 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Julia 1.10+](https://img.shields.io/badge/julia-1.10+-purple.svg)](https://julialang.org/)
+[![Julia 1.12](https://img.shields.io/badge/julia-1.12-purple.svg)](https://julialang.org/)
 [![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
-[![Tests](https://img.shields.io/badge/tests-166%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 
 **A minimal template for reproducible research with provenance tracking and automated builds**
 
 This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
 
-> **Starting a project?** Click **"Use this template"** (top of this page) to get your own repo, then follow **[QUICKSTART](QUICKSTART.md)**. The bundled example analyses are runnable demos — keep them to learn the workflow, then drop any you don't need with `make remove-analysis NAME=<name>`.
+```mermaid
+flowchart LR
+    data[("data/")] --> script["analysis<br/>(run_analysis.py · notebooks · run_did.py)"]
+    script -->|"make all"| out["output/<br/>figure + table + provenance.yml"]
+    out -->|"make publish<br/>(git-safety-checked)"| paper["paper/<br/>(separate Overleaf repo)"]
+```
+
+*Every build stamps the git commit and the SHA256 of each input and output; `make publish` is the only sanctioned path from `output/` to `paper/`.*
 
 ---
 
@@ -34,67 +41,29 @@ This template is designed for:
 
 ---
 
-## 🎯 Creating a New Project from This Template
+## 🚀 Get started
 
-A real project should live in **its own git repository**, not inherit this template's history. The quickest route is GitHub's **"Use this template"** button (it creates a fresh repo with its own history); then clone *your* repo **with submodules** and customize:
+This is a **GitHub template**. Click **"Use this template"** at the top of the page to create your **own repo** (its own history), then clone it **with submodules** and build:
 
 ```bash
-git clone --recursive https://github.com/<you>/my-project.git
+git clone --recursive https://github.com/<you>/my-project.git   # your repo + the repro-tools submodule
 cd my-project
-python bootstrap.py --interactive   # choose languages, rename
-make environment
+python bootstrap.py --interactive   # (optional) drop Julia/Stata, rename
+make environment                    # install Python/Julia/(Stata)   (~10–15 min)
+make verify                         # smoke test (~1 min)
+make all                            # build every figure + table + provenance → output/
+make publish                        # copy output/ → paper/ with provenance + git safety checks
 ```
 
-Starting from this repo directly and resetting history yourself? See the step‑by‑step in **[QUICKSTART.md](QUICKSTART.md)** ("Starting your own project") and **[TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)**.
-
-**Already cloned without `--recursive`?** `lib/repro-tools/` will be empty. Populate it with:
+**Prefer an isolated container?** You then need only Docker — no Make/uv/Julia:
 ```bash
-git submodule update --init --recursive
-```
-(`make environment` also attempts this automatically, and now stops with a clear message if the submodule is still missing.)
-
-**⚠️ IMPORTANT:** Never manually copy the `lib/repro-tools/` directory — let git manage it as a submodule.
-
-**Updating repro-tools:**
-- Quick update: `make update-submodules` (updates submodule only)
-- Full update: `make update-environment` (updates submodule + reinstalls environment)
-- See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for details
-
----
-
-## 🚀 Quick Start
-
-**First time setup (required once, ~10-15 minutes):**
-```bash
-make environment    # Install Python, Julia, Stata packages + initialize submodules
+docker build -t my-project . && docker run --rm -v "$PWD/output:/project/output" my-project
 ```
 
-**Verify setup:**
-```bash
-make verify         # Quick smoke test (~1 minute)
-```
-
-**To build all artifacts:**
-```bash
-make all           # Build figures + tables + provenance (~5 minutes)
-```
-
-**To publish to paper directory:**
-```bash
-make publish       # Copy outputs to paper/ with provenance
-```
-
-**To verify outputs:**
-```bash
-make test-outputs  # Check all expected files exist
-```
-
-**To test setup:**
-```bash
-make examples      # Run example scripts
-```
-
-**Need help?** See [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editors.
+- **Full 5-minute walkthrough:** [QUICKSTART.md](QUICKSTART.md) · **local vs. Docker:** [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)
+- The bundled **example analyses are runnable demos** — keep them to learn the workflow, then remove any with `make remove-analysis NAME=<name>`.
+- **Starting your own repo without the button** (clone + reset history): [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)
+- **Cloned without `--recursive`?** `lib/repro-tools/` is empty — run `git submodule update --init --recursive`. Update it later with `make update-submodules` (or `make update-environment` to also reinstall); see [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md). Never copy `lib/repro-tools/` by hand — let git manage the submodule.
 
 ---
 
@@ -123,7 +92,7 @@ docker run --rm -v "$PWD/output:/project/output" project-template-repro    # rep
 
 ---
 
-## � VS Code Users: No Command Line Required!
+## 💻 VS Code Users: No Command Line Required!
 
 **Prefer working in VS Code?** Everything works through the UI:
 
@@ -140,7 +109,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 
 ---
 
-## �📊 What This Template Provides
+## 📊 What This Template Provides
 
 ### Core Features
 
@@ -150,7 +119,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Multi-language support**: Python, Julia, Stata
 - **Jupyter Notebook support**: Parameterized notebooks via papermill with full provenance
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
-- **Code quality tools**: Integrated linting (ruff), formatting (black + ruff), and type checking (mypy)
+- **Code quality tools**: Integrated linting (ruff), formatting (ruff), and type checking (mypy)
 - **Automated testing**: pytest-based test suite for reliability
 - **Output comparison**: Diff current vs. published outputs
 - **Pre-submission checks**: Comprehensive validation before journal submission
@@ -205,7 +174,7 @@ This produces **three outputs per artifact** (atomically):
 
 ```bash
 make publish                              # Publish all artifacts
-make publish PUBLISH_ARTIFACTS="price_base"  # Publish specific ones
+make publish PUBLISH_ANALYSES="price_base"  # Publish specific ones
 make publish REQUIRE_CURRENT_HEAD=1         # Strict: require current HEAD
 ```
 
@@ -283,7 +252,7 @@ Adding a new analysis is simple - just add configuration to `config.py`:
 3. **Build and publish**:
    ```bash
    make my_artifact
-   make publish PUBLISH_ARTIFACTS="my_artifact"
+   make publish PUBLISH_ANALYSES="my_artifact"
    ```
 
 ---
@@ -385,12 +354,12 @@ make <artifact>       # Build specific artifact
 
 make test-outputs     # Verify all expected outputs exist
 make publish          # Publish all to paper/
-make publish PUBLISH_ARTIFACTS="x y"  # Publish specific
+make publish PUBLISH_ANALYSES="x y"  # Publish specific
 make publish REQUIRE_CURRENT_HEAD=1   # Strict: require current HEAD
 
 make test             # Run test suite
 make lint             # Run code linter (ruff)
-make format           # Auto-format code (black + ruff)
+make format           # Auto-format code (ruff)
 make type-check       # Run type checker (mypy)
 make check            # Run all quality checks (lint + format + type + test)
 make diff-outputs     # Compare current vs published outputs
@@ -510,7 +479,7 @@ See `CITATION.cff` for structured metadata.
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 **Dependencies:**
-- **repro-tools**: 0.2.0 (git submodule at `lib/repro-tools/`)
+- **repro-tools**: v0.3.3 (git submodule at `lib/repro-tools/`)
   - Provides provenance tracking, CLI utilities, publishing tools
   - See [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md) for updates
 
@@ -531,6 +500,3 @@ This creates a fresh git repository excluding:
 
 See `JOURNAL_EXCLUDE` for complete list and [`docs/journal_editor_readme.md`](docs/journal_editor_readme.md) for journal editor instructions.
 
----
-
-**Last updated:** January 17, 2026
