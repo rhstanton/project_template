@@ -55,7 +55,7 @@ make all                            # build every figure + table + provenance �
 make publish                        # copy output/ → paper/ with provenance + git safety checks
 ```
 
-**Prefer an isolated container?** You then need only Docker — no Make/uv/Julia:
+**Prefer an isolated container?** Clone your repo as above, then — instead of the `make` steps — build and run with Docker (no local Make, uv, or Julia needed; just git + Docker):
 ```bash
 docker build -t my-project . && docker run --rm -v "$PWD/output:/project/output" my-project
 ```
