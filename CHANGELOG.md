@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-05-26
+
+### Added
+- **`bootstrap.py --python-only`** shorthand for scaffolding a Python-only project (equivalent to `--remove-julia --remove-stata`).
+
+### Fixed
+- **Dropping a language with `bootstrap.py` now also removes that language's example analyses.** Previously `--remove-julia` / `--remove-stata` stripped only the environment plumbing, leaving the language-backed examples (`julia_demo`, `did_example`) wired into `ANALYSES` — so `make all` broke afterward. bootstrap now delegates to `remove_analysis` to clean up the Makefile block, `config.py` `STUDIES`, the example script, and artifacts, keeping the build green. (`scripts/remove_analysis.py` exposes an importable `remove_analysis()`; CLI behavior unchanged.)
+
+### Changed
+- **Documentation polish** (no analysis-code changes). README/TEMPLATE_USAGE now surface the one/two/three-language choice early (tagline + callout) and the intro clarifies that Julia runs standalone or from within Python; fixed stale "remove Julia by hand" guidance and assorted review-pass wording.
+
 ## [2.0.1] - 2026-05-26
 
 ### Changed

@@ -4,7 +4,7 @@ This is the version of the template itself, not the repro-tools submodule.
 repro-tools has its own versioning in lib/repro-tools/pyproject.toml
 """
 
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 __version_info__ = tuple(int(x) for x in __version__.split("."))
 
 # Release information
