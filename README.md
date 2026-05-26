@@ -112,9 +112,9 @@ Both build paths in **Get started** use the *same* sources (`pyproject.toml` + `
 3. **Press `Ctrl+Shift+B`** to build everything
 4. **Press `F5`** to debug Python scripts
 
-**Full guide:** [GETTING_STARTED_VSCODE.md](GETTING_STARTED_VSCODE.md)
-**Cheat sheet:** [.vscode/QUICK_REFERENCE.md](.vscode/QUICK_REFERENCE.md)
-**Details:** [docs/vscode_integration.md](docs/vscode_integration.md)
+- **Full guide:** [GETTING_STARTED_VSCODE.md](GETTING_STARTED_VSCODE.md)
+- **Cheat sheet:** [.vscode/QUICK_REFERENCE.md](.vscode/QUICK_REFERENCE.md)
+- **Details:** [docs/vscode_integration.md](docs/vscode_integration.md)
 
 All Make commands are available as VS Code tasks - you can work entirely in the GUI!
 
@@ -142,6 +142,7 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 ```
 project_template/
 ├── run_analysis.py    # Unified analysis script (handles all studies)
+├── Dockerfile         # Reproducible build image (see "Local vs. Docker")
 ├── data/              # Input datasets
 ├── env/               # Environment setup (Python/Julia/Stata)
 │   └── examples/      # Sample scripts for testing
@@ -157,6 +158,7 @@ project_template/
 │   ├── tables/        # Published tables
 │   └── provenance.yml # Aggregated publication provenance
 ├── scripts/           # Project helper scripts (e.g. check_prerequisites.sh)
+├── tests/             # pytest test suite
 └── shared/            # Project configuration
     └── config.py      # Study configurations (STUDIES + DEFAULTS)
 ```
@@ -367,9 +369,11 @@ make help             # Detailed command reference (all targets)
 make info             # Comprehensive project information
 
 make environment      # Setup Python/Julia/Stata (one-time)
+make update-submodules   # Update the repro-tools submodule (update-environment also reinstalls)
 make verify           # Verify environment and data (quick check)
 make all              # Build all artifacts
 make <artifact>       # Build specific artifact
+make remove-analysis NAME=x   # Remove an analysis (config + Makefile block + outputs)
 
 make test-outputs     # Verify all expected outputs exist
 make publish          # Publish all to paper/
@@ -421,17 +425,14 @@ See [env/examples/](env/examples/) directory for sample scripts in Python, Julia
 
 ## 🔒 Git Integration
 
-Provenance tracking requires git:
+Provenance is tied to git: every build records the commit (and dirty state) it came from. Your project is already a git repo — from **"Use this template"** / `git clone` — so there's nothing extra to set up; just keep your work committed so the records are meaningful:
 
 ```bash
-git init
-git add -A
-git commit -m "Initial commit"
-make all              # Builds include git commit hash
-make publish          # Tracks publication from specific commit
+make all       # build records embed the current git commit + dirty state
+make publish   # records the commit each artifact was published from
 ```
 
-The `paper/` directory is intended as a **separate git repository** for Overleaf integration.
+The `paper/` directory is intended as a **separate git repository** (e.g. an Overleaf remote).
 
 ---
 
