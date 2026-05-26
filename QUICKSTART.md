@@ -4,13 +4,15 @@
 
 **Need help?** Run `make` for brief guidance, `make help` for all commands, or `make info` for comprehensive project information.
 
+**Local or Docker?** The steps below build **locally** (uv — fastest). To build in an isolated, OS‑pinned container instead (only Docker required), see **[Build with Docker instead](#build-with-docker-instead)** below, or the full **[local‑vs‑Docker guide](docs/running_locally_vs_docker.md)**.
+
 ---
 
 ## TL;DR - Copy-Paste Commands
 
 ```bash
-# 1. Start YOUR project from the template (its own repo — see "Starting your own
-#    project" below). Then, from inside your project:
+# 1. Start YOUR project: click "Use this template" on GitHub for your OWN repo
+#    (details in "Starting your own project" below). Then clone it and customize:
 git clone --recursive <your-repo-url>   # YOUR repo, cloned WITH --recursive
 cd <your-project>
 python bootstrap.py --interactive        # choose languages, rename
@@ -47,6 +49,17 @@ make publish
 
 **Total time**: ~5-10 minutes
 **Total disk**: ~2.5GB (2GB environment + 500MB Julia)
+
+### Build with Docker instead
+
+Prefer an isolated, OS‑pinned container? Then you need **only Docker** on your machine (no Make/uv/Julia). Do step 1 above, then replace steps 2–5 with:
+
+```bash
+docker build -t my-project .                                  # build the full environment into the image
+docker run --rm -v "$PWD/output:/project/output" my-project   # reproduce all artifacts -> ./output
+```
+
+See the full comparison — and how to *develop* inside a container — in **[docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)**.
 
 ---
 
