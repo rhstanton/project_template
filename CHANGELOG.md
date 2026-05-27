@@ -9,8 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-05-27
+
 ### Added
 - **Private maintainer overlay** (`make private-init` / `scripts/init-private.sh`). Keeps maintainer-only files — working notes, private agent instructions, per-user tool config — out of the public repo while staying version-controlled and usable at their normal paths: their real homes live in a nested, gitignored `private/` git repo and are symlinked back into place. `AGENTS.local.md` is the canonical private agent-instructions file, picked up by every AI tool via a "load it if present" pointer in the public `AGENTS.md`. A shared, committed `.claude/settings.json` (safe defaults) ships with the template, while per-user `settings.local.json` moves into the overlay. The setup script is idempotent. Documented in TEMPLATE_USAGE.md → "Keeping private maintainer files"; guarded against leaks by `tests/test_private_overlay.py`.
+- **`make bump-version VERSION=X.Y.Z`** (`scripts/bump_version.py`): set the project version in every place it appears — `pyproject.toml`, `uv.lock`, `_version.py`, `CITATION.cff` (+ release date), `README.md`, `QUICKSTART.md` — and roll the CHANGELOG `[Unreleased]` section into the release. Reads the version and package name from `pyproject.toml`, so it works for projects renamed/derived from this template too (inapplicable files are skipped). Dry-run by default; never commits or tags.
 
 ## [2.0.2] - 2026-05-26
 

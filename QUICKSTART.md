@@ -630,6 +630,6 @@ See [docs/platform_compatibility.md](docs/platform_compatibility.md) for details
 
 ## Version
 
-This quickstart is for **template v2.0.2**.
+This quickstart is for **template v2.1.0**.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.

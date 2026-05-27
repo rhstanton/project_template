@@ -169,6 +169,15 @@ check-prereq:
 private-init:
 	@./scripts/init-private.sh
 
+# Bump the template version in every place it appears (pyproject.toml,
+# _version.py, CITATION.cff + date, README, QUICKSTART, uv.lock) and roll the
+# CHANGELOG [Unreleased] section into the release. Does NOT commit/tag/publish.
+# Usage: make bump-version VERSION=2.1.0
+.PHONY: bump-version
+bump-version:
+	@test -n "$(VERSION)" || { echo "Usage: make bump-version VERSION=X.Y.Z"; exit 1; }
+	@./scripts/bump_version.py "$(VERSION)" --apply
+
 # ==============================================================================
 # Include Generic Targets from repro-tools
 # ==============================================================================
@@ -607,6 +616,7 @@ help:
 	@echo "PRE-FLIGHT:"
 	@echo "  make check-prereq       Check system prerequisites (before install)"
 	@echo "  make private-init       Set up private maintainer overlay (notes, private agent rules)"
+	@echo "  make bump-version VERSION=X.Y.Z  Set the version everywhere + roll CHANGELOG (maintainer)"
 	@echo ""
 	@echo "ENVIRONMENT:"
 	@echo "  make environment        Setup Python 3.12 + Julia + Stata (~10 min)"
