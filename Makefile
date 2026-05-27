@@ -161,6 +161,14 @@ PAPER_TBL_DIR := $(PAPER_DIR)/tables
 check-prereq:
 	@./scripts/check_prerequisites.sh
 
+# Set up (or repair) the private maintainer overlay: a separate, gitignored
+# git repo under private/ for files that must never ship publicly (working
+# notes, private agent instructions, per-user tool config). Idempotent.
+# See TEMPLATE_USAGE.md → "Keeping private maintainer files".
+.PHONY: private-init
+private-init:
+	@./scripts/init-private.sh
+
 # ==============================================================================
 # Include Generic Targets from repro-tools
 # ==============================================================================
@@ -598,6 +606,7 @@ help:
 	@echo ""
 	@echo "PRE-FLIGHT:"
 	@echo "  make check-prereq       Check system prerequisites (before install)"
+	@echo "  make private-init       Set up private maintainer overlay (notes, private agent rules)"
 	@echo ""
 	@echo "ENVIRONMENT:"
 	@echo "  make environment        Setup Python 3.12 + Julia + Stata (~10 min)"

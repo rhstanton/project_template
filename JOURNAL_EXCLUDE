@@ -8,6 +8,7 @@
 data-construction/     # Processes proprietary raw data (if applicable)
 notes/                 # Working notes and drafts
 dev-notes/             # Internal development milestone notes (maintainers only)
+private/               # Private maintainer overlay (nested repo; never shipped)
 paper/                 # Separate paper repository (managed independently)
 
 # Editor-specific configuration files (not needed for replication)
@@ -20,7 +21,8 @@ paper/                 # Separate paper repository (managed independently)
 
 # Template/development guides (not needed for replication)
 TEMPLATE_USAGE.md      # Template customization guide
-COAUTHOR_SETUP.md      # Internal coauthor setup instructions (if exists)
+COAUTHOR_SETUP.md      # Internal coauthor setup instructions (private overlay)
+AGENTS.local.md        # Private agent instructions (private overlay)
 CHANGELOG.md           # Internal version history
 
 # Cache directories (generated at runtime)

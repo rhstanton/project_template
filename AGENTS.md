@@ -2,6 +2,8 @@
 
 Guidance for AI coding agents (Claude Code, GitHub Copilot, Codex, etc.) working in this repository. This file is the **single source of truth**; tool-specific files are symlinks to it (see "Agent tool wiring" at the bottom).
 
+> **Private local instructions.** If a file named `AGENTS.local.md` exists in the repo root, read it and follow it as additional, private instructions that take precedence over this file. It is gitignored (a symlink into the `private/` overlay) and never shipped — so it is the place for maintainer- or machine-specific guidance. See "Agent tool wiring" for the overlay layout.
+
 ## What this is
 
 A template for reproducible empirical research. The core idea is a **build → publish separation with provenance tracking**: analysis scripts write artifacts (figure + table + provenance YAML) to `output/`, and `make publish` is the *only* sanctioned way to copy them into `paper/` (intended to be a separate git repo with an Overleaf remote). Supports Python, Julia, and Stata in one environment.
@@ -89,3 +91,11 @@ This file is canonical. To keep every assistant reading the same instructions wi
 - **GitHub Copilot** reads `.github/copilot-instructions.md` → symlinked to `AGENTS.md`.
 
 To wire up another tool, add a symlink from its expected path to this file (e.g. `ln -s AGENTS.md .cursorrules`) rather than copying the content.
+
+### Private overlay
+
+Maintainer-only files that must **never** ship publicly (working notes, private agent instructions, per-user tool config) live in `private/` — a *separate, nested git repo* that this repo gitignores. Gitignored symlinks at the public root point into it, so tools find everything at its normal path while git never tracks it. Set it up (or repair it) with `make private-init`; full details in TEMPLATE_USAGE.md → "Keeping private maintainer files".
+
+- `AGENTS.local.md` → `private/ai/AGENTS.local.md` — canonical private agent instructions, loaded via the callout at the top of this file. **Agents: never commit `private/` or any of these symlinks to the public repo, and never copy private content into public files.**
+- `.claude/settings.local.json` → `private/.claude/settings.local.json` — per-user Claude Code config. The committed, shared defaults live in `.claude/settings.json`.
+- `dev-notes`, `COAUTHOR_SETUP.md`, and (when present) maintainer-only docs under `docs/`/`tests/` are wired the same way.

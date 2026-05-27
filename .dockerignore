@@ -22,8 +22,13 @@ replication-package/
 replication-package.tar.gz
 replication-package.zip
 
-# Maintainer-only notes (not needed to reproduce)
-dev-notes/
+# Private maintainer overlay (not needed to reproduce; also keeps the nested
+# private/ repo and its symlinks out of the image — the symlinks would dangle).
+private/
+dev-notes
+AGENTS.local.md
+COAUTHOR_SETUP.md
+.claude/
 
 # Caches & cruft
 __pycache__/

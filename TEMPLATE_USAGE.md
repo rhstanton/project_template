@@ -317,6 +317,71 @@ REQUIRE_CURRENT_HEAD := 1     # Require artifacts from HEAD
 
 ---
 
+## Keeping private maintainer files (the `private/` overlay)
+
+Some files are *just for you* — working notes, private agent instructions, per-user tool config, coauthor setup — and must **never** ship in the public repo. But you still want them **version-controlled** (not just loose, un-backed-up files) and **usable** at their normal paths. This template provides a small pattern that gets all three:
+
+- **usable** — files live at their expected paths via symlinks, so every tool finds them;
+- **tracked** — their real homes live inside `private/`, a *separate git repo* you can push to a private backup remote;
+- **private** — `private/` and every symlink name are gitignored by this repo, so none of it is ever committed or shipped.
+
+### Set it up
+
+```bash
+make private-init      # or: ./scripts/init-private.sh
+```
+
+This is **idempotent** — run it any time to create or repair the overlay. It never overwrites a real file. It:
+
+1. initializes `private/` as a nested git repo (with an initial commit) and seeds template files;
+2. moves any existing `.claude/settings.local.json` into the overlay;
+3. creates the gitignored symlinks below.
+
+### Layout
+
+```
+private/                          ← nested git repo, gitignored by this repo
+├── README.md                     (explains the overlay + backup-remote one-liner)
+├── .gitignore
+├── dev-notes/                    ← maintainer working/milestone notes
+├── docs/  tests/                 ← homes for maintainer-only docs (see below)
+├── ai/AGENTS.local.md            ← private agent instructions (all AI tools)
+└── .claude/settings.local.json   ← per-user Claude Code config
+
+dev-notes          → private/dev-notes                 (gitignored symlink)
+AGENTS.local.md    → private/ai/AGENTS.local.md         (gitignored symlink)
+COAUTHOR_SETUP.md  → private/COAUTHOR_SETUP.md          (gitignored symlink)
+.claude/settings.local.json → ../private/.claude/settings.local.json
+```
+
+### Private agent instructions, for *every* AI tool
+
+`AGENTS.local.md` is the single canonical home for private agent guidance. The public, committed `AGENTS.md` contains a callout telling assistants to *also* read `AGENTS.local.md` when it exists. Because every tool already reads `AGENTS.md` (Claude Code via `CLAUDE.md`, Codex directly, Copilot via `.github/copilot-instructions.md`), that one public line makes **all** of them pick up your private instructions — no tool-specific local file needed. Only the harmless "load it if present" line is public; the content stays in `private/`.
+
+### `.claude/` — shared vs. per-user
+
+`.claude/settings.json` is **committed** and ships with the template: safe shared defaults (e.g. pre-allowing read-only git and the project's test/lint/build commands). `.claude/settings.local.json` is **per-user** and lives in the overlay, symlinked back into place. Keep machine-specific permissions in the local file; promote anything broadly safe into the committed `settings.json`.
+
+### Adding a maintainer-only doc that lives in a public directory
+
+To keep a doc like `docs/IMPLEMENTATION_NOTES.md` private even though `docs/` is public, create it under `private/docs/` (or `private/tests/`) and re-run `make private-init` — the script symlinks it into place only when the private source exists, so links never dangle. (`docs/NOTEBOOK_SUPPORT_IMPLEMENTATION.md`, `tests/NOTEBOOK_TESTS_SUMMARY.md`, and `tests/TEST_IMPROVEMENTS.md` are pre-wired this way.)
+
+### Backing up the overlay (optional)
+
+`private/` has no remote by default. To back it up, create a **private** repo and:
+
+```bash
+git -C private remote add origin git@github.com:<you>/<project>-private.git
+git -C private add -A && git -C private commit -m "Update private overlay"
+git -C private push -u origin main
+```
+
+### For adopters of this template
+
+If you cloned this template, the overlay starts empty — run `make private-init` to scaffold your own. Nothing the original maintainer kept private was ever in the repo you cloned; the pattern ships, the content does not.
+
+---
+
 ## Domain-Specific Adaptations
 
 ### Economics/Econometrics
