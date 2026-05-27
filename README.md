@@ -235,6 +235,16 @@ outputs:
 
 See `docs/provenance.md` for complete explanation.
 
+### Private maintainer files (optional)
+
+Keep maintainer-only material — working notes, private agent instructions, per-user tool config — out of the public repo while still version-controlling it and using it at its normal paths:
+
+```bash
+make private-init     # nested, gitignored `private/` repo + symlinks back into place
+```
+
+Nothing here ever ships in the public repo. See [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md) → "Keeping private maintainer files".
+
 ---
 
 ## 🔧 Adding New Analyses

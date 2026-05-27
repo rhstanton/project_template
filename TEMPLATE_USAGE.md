@@ -362,6 +362,8 @@ COAUTHOR_SETUP.md  → private/COAUTHOR_SETUP.md          (gitignored symlink)
 
 `.claude/settings.json` is **committed** and ships with the template: safe shared defaults (e.g. pre-allowing read-only git and the project's test/lint/build commands). `.claude/settings.local.json` is **per-user** and lives in the overlay, symlinked back into place. Keep machine-specific permissions in the local file; promote anything broadly safe into the committed `settings.json`.
 
+> **Adopters inherit this allowlist.** Because `settings.json` is committed, anyone who clones or "Use this template"s your project inherits the commands it pre-authorizes. The shipped defaults are deliberately non-destructive (read-only git inspection plus the project's own `test`/`lint`/`format`/`type-check`/`build` targets — nothing that pushes, publishes, deletes, or hits the network). Review and trim it to your own risk tolerance before relying on it.
+
 ### Adding a maintainer-only doc that lives in a public directory
 
 To keep a doc like `docs/IMPLEMENTATION_NOTES.md` private even though `docs/` is public, create it under `private/docs/` (or `private/tests/`) and re-run `make private-init` — the script symlinks it into place only when the private source exists, so links never dangle. (`docs/NOTEBOOK_SUPPORT_IMPLEMENTATION.md`, `tests/NOTEBOOK_TESTS_SUMMARY.md`, and `tests/TEST_IMPROVEMENTS.md` are pre-wired this way.)

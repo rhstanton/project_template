@@ -349,6 +349,7 @@ def interactive_mode(repo_root: Path) -> None:
     print("  1. Review the changes: git status")
     print("  2. Set up environment: make environment")
     print("  3. Run sample analysis: make all")
+    print("  4. (optional) Private maintainer overlay: make private-init")
     print()
 
 
@@ -440,6 +441,7 @@ def main():
     print("  1. Review the changes: git status")
     print("  2. Set up environment: make environment")
     print("  3. Run sample analysis: make all")
+    print("  4. (optional) Private maintainer overlay: make private-init")
     print()
 
 

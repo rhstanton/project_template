@@ -45,8 +45,8 @@ env/scripts/runpython -m pytest tests/test_defaults.py::TestName::test_case -v
 
 **The `repro-tools` submodule does most of the heavy lifting.** It is a git submodule at `lib/repro-tools/` and provides two things the project depends on:
 
-1. **The `repro_tools` Python package** — imported directly in analysis scripts: `auto_build_record`, `friendly_docopt`, `print_config`, `validate_study_config`, `setup_environment`, etc. (Note: the local `scripts/` dir only has `check_prerequisites.sh`; older docs referencing `scripts/provenance.py` and `scripts/publish_artifacts.py` are stale — that code now lives in `repro_tools`.)
-2. **Core Make targets** — the project `Makefile` does `include lib/repro-tools/src/repro_tools/lib/common.mk` (around line 151). `test`, `lint`, `format`, `type-check`, `check`, `verify`, `publish`, `test-outputs`, `pre-submit`, `replication-report` are all defined *there*, not in the project Makefile. To understand or change those targets, edit/read `common.mk`, not `Makefile`.
+1. **The `repro_tools` Python package** — imported directly in analysis scripts: `auto_build_record`, `friendly_docopt`, `print_config`, `validate_study_config`, `setup_environment`, etc. (Note: the local `scripts/` dir holds only project-setup helpers — `check_prerequisites.sh`, `remove_analysis.py`, and `init-private.sh`; older docs referencing `scripts/provenance.py` and `scripts/publish_artifacts.py` are stale — that code now lives in `repro_tools`.)
+2. **Core Make targets** — the project `Makefile` does `include lib/repro-tools/src/repro_tools/lib/common.mk`. `test`, `lint`, `format`, `type-check`, `check`, `verify`, `publish`, `test-outputs`, `pre-submit`, `replication-report` are all defined *there*, not in the project Makefile. To understand or change those targets, edit/read `common.mk`, not `Makefile`.
 
 **Two kinds of analysis scripts:**
 
