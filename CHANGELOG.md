@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-05-27
+
 ### Changed
 - **All AI-tool files moved out of the public repo.** `AGENTS.md`, `CLAUDE.md`, `.claude/`, and `.github/copilot-instructions.md` no longer ship in the public template — they live entirely in the private overlay at `private/ai/AGENTS.md` and `private/ai/.claude/`, and are exposed locally via gitignored symlinks created by `make private-init`. Every assistant (Claude Code, Codex, Copilot) reads the same `private/ai/AGENTS.md`. The previous split between a public `AGENTS.md` (with a "load AGENTS.local.md if present" callout) and a private `AGENTS.local.md` is gone; there is one canonical AGENTS.md, and it is private. The shared `.claude/settings.json` safe-defaults file is also gone — its permissions merged into `private/ai/.claude/settings.local.json`. `scripts/init-private.sh` migrates leftover public `.claude/` files on first run, so upgrading is just `git pull && make private-init`. `tests/test_private_overlay.py` now pins the new privacy surface (AGENTS.md, CLAUDE.md, `.claude`, copilot-instructions); the docs no longer reference any of these paths.
 
