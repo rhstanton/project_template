@@ -52,13 +52,23 @@ journal-package.zip
 # Gitignored symlinks at the public root point into it; set up / repaired by
 # `make private-init` (scripts/init-private.sh). No trailing slashes, so each
 # pattern matches the SYMLINK (which git sees as a file) as well as a real
-# file/dir. These sit AFTER the `!*.md` include above, so they re-ignore the
-# .md symlinks that `!*.md` would otherwise track. `private` likewise overrides
-# the `!*/` directory include, so git never descends into the private repo.
+# file/dir. These sit AFTER the `!*.md` / `!*.json` / `!*/` includes above, so
+# they re-ignore the symlinks that those includes would otherwise track.
+# `private` likewise overrides `!*/` so git never descends into the private repo.
 private
 dev-notes
-AGENTS.local.md
 COAUTHOR_SETUP.md
+
+# AI-tool files — kept entirely in private/ai/. The public repo ships no AI
+# guidance, settings, or rule files. `make private-init` creates gitignored
+# symlinks at the canonical paths so the maintainer's tools find their config.
+AGENTS.md
+CLAUDE.md
+.claude
+.github/copilot-instructions.md
+.aider*
+.cursor*
+.tabnine
 
 # Maintainer-only docs that sit inside otherwise-public dirs (symlinked from
 # private/ when present). Listed explicitly so they're ignored either way.
@@ -118,9 +128,6 @@ _region*
 # OS artifacts
 .DS_Store
 Thumbs.db
-
-# Local Claude Code config (per-user permissions/settings; not committed)
-.claude/settings.local.json
 
 # Build/temp artifacts
 *.log

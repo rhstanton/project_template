@@ -192,12 +192,6 @@ Complete guide to the reproducible research template.
   - Infrastructure changes
   - Breaking changes
 
-- **[.github/copilot-instructions.md](../.github/copilot-instructions.md)** - AI assistant guidance
-  - Project architecture overview
-  - Key workflows
-  - Critical conventions
-  - Integration points
-
 ---
 
 ## 📂 Examples
@@ -266,9 +260,6 @@ project_template/
 ├── QUICKSTART.md                       # Quick start (5 min)
 ├── CHANGELOG.md                        # Version history
 ├── TEMPLATE_USAGE.md                   # Customization guide
-│
-├── .github/
-│   └── copilot-instructions.md         # AI assistant guidance
 │
 ├── docs/
 │   ├── README.md                       # This file
@@ -355,7 +346,6 @@ When making significant changes:
 - [ ] Update QUICKSTART.md if quick start commands change
 - [ ] Update README.md if core workflow changes
 - [ ] Update troubleshooting.md with new issues found
-- [ ] Update .github/copilot-instructions.md if architecture changes
 - [ ] Update env/examples/ if usage patterns change
 - [ ] Test all documented commands actually work
 

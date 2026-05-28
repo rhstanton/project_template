@@ -95,11 +95,6 @@ The manual checklist below covers anything `bootstrap.py` doesn't.
 - [ ] Reset to version 0.1.0
 - [ ] Add initial commit entry
 
-**.github/copilot-instructions.md**:
-- [ ] Update project architecture section
-- [ ] Add domain-specific conventions
-- [ ] Update workflow descriptions
-
 ### 2. Configure Environments
 
 **pyproject.toml** (exact versions pinned in `uv.lock`):
@@ -319,7 +314,7 @@ REQUIRE_CURRENT_HEAD := 1     # Require artifacts from HEAD
 
 ## Keeping private maintainer files (the `private/` overlay)
 
-Some files are *just for you* — working notes, private agent instructions, per-user tool config, coauthor setup — and must **never** ship in the public repo. But you still want them **version-controlled** (not just loose, un-backed-up files) and **usable** at their normal paths. This template provides a small pattern that gets all three:
+Some files are *just for you* — working notes, AI agent instructions and settings, coauthor onboarding — and must **never** ship in the public repo. But you still want them **version-controlled** (not just loose, un-backed-up files) and **usable** at their normal paths. This template provides a small pattern that gets all three:
 
 - **usable** — files live at their expected paths via symlinks, so every tool finds them;
 - **tracked** — their real homes live inside `private/`, a *separate git repo* you can push to a private backup remote;
@@ -334,35 +329,32 @@ make private-init      # or: ./scripts/init-private.sh
 This is **idempotent** — run it any time to create or repair the overlay. It never overwrites a real file. It:
 
 1. initializes `private/` as a nested git repo (with an initial commit) and seeds template files;
-2. moves any existing `.claude/settings.local.json` into the overlay;
+2. migrates any leftover public `.claude/` files into the overlay (older layouts);
 3. creates the gitignored symlinks below.
 
 ### Layout
 
 ```
-private/                          ← nested git repo, gitignored by this repo
-├── README.md                     (explains the overlay + backup-remote one-liner)
+private/                              ← nested git repo, gitignored by this repo
+├── README.md                         (explains the overlay + backup-remote one-liner)
 ├── .gitignore
-├── dev-notes/                    ← maintainer working/milestone notes
-├── docs/  tests/                 ← homes for maintainer-only docs (see below)
-├── ai/AGENTS.local.md            ← private agent instructions (all AI tools)
-└── .claude/settings.local.json   ← per-user Claude Code config
+├── dev-notes/                        ← maintainer working/milestone notes
+├── docs/  tests/                     ← homes for maintainer-only docs (see below)
+├── COAUTHOR_SETUP.md                 ← private coauthor onboarding notes
+├── ai/AGENTS.md                      ← canonical AI agent instructions (every tool)
+└── ai/.claude/settings.local.json    ← per-user Claude Code config
 
-dev-notes          → private/dev-notes                 (gitignored symlink)
-AGENTS.local.md    → private/ai/AGENTS.local.md         (gitignored symlink)
-COAUTHOR_SETUP.md  → private/COAUTHOR_SETUP.md          (gitignored symlink)
-.claude/settings.local.json → ../private/.claude/settings.local.json
+dev-notes                       → private/dev-notes                (gitignored symlink)
+COAUTHOR_SETUP.md               → private/COAUTHOR_SETUP.md         (gitignored symlink)
+AGENTS.md                       → private/ai/AGENTS.md              (gitignored symlink)
+CLAUDE.md                       → private/ai/AGENTS.md              (gitignored symlink)
+.claude                         → private/ai/.claude                (gitignored symlink)
+.github/copilot-instructions.md → ../private/ai/AGENTS.md           (gitignored symlink)
 ```
 
-### Private agent instructions, for *every* AI tool
+### AI agent files are entirely private
 
-`AGENTS.local.md` is the single canonical home for private agent guidance. The public, committed `AGENTS.md` contains a callout telling assistants to *also* read `AGENTS.local.md` when it exists. Because every tool already reads `AGENTS.md` (Claude Code via `CLAUDE.md`, Codex directly, Copilot via `.github/copilot-instructions.md`), that one public line makes **all** of them pick up your private instructions — no tool-specific local file needed. Only the harmless "load it if present" line is public; the content stays in `private/`.
-
-### `.claude/` — shared vs. per-user
-
-`.claude/settings.json` is **committed** and ships with the template: safe shared defaults (e.g. pre-allowing read-only git and the project's test/lint/build commands). `.claude/settings.local.json` is **per-user** and lives in the overlay, symlinked back into place. Keep machine-specific permissions in the local file; promote anything broadly safe into the committed `settings.json`.
-
-> **Adopters inherit this allowlist.** Because `settings.json` is committed, anyone who clones or "Use this template"s your project inherits the commands it pre-authorizes. The shipped defaults are deliberately non-destructive (read-only git inspection plus the project's own `test`/`lint`/`format`/`type-check`/`build` targets — nothing that pushes, publishes, deletes, or hits the network). Review and trim it to your own risk tolerance before relying on it.
+The public repo ships **no** AI-tool files at all — no `AGENTS.md`, no `CLAUDE.md`, no `.claude/`, no Copilot instructions. Every AI tool that looks for guidance lands on the same `private/ai/AGENTS.md` via a gitignored symlink, so Claude Code, Codex, and Copilot all read identical instructions while the content stays out of the public repo. Claude Code's per-user permissions (`settings.local.json`) live alongside it under `private/ai/.claude/`. Adopters of the template get a clean codebase with no inherited AI guidance — they consult the regular `docs/` like any other contributor, and write their own private overlay if they want one.
 
 ### Adding a maintainer-only doc that lives in a public directory
 

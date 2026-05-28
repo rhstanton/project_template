@@ -6,8 +6,7 @@ This document explains the organization of the reproducible research template.
 
 ```
 project_template/
-├── .github/               # GitHub metadata
-│   └── copilot-instructions.md
+├── .github/               # GitHub metadata (issue templates, CI workflows)
 ├── .gitignore             # Git exclusions
 ├── .gitmodules            # Git submodule configuration
 ├── run_analysis.py        # Unified analysis script (study configs in shared/config.py)
@@ -245,14 +244,7 @@ docs/
 
 ### `.github/`
 
-GitHub-specific files.
-
-```
-.github/
-└── copilot-instructions.md    # AI agent guidance
-```
-
-**Purpose**: Provides context for GitHub Copilot and other AI coding assistants working in this codebase.
+GitHub-specific files: issue templates and CI workflows.
 
 ## Hidden Directories (Git-Ignored)
 

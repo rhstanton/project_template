@@ -476,4 +476,3 @@ PAPER_DIR ?= paper  # Change default
 
 - [docs/provenance.md](provenance.md) - Understanding provenance tracking
 - [docs/directory_structure.md](directory_structure.md) - Project organization
-- [.github/copilot-instructions.md](../.github/copilot-instructions.md) - Workflow patterns

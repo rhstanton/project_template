@@ -3,9 +3,10 @@
 # init-private.sh — set up (or repair) this project's private maintainer overlay
 # ==============================================================================
 #
-# Some files are "just for me, the maintainer" — working notes, private agent
-# instructions, per-user editor/tool config — and must NEVER ship in the public
-# repo. This script wires up a small pattern that keeps such files
+# Some files are "just for me, the maintainer" — working notes, AI agent
+# instructions and settings, per-user editor config, coauthor onboarding — and
+# must NEVER ship in the public repo. This script wires up a small pattern
+# that keeps such files
 #
 #   * usable  — they live at their normal paths (via symlinks), so every tool
 #               finds them where it expects;
@@ -17,22 +18,25 @@
 #
 # Layout it creates:
 #
-#   private/                          <- nested git repo, gitignored here
+#   private/                            <- nested git repo, gitignored here
 #   ├── README.md
 #   ├── .gitignore
-#   ├── dev-notes/                    <- maintainer working notes
-#   ├── docs/  tests/                 <- homes for maintainer-only docs
-#   ├── ai/AGENTS.local.md            <- private agent instructions (see below)
-#   └── .claude/settings.local.json   <- per-user Claude Code config
+#   ├── dev-notes/                      <- maintainer working notes
+#   ├── docs/  tests/                   <- homes for maintainer-only docs
+#   ├── ai/AGENTS.md                    <- canonical AI agent instructions
+#   └── ai/.claude/settings.local.json  <- per-user Claude Code config
 #
-#   dev-notes         -> private/dev-notes                (gitignored symlink)
-#   AGENTS.local.md   -> private/ai/AGENTS.local.md        (gitignored symlink)
-#   COAUTHOR_SETUP.md -> private/COAUTHOR_SETUP.md         (gitignored symlink)
-#   .claude/settings.local.json -> ../private/.claude/settings.local.json
+#   dev-notes                       -> private/dev-notes
+#   COAUTHOR_SETUP.md               -> private/COAUTHOR_SETUP.md
+#   AGENTS.md                       -> private/ai/AGENTS.md
+#   CLAUDE.md                       -> private/ai/AGENTS.md
+#   .claude                         -> private/ai/.claude
+#   .github/copilot-instructions.md -> ../private/ai/AGENTS.md
 #
-# AGENTS.local.md is the single canonical source of truth for private agent
-# instructions. The public AGENTS.md tells every assistant to load it if
-# present, so all AI tools pick it up without any tool-specific local file.
+# The public repo ships NO AI-tool files at all (no AGENTS.md, CLAUDE.md,
+# .claude/, or copilot instructions). All four canonical paths point at the
+# same `private/ai/AGENTS.md`, so every tool — Claude Code, Codex, Copilot —
+# reads identical guidance.
 #
 # The script is idempotent: safe to re-run any time. Run it via `make
 # private-init` or directly. It never overwrites an existing real file.
@@ -101,7 +105,7 @@ if [ ! -d "$PRIV/.git" ]; then
 else
     echo "  ✓ private/ is already a git repo"
 fi
-mkdir -p "$PRIV/dev-notes" "$PRIV/docs" "$PRIV/tests" "$PRIV/ai" "$PRIV/.claude"
+mkdir -p "$PRIV/dev-notes" "$PRIV/docs" "$PRIV/tests" "$PRIV/ai" "$PRIV/ai/.claude"
 echo ""
 
 # --- 2. seed template files (only when missing) ------------------------------
@@ -122,6 +126,10 @@ seed_file "$PRIV/.gitignore" <<'EOF'
 # Python caches (in case private tooling lands here)
 __pycache__/
 *.pyc
+
+# Override the user's global ~/.gitignore_global (if it ignores Claude per-user
+# settings — common default). Inside this private repo we *want* to track them.
+!**/.claude/settings.local.json
 EOF
 
 seed_file "$PRIV/README.md" <<'EOF'
@@ -137,17 +145,18 @@ symlinks that make these files usable at their normal paths. It is idempotent.
 
 ## What lives here
 
-| Real file (here)                  | Symlinked into public repo as       | Purpose                                  |
-|-----------------------------------|-------------------------------------|------------------------------------------|
-| `dev-notes/`                      | `dev-notes`                         | Maintainer working/milestone notes       |
-| `ai/AGENTS.local.md`              | `AGENTS.local.md`                   | Private agent instructions (all tools)   |
-| `COAUTHOR_SETUP.md`               | `COAUTHOR_SETUP.md`                 | Private coauthor setup notes             |
-| `.claude/settings.local.json`     | `.claude/settings.local.json`       | Per-user Claude Code config              |
+| Real file (here)              | Symlinked into public repo as       | Purpose                                  |
+|-------------------------------|-------------------------------------|------------------------------------------|
+| `dev-notes/`                  | `dev-notes`                         | Maintainer working/milestone notes       |
+| `COAUTHOR_SETUP.md`           | `COAUTHOR_SETUP.md`                 | Private coauthor setup notes             |
+| `ai/AGENTS.md`                | `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md` | Canonical AI agent instructions (every tool) |
+| `ai/.claude/`                 | `.claude/`                          | Claude Code settings + per-user config   |
 | `docs/<name>.md`, `tests/<name>.md` | `docs/<name>.md`, `tests/<name>.md` | Maintainer-only docs (symlinked if present) |
 
-`AGENTS.local.md` is the canonical home for private agent guidance. The public
-`AGENTS.md` instructs every assistant to read `AGENTS.local.md` if it exists, so
-all AI tools pick it up — no tool-specific local file needed.
+The public repo ships **no** AI-tool files — no `AGENTS.md`, no `CLAUDE.md`,
+no `.claude/`, no copilot instructions. Anyone who clones the public repo
+gets a clean codebase and consults the regular `docs/` for guidance. The
+maintainer's AI guidance lives entirely in this private repo.
 
 To add a maintainer-only doc that sits in an otherwise-public directory (e.g.
 `docs/IMPLEMENTATION_NOTES.md`), create it under `private/docs/` and re-run
@@ -165,21 +174,29 @@ git -C private push -u origin main
 ```
 EOF
 
-seed_file "$PRIV/ai/AGENTS.local.md" <<'EOF'
-# Private agent instructions (AGENTS.local.md)
+seed_file "$PRIV/ai/AGENTS.md" <<'EOF'
+# AGENTS.md (private)
 
-Canonical, private addendum to the public `AGENTS.md`. The public `AGENTS.md`
-tells every AI assistant to load this file when it exists, so anything here
-applies on top of the public guidance — for **all** tools (Claude Code, Codex,
-Copilot, …). This file is gitignored by the public repo and never shipped.
+Canonical AI agent instructions for this project. Symlinked into the public
+repo as gitignored `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`,
+so every assistant (Claude Code, Codex, Copilot, …) reads the same file.
 
-Put private context here, e.g.:
+Replace this placeholder with your own project-specific guidance:
 
-- Personal workflow preferences and shortcuts.
-- Pointers to private data locations, internal URLs, or credentials handling
-  (never paste secrets themselves).
-- Coauthor- or project-specific conventions not meant for the public template.
-- Reminders that should steer agents but shouldn't appear in the shipped repo.
+- What the project is and the build/test workflow.
+- Environment and tooling conventions.
+- Anything an agent must know to be useful — and anything it must not do.
+
+This file is **never tracked publicly**. Agents: never commit `private/` or any
+of the symlinks that point into it.
+EOF
+
+seed_file "$PRIV/ai/.claude/settings.local.json" <<'EOF'
+{
+  "permissions": {
+    "allow": []
+  }
+}
 EOF
 
 seed_file "$PRIV/dev-notes/README.md" <<'EOF'
@@ -201,34 +218,42 @@ _Replace this placeholder with your own notes._
 EOF
 echo ""
 
-# --- 3. relocate per-user Claude config into the overlay ---------------------
+# --- 3. migrate any leftover public .claude/ files into the overlay ----------
+#
+# Only triggers when `.claude` is a REAL directory (older layouts shipped a
+# committed `.claude/settings.json`). If `.claude` is already a symlink into
+# private/, the files seen "under" it are already private — nothing to do.
 
-echo "3. .claude/settings.local.json (per-user Claude Code config)"
-local_settings="$REPO_ROOT/.claude/settings.local.json"
-priv_settings="$PRIV/.claude/settings.local.json"
-if [ -f "$local_settings" ] && [ ! -L "$local_settings" ]; then
-    if [ -e "$priv_settings" ]; then
-        echo "  ⚠ a private copy already exists; leaving public file in place."
-        echo "     Reconcile $local_settings and $priv_settings by hand."
-    else
-        mv "$local_settings" "$priv_settings"
-        echo "  → moved existing settings.local.json into private/.claude/"
-    fi
-fi
-# Ensure a target exists so the symlink is never dangling.
-if [ ! -e "$priv_settings" ]; then
-    printf '{\n  "permissions": {\n    "allow": []\n  }\n}\n' >"$priv_settings"
-    echo "  + created empty private/.claude/settings.local.json"
+echo "3. migrate leftover public Claude config (if any)"
+if [ -d "$REPO_ROOT/.claude" ] && [ ! -L "$REPO_ROOT/.claude" ]; then
+    for fname in settings.json settings.local.json; do
+        pub="$REPO_ROOT/.claude/$fname"
+        priv="$PRIV/ai/.claude/$fname"
+        if [ -f "$pub" ] && [ ! -L "$pub" ]; then
+            if [ -e "$priv" ] && [ ! -L "$priv" ]; then
+                echo "  ⚠ both $pub and $priv exist as real files — reconcile by hand."
+            else
+                mv "$pub" "$priv"
+                echo "  → moved .claude/$fname into private/ai/.claude/"
+            fi
+        fi
+    done
+    # If .claude/ is now empty, remove it so the symlink can land.
+    rmdir "$REPO_ROOT/.claude" 2>/dev/null && echo "  → removed empty .claude/ directory" || true
+else
+    echo "  · nothing to migrate"
 fi
 echo ""
 
 # --- 4. symlinks (gitignored by the public repo) -----------------------------
 
 echo "4. symlinks"
-make_symlink "dev-notes"                   "private/dev-notes"
-make_symlink "AGENTS.local.md"             "private/ai/AGENTS.local.md"
-make_symlink "COAUTHOR_SETUP.md"           "private/COAUTHOR_SETUP.md"
-make_symlink ".claude/settings.local.json" "../private/.claude/settings.local.json"
+make_symlink "dev-notes"                       "private/dev-notes"
+make_symlink "COAUTHOR_SETUP.md"               "private/COAUTHOR_SETUP.md"
+make_symlink "AGENTS.md"                       "private/ai/AGENTS.md"
+make_symlink "CLAUDE.md"                       "private/ai/AGENTS.md"
+make_symlink ".claude"                         "private/ai/.claude"
+make_symlink ".github/copilot-instructions.md" "../private/ai/AGENTS.md"
 
 # Maintainer-only docs that sit inside otherwise-public dirs: link only when a
 # private source actually exists (so we never create dangling links).

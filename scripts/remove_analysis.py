@@ -2,7 +2,7 @@
 """
 remove_analysis.py — cleanly remove an example/analysis from the project.
 
-This is the inverse of "Adding a new analysis" (see AGENTS.md). An analysis is
+This is the inverse of "Adding a new analysis" (see README.md). An analysis is
 spread across several places, and deleting it by hand easily leaves the build
 referencing a study that no longer exists (`make all` then breaks). This removes
 all of it together:
