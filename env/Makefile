@@ -38,11 +38,27 @@ ensure-uv:
 
 # Install Julia via Python (triggers juliacall auto-install).
 #
-# env/juliapkg.json pins the Julia *binary* version and is copied into the
-# juliapkg project before the install runs. Without it, juliapkg takes whatever
-# Julia satisfies PythonCall's loose compat bound -- so two clones of the same
-# commit, built a month apart, can end up on different Julia versions with
-# nothing recording that they differ.
+# env/juliapkg.json is copied into the juliapkg project before the install runs.
+# It pins PythonCall.
+#
+# It deliberately does NOT pin the Julia binary version, and that is worth
+# explaining because pinning it is the obvious thing to want. juliacall declares
+# OpenSSL_jll as "<=python", tying it to the OpenSSL of the host Python -- and
+# the resulting OpenSSL_jll carries its own Julia compat bound. On one machine
+# that admits Julia 1.12; on a GitHub runner it resolves to a build supporting
+# only "1.0.0 - 1.11". A pin of "=1.12.4" therefore produced:
+#
+#   ✗ Error: 'julia' compat entries have empty intersection:
+#     - '=1.12.4'      at env/juliapkg.json
+#     - '1.0.0 - 1.11' at …/juliacall/juliapkg.json (OpenSSL_jll)
+#     - '^1.10.3'      at …/juliacall/juliapkg.json
+#
+# So the achievable Julia range is a property of the machine's Python, not of
+# this repo, and an exact binary pin is not portable by construction. What Julia
+# a build actually used is still recorded -- env/Manifest.toml carries
+# julia_version -- which is provenance rather than constraint, and is the honest
+# thing to offer here. A project that knows its platforms can add a "julia" key
+# back; a template cannot.
 julia-install-via-python:
 	@echo ">> Pinning Julia binary version from env/juliapkg.json"
 	@mkdir -p "$(JULIA_DEPOT_PATH)"

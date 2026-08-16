@@ -269,31 +269,55 @@ class TestJuliaPinning:
             "one real project's Julia stack moved 61 packages under such bounds."
         )
 
-    def test_juliapkg_pins_an_exact_julia_version(self):
+    def test_juliapkg_pins_pythoncall_exactly(self):
         path = REPO_ROOT / "env" / "juliapkg.json"
         if not path.is_file():
             pytest.skip("no Julia in this project")
         import json
 
         spec = json.loads(path.read_text())
-        julia = spec.get("julia", "")
-        assert julia.startswith("="), (
-            f"env/juliapkg.json pins julia as {julia!r}; without an exact '=' pin "
-            "juliapkg takes whatever satisfies PythonCall's loose compat bound"
+        version = spec.get("packages", {}).get("PythonCall", {}).get("version", "")
+        assert version.startswith("="), (
+            f"env/juliapkg.json pins PythonCall as {version!r}; it should be an "
+            "exact '=' pin, since PythonCall is the Julia side of the bridge"
         )
 
-    def test_juliapkg_matches_the_installed_julia(self):
+    def test_juliapkg_does_not_pin_the_julia_binary(self):
+        """A template must not pin the Julia binary version, however tempting.
+
+        juliacall declares OpenSSL_jll as "<=python", tying it to the host
+        Python's OpenSSL, and the resulting OpenSSL_jll carries its own Julia
+        compat bound. On one machine that admits 1.12; on a GitHub runner it
+        resolved to a build supporting only "1.0.0 - 1.11". Pinning "=1.12.4"
+        therefore failed with an empty intersection on CI while working locally.
+
+        The achievable Julia range is a property of the machine's Python, not of
+        the repository, so an exact pin is not portable by construction. A
+        project that knows its platforms may add a "julia" key back; the record
+        of what was actually used lives in env/Manifest.toml's julia_version,
+        which is provenance rather than constraint.
+        """
         path = REPO_ROOT / "env" / "juliapkg.json"
-        binary = REPO_ROOT / ".julia" / "pyjuliapkg" / "install" / "bin" / "julia"
-        if not path.is_file() or not binary.is_file():
-            pytest.skip("Julia not installed here")
+        if not path.is_file():
+            pytest.skip("no Julia in this project")
         import json
 
-        want = json.loads(path.read_text())["julia"].lstrip("=")
-        got = subprocess.run(
-            [str(binary), "--version"], capture_output=True, text=True
-        ).stdout.split()[-1]
-        assert got == want, f"juliapkg.json pins {want}, installed Julia is {got}"
+        julia = json.loads(path.read_text()).get("julia")
+        assert julia is None or not julia.startswith("="), (
+            f"env/juliapkg.json pins julia as {julia!r}. An exact pin cannot be "
+            "satisfied on every platform, because juliacall ties OpenSSL_jll -- "
+            "and through it the maximum Julia version -- to the host Python."
+        )
+
+    def test_manifest_records_the_julia_version_used(self):
+        """The Manifest is where the Julia version is recorded, since the pin
+        cannot live in juliapkg.json. Provenance, not constraint."""
+        manifest = REPO_ROOT / "env" / "Manifest.toml"
+        if not manifest.is_file():
+            pytest.skip("no Julia in this project")
+        assert re.search(
+            r'^julia_version\s*=\s*"[\d.]+"', manifest.read_text(), re.M
+        ), "env/Manifest.toml has no julia_version entry"
 
 
 class TestStataVendoring:
