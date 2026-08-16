@@ -362,6 +362,29 @@ class TestJuliaPinning:
             "from scratch only when none exists."
         )
 
+    def test_instantiate_recipe_does_not_depend_on_the_working_directory(self):
+        """env/Makefile uses .ONESHELL, so a `cd` persists for the whole recipe.
+
+        The julia-instantiate recipe cds to the repo root to run Julia, then
+        reads Manifest.toml. Written as a bare relative path, that grep looked
+        for env/Manifest.toml in the repo ROOT, found nothing, and the
+        version-mismatch warning it guarded silently never fired -- a check
+        disabled by a `cd` three lines above it.
+        """
+        mk = REPO_ROOT / "env" / "Makefile"
+        if not mk.is_file():
+            pytest.skip("no env/Makefile")
+        text = mk.read_text()
+        if "julia-instantiate:" not in text:
+            pytest.skip("no Julia in this project")
+        start = text.index("julia-instantiate:")
+        recipe = text[start : text.index("\nall-env:", start)]
+        assert "$(CURDIR)/Manifest.toml" in recipe, (
+            "julia-instantiate reads Manifest.toml by a relative path. Under "
+            ".ONESHELL the recipe's earlier `cd $(REPO_ROOT)` is still in effect, "
+            "so the path must be absolute or the read silently finds nothing."
+        )
+
     def test_julia_version_floor_matches_what_juliacall_requires(self):
         """runjulia's warning threshold must not exceed what platforms can install.
 

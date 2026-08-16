@@ -76,10 +76,39 @@ julia-install-via-python:
 #
 # Kept separate from julia-install-via-python because that step populates the
 # *juliapkg* project (PythonCall), a different environment from this one.
+# A Manifest pins packages *for the Julia version it was resolved with*. On a
+# different Julia, Pkg emits
+#
+#   ┌ Warning: The active manifest file has dependencies that were resolved with
+#   │ a different julia version (1.12.4). Unexpected behavior may occur.
+#   ┌ Warning: The project dependencies or compat requirements have changed
+#   │ since the manifest was last resolved.
+#
+# and then RE-RESOLVES and carries on. The build goes green while reproducing
+# versions other than the pinned ones, and the only evidence is two warnings
+# several hundred lines into a log nobody reads. So say it plainly at the end,
+# where it is visible: a green build that is not reproducing the pin should not
+# look identical to one that is.
 .PHONY: julia-instantiate
 julia-instantiate:
-	@echo ">> Instantiating env/ from Manifest.toml"
-	@cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
+	@manifest="$(CURDIR)/Manifest.toml"
+	want=$$(grep -m1 '^julia_version' "$$manifest" 2>/dev/null | sed 's/.*"\(.*\)"/\1/')
+	echo ">> Instantiating env/ from Manifest.toml"
+	cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
+	got=$$($(REPO_ROOT)/env/scripts/runjulia -e 'print(VERSION)' 2>/dev/null | tail -1)
+	if [ -n "$$want" ] && [ -n "$$got" ] && [ "$$want" != "$$got" ]; then
+	  echo ""
+	  echo "  ================================================================"
+	  echo "  NOT REPRODUCING THE PINNED VERSIONS"
+	  echo "  Manifest.toml was resolved with Julia $$want; this machine runs $$got."
+	  echo "  Pkg re-resolved instead of honouring the pin, so the installed"
+	  echo "  package versions are not the committed ones."
+	  echo ""
+	  echo "  Run on Julia $$want, or regenerate the Manifest here and commit"
+	  echo "  the change deliberately (make julia-relock, if defined)."
+	  echo "  ================================================================"
+	  echo ""
+	fi
 
 all-env: python-env julia-install-via-python julia-instantiate stata-env
 
