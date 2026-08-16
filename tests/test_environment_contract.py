@@ -76,9 +76,9 @@ class TestOneSourceOfTruth:
 
     def test_env_sh_exists_and_sources_the_shared_half(self):
         assert ENV_SH.is_file(), f"missing {ENV_SH}"
-        assert (
-            SHARED_ENV_SH.is_file()
-        ), f"missing {SHARED_ENV_SH} -- run: git submodule update --init --recursive"
+        assert SHARED_ENV_SH.is_file(), (
+            f"missing {SHARED_ENV_SH} -- run: git submodule update --init --recursive"
+        )
         assert "repro_tools/lib/env.sh" in ENV_SH.read_text(), (
             "env/env.sh must source the shared toolchain from the submodule, "
             "or environment fixes cannot reach projects generated earlier"
@@ -127,9 +127,9 @@ class TestOneSourceOfTruth:
             text = w.read_text()
             assert "env.sh" in text, f"{w.name} does not source env/env.sh"
             for var in bridge:
-                assert (
-                    f"export {var}=" not in text
-                ), f"{w.name} exports {var} itself; it belongs in env/env.sh"
+                assert f"export {var}=" not in text, (
+                    f"{w.name} exports {var} itself; it belongs in env/env.sh"
+                )
 
     def test_all_wrappers_agree(self):
         """Every wrapper must yield the same environment, not merely have one."""
@@ -192,9 +192,9 @@ class TestNoAmbientLeakage:
 
     def test_juliaup_is_stripped_from_path(self):
         env = source_env({"PATH": f"/opt/juliaup/bin:{os.environ.get('PATH', '')}"})
-        assert not any(
-            "juliaup" in part.lower() for part in env["PATH"].split(":")
-        ), "juliaup survived on PATH; a second Julia is then one lookup away"
+        assert not any("juliaup" in part.lower() for part in env["PATH"].split(":")), (
+            "juliaup survived on PATH; a second Julia is then one lookup away"
+        )
 
 
 class TestCdpathDiscipline:
@@ -245,9 +245,9 @@ class TestCdpathDiscipline:
         polluted = f".:{REPO_ROOT.parent}:{Path.home()}"
         env = source_env({"CDPATH": polluted})
         root = env["REPRO_PROJECT_ROOT"]
-        assert (
-            "\n" not in root and root.count("/home") <= 1
-        ), f"REPRO_PROJECT_ROOT contains more than one path under CDPATH: {root!r}"
+        assert "\n" not in root and root.count("/home") <= 1, (
+            f"REPRO_PROJECT_ROOT contains more than one path under CDPATH: {root!r}"
+        )
         assert Path(root).is_dir(), f"REPRO_PROJECT_ROOT is not a directory: {root!r}"
 
 
@@ -445,9 +445,9 @@ class TestTemplateOrigin:
         with path.open("rb") as f:
             data = tomllib.load(f)
         assert data["template"]["commit"], "template-origin.toml records no commit"
-        assert re.fullmatch(
-            r"[0-9a-f]{40}", data["template"]["commit"]
-        ), "template.commit is not a full git SHA"
+        assert re.fullmatch(r"[0-9a-f]{40}", data["template"]["commit"]), (
+            "template.commit is not a full git SHA"
+        )
 
     def test_bootstrap_refuses_to_guess_the_commit(self):
         """git searches UPWARDS for a repo, so a tree with no history of its own

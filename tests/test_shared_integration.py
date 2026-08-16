@@ -162,9 +162,9 @@ class TestConfigImport:
         # differently-named directory. The property actually under test is "this
         # is the root, not shared/", and shared/config.py living beneath it
         # establishes that without naming anyone.
-        assert (
-            REPO_ROOT / "shared" / "config.py"
-        ).exists(), f"REPO_ROOT does not look like a project root: {REPO_ROOT}"
+        assert (REPO_ROOT / "shared" / "config.py").exists(), (
+            f"REPO_ROOT does not look like a project root: {REPO_ROOT}"
+        )
         assert REPO_ROOT.name != "shared", "REPO_ROOT points at shared/, not the root"
 
         # Paths should be correct

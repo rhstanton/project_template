@@ -72,9 +72,9 @@ class TestPythonEnvironment:
                 cmd = [str(python_exe), "-c", f"import {package}"]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
-            assert (
-                result.returncode == 0
-            ), f"Package {package} not installed: {result.stderr}"
+            assert result.returncode == 0, (
+                f"Package {package} not installed: {result.stderr}"
+            )
 
     def test_repro_tools_installed(self):
         """repro_tools should be installed in editable mode."""
@@ -445,9 +445,9 @@ class TestEnvironmentReproducibility:
             config = tomllib.load(f)
 
         requires_python = config.get("project", {}).get("requires-python", "")
-        assert (
-            "3.12" in requires_python
-        ), "Python 3.12 not constrained in requires-python"
+        assert "3.12" in requires_python, (
+            "Python 3.12 not constrained in requires-python"
+        )
 
     def test_project_toml_has_compat_section(self):
         """Project.toml should have [compat] section for version constraints."""
