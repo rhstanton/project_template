@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -108,6 +109,11 @@ def remove_stata_files(repo_root: Path) -> None:
 
     files_to_remove = [
         "env/stata-packages.txt",
+        # The pin record that goes with the vendored packages. Leaving it would
+        # give a project a checkable version manifest for a language it does not
+        # have -- and `make stata-check` would then fail on a tree that was
+        # correctly removed.
+        "env/stata-requirements.txt",
         "env/scripts/runstata",
         "env/scripts/execute.ado",
         "env/examples/sample_stata.do",
@@ -120,6 +126,16 @@ def remove_stata_files(repo_root: Path) -> None:
             print(f"  ✓ Removed {file_path}")
         else:
             print(f"  ⚠ Not found: {file_path}")
+
+    # The vendored ado tree: 84 files and 2 MB of Stata packages, committed so
+    # the versions can be pinned at all. A project without Stata should not carry
+    # them, and unlike everything above this is a directory, so unlink() is not
+    # enough -- the earlier version of this function silently left it behind.
+    vendored = repo_root / ".stata"
+    if vendored.is_dir():
+        n = sum(1 for _ in vendored.rglob("*") if _.is_file())
+        shutil.rmtree(vendored)
+        print(f"  ✓ Removed .stata/ (vendored packages, {n} files)")
 
 
 def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
