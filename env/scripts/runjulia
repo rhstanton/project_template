@@ -29,7 +29,12 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/../env.sh"
 
-REQUIRED_VERSION_MIN="${REQUIRED_VERSION_MIN:-1.12.0}"
+# Matches juliacall's own floor (^1.10.3), not the newest Julia that happens to
+# be installed here. It was 1.12.0, which made the warning fire on every platform
+# where OpenSSL_jll caps Julia below that -- including GitHub runners, where 1.11.9
+# is the most that can be installed. A warning that fires on correct, expected
+# configurations trains people to ignore it.
+REQUIRED_VERSION_MIN="${REQUIRED_VERSION_MIN:-1.10.3}"
 
 # Use the bundled Julia installed by `make environment`. Never fall back to a
 # global juliaup Julia -- the project must use its own repo-local copy. env.sh

@@ -35,6 +35,22 @@ SHARED_ENV_SH = (
 )
 
 
+def strip_comments(text: str) -> str:
+    """Drop whole-line comments before matching source text.
+
+    Needed more often than it should be. Twice in one day a test here asserted
+    that some construct was absent, and matched the comment that explained WHY it
+    was absent -- so the file documenting the rule read as breaking it. If a test
+    must look at source rather than behaviour, it should at least look only at
+    the source that runs.
+    """
+    return "\n".join(
+        line
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    )
+
+
 def source_env(extra: dict[str, str] | None = None, root: Path | None = None) -> dict:
     """Source env/env.sh in a clean subshell and return the resulting variables.
 
@@ -307,6 +323,64 @@ class TestJuliaPinning:
             f"env/juliapkg.json pins julia as {julia!r}. An exact pin cannot be "
             "satisfied on every platform, because juliacall ties OpenSSL_jll -- "
             "and through it the maximum Julia version -- to the host Python."
+        )
+
+    def test_the_build_does_not_discard_the_committed_manifest(self):
+        """install_julia.py must RESTORE the manifest it hides, not delete it.
+
+        It hides env/Manifest.toml during the juliacall import for a real reason
+        (the manifest references PythonCall, which the depot does not have yet),
+        but it used to then delete the backup and let Pkg re-resolve from
+        Project.toml -- silently discarding the committed pin on every build.
+
+        Invisible on the machine it was written on, because a fresh resolution
+        there reproduced the same versions and left `git status` clean. Only a
+        platform that resolves differently would ever have shown it, and this
+        project had no CI at the time.
+        """
+        path = REPO_ROOT / "env" / "scripts" / "install_julia.py"
+        if not path.is_file():
+            pytest.skip("no Julia in this project")
+        # Comments stripped before matching. Without this the assertions below
+        # match the COMMENTS that explain the rule -- which is how the first
+        # version of this test failed, and how a sibling test failed earlier the
+        # same day. Prose about a rule is not a violation of it.
+        code = strip_comments(path.read_text())
+
+        assert "shutil.move(manifest_backup, manifest_path)" in code, (
+            "install_julia.py does not restore the manifest it moved aside. "
+            "Without the restore, the committed Manifest.toml pins nothing."
+        )
+        assert "os.remove(manifest_backup)" not in code, (
+            "install_julia.py deletes the manifest backup, which discards the "
+            "committed pin and re-resolves from Project.toml's loose bounds."
+        )
+        assert "Pkg.resolve()" not in code, (
+            "install_julia.py calls Pkg.resolve(), which rewrites Manifest.toml "
+            "and re-derives versions from Project.toml -- undoing the restore. "
+            "Pkg.instantiate() alone honours an existing manifest and resolves "
+            "from scratch only when none exists."
+        )
+
+    def test_julia_version_floor_matches_what_juliacall_requires(self):
+        """runjulia's warning threshold must not exceed what platforms can install.
+
+        It was 1.12.0, so the warning fired on every platform where OpenSSL_jll
+        caps Julia lower -- GitHub runners install 1.11.9 at most. A warning that
+        fires on correct, expected configurations trains people to ignore it.
+        """
+        runjulia = REPO_ROOT / "env" / "scripts" / "runjulia"
+        if not runjulia.is_file():
+            pytest.skip("no Julia in this project")
+        m = re.search(
+            r'REQUIRED_VERSION_MIN="\$\{REQUIRED_VERSION_MIN:-([\d.]+)\}"',
+            runjulia.read_text(),
+        )
+        assert m, "could not find REQUIRED_VERSION_MIN in runjulia"
+        floor = tuple(int(x) for x in m.group(1).split("."))
+        assert floor <= (1, 11, 0), (
+            f"runjulia warns below {m.group(1)}, but juliacall's own floor is "
+            "1.10.3 and some platforms cannot install past 1.11.x"
         )
 
     def test_manifest_records_the_julia_version_used(self):

@@ -105,14 +105,30 @@ try:
     print("✓ juliacall imported successfully")
     print()
 
-    # Don't restore Manifest.toml - let Pkg.instantiate() generate a fresh one
-    # from env/Project.toml. The backup will be cleaned up if it exists.
+    # RESTORE Manifest.toml. Hiding it for the juliacall import is legitimate --
+    # the manifest references PythonCall, which the depot does not have yet --
+    # but this used to DELETE it instead, "let Pkg.instantiate() generate a fresh
+    # one from env/Project.toml".
+    #
+    # That silently discarded the committed pin on every build. Project.toml
+    # admits any FixedEffectModels 1.x; the Manifest is what fixes the exact
+    # versions, and re-resolving from Project.toml is precisely what committing
+    # it was meant to prevent. It was invisible on the machine it was written on,
+    # because a fresh resolution there reproduced the same versions and left the
+    # file unchanged in `git status` -- correct by coincidence, not by design.
     if manifest_backup and os.path.exists(manifest_backup):
         try:
-            os.remove(manifest_backup)
-            print("Removed old Manifest.toml backup (will be regenerated)")
+            shutil.move(manifest_backup, manifest_path)
+            print("Restored Manifest.toml (the committed pin)")
         except Exception as e:
-            print(f"⚠ Could not remove Manifest.toml backup: {e}")
+            print(f"⚠ Could not restore Manifest.toml: {e}", file=sys.stderr)
+            print(
+                "  The environment will re-resolve from Project.toml, which",
+                file=sys.stderr,
+            )
+            print(
+                "  does NOT reproduce the committed package versions.", file=sys.stderr
+            )
 
     # Check Julia version
     julia_version = jl.seval("VERSION")
@@ -173,10 +189,19 @@ try:
 
         println("Active project: ", Base.active_project())
 
-        println("Resolving dependencies...")
-        Pkg.resolve()
-        println()
-        println("Installing packages...")
+        # instantiate() ONLY -- deliberately no Pkg.resolve() before it.
+        #
+        # resolve() recomputes the dependency graph and rewrites Manifest.toml,
+        # which would undo the restore just performed and re-derive versions from
+        # Project.toml's loose bounds. instantiate() installs exactly what the
+        # manifest says, and resolves from scratch only when there is no manifest
+        # -- so it is correct both for a fresh clone and for one with a pin.
+        #
+        # If it cannot satisfy the manifest (typically a manifest written by a
+        # newer Julia than the one installed here), it should fail loudly rather
+        # than quietly substitute different versions. That failure is real
+        # information: a Manifest is tied to a Julia version.
+        println("Installing packages from Manifest.toml (or resolving if absent)...")
         Pkg.instantiate()
         """
     ]
