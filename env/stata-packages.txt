@@ -1,4 +1,21 @@
+# Stata packages vendored in .stata/ado/plus (committed).
+#
+# No version numbers here, deliberately. SSC has no versioned install -- `ssc
+# install estout 3.1.2` is a syntax error, not a version request -- so a version
+# in this file could not be enforced by anything, and the rule that read one
+# printed "with version 3.1.2" while installing whatever SSC served that day.
+#
+# Versions live in stata-requirements.txt, generated from what is actually
+# installed and verified by `make stata-check`.
+#
+# The ado files themselves are committed, per AEA Data Editor guidance: "provide
+# copies of such packages/modules when the package repository does not allow you
+# to specify a version." `make stata-env` therefore installs nothing when they
+# are present; use `make stata-update` to refresh from SSC deliberately.
+#
+# `require` is listed because stata-check and stata-requirements both use it.
 reghdfe
 ftools
-estout 3.1.2
-coefplot 2.0.0
+estout
+coefplot
+require

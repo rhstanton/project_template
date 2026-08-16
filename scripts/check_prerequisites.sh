@@ -3,6 +3,18 @@
 # This script can run without any Python/Julia environment installed
 
 set -e
+# CDPATH must be neutralized before any $(cd ... && pwd). When `cd` resolves a
+# target through CDPATH it echoes the directory, and inside a command
+# substitution that output is captured -- so the variable silently holds two
+# newline-separated paths. Only the bare relative form is affected ("scripts/x"
+# resolves through CDPATH; "./scripts/x" does not), which is why the Makefile's
+# ./scripts/... invocation hid this while a direct `bash scripts/...` did not.
+#
+# This script is EXECUTED, so `unset` is correct. A file that is *sourced* must
+# use `CDPATH= cd --` inside the substitution instead, so it does not mutate the
+# caller's interactive shell.
+unset CDPATH
+
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
