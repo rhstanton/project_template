@@ -178,6 +178,54 @@ bump-version:
 	@test -n "$(VERSION)" || { echo "Usage: make bump-version VERSION=X.Y.Z"; exit 1; }
 	@./scripts/bump_version.py "$(VERSION)" --apply
 
+# Materialize a disposable, bootstrapped instantiation of this template into a
+# sibling directory, so a bug reported against "a project made from the template"
+# can be reproduced against a real one. This repo already exercises the full
+# three-language variant on every build; what it never exercises is bootstrap.py,
+# the pruning step every real project starts with.
+#
+# Disposable on purpose: regenerate rather than maintain. A hand-kept example
+# rots, and debugging against a rotted example is worse than having none, because
+# you trust the answer.
+#
+#   make instance                           # full variant, from HEAD
+#   make instance VARIANT=python-only
+#   make instance VARIANT=no-julia DIRTY=1  # from the working tree instead
+#   make instance VARIANT=full BUILD=1      # also build its environment
+# Override the location with DEST=/path (must be outside this repo).
+INSTANCE_VARIANT := $(if $(VARIANT),$(VARIANT),full)
+INSTANCE_DIR := $(abspath $(CURDIR)/..)/project_template-instances
+
+.PHONY: instance
+instance:
+	@./scripts/make_instance.sh \
+		--variant "$(INSTANCE_VARIANT)" \
+		$(if $(DEST),--dest "$(DEST)") \
+		$(if $(DIRTY),--dirty) \
+		$(if $(BUILD),--build) \
+		$(if $(FORCE),--force)
+
+.PHONY: instance-list
+instance-list:
+	@if [ -d "$(INSTANCE_DIR)" ]; then \
+		echo "Instances under $(INSTANCE_DIR):"; \
+		du -sh "$(INSTANCE_DIR)"/* 2>/dev/null || echo "  (none)"; \
+	else \
+		echo "No instances yet. Create one with: make instance VARIANT=python-only"; \
+	fi
+
+# Removes every generated instance, including any environment built inside one.
+# Only ever touches $(INSTANCE_DIR); an instance placed elsewhere with DEST= is
+# yours to remove.
+.PHONY: instance-clean
+instance-clean:
+	@if [ -d "$(INSTANCE_DIR)" ]; then \
+		echo "Removing $(INSTANCE_DIR)"; \
+		rm -rf "$(INSTANCE_DIR)"; \
+	else \
+		echo "Nothing to remove."; \
+	fi
+
 # ==============================================================================
 # Include Generic Targets from repro-tools
 # ==============================================================================

@@ -1,0 +1,141 @@
+
+# Build the template the way users actually receive it.
+#
+# tests.yml exercises this repo as-is: the full three-language variant, never
+# bootstrapped. But no real project is that. Every project starts by running
+# bootstrap.py to prune the languages it does not want, and until this workflow
+# existed that step had zero tests and never ran in CI -- so the code path every
+# user takes first was the one path nothing checked.
+#
+# That was not hypothetical. The first generated instance failed to build at all:
+# bootstrap.py removed the julia-install-via-python target name with a regex
+# whose \s+ crossed newlines, which deleted the rule's own definition line and
+# re-parented its recipe onto ensure-uv. A --python-only project therefore ran
+# the Julia installer before its venv existed, and blamed a target with nothing
+# to do with Julia.
+#
+# Each variant here is a separate job so a failure names the variant that broke,
+# rather than a single job that stops at the first one.
+
+name: Bootstrap variants
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: variants-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  variant:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The full variant is covered by tests.yml on both OSes, so it is not
+          # repeated here. These are the pruned trees nothing else builds.
+          - name: python-only
+            flags: "--python-only"
+          - name: no-julia
+            flags: "--remove-julia"
+          - name: no-stata
+            flags: "--remove-stata"
+          # --rename touches a different set of files (README, QUICKSTART,
+          # config.py) than the pruning flags. Kept as its own entry rather than
+          # folded into another so a rename failure is not misread as a pruning
+          # failure.
+          - name: python-only-renamed
+            flags: "--python-only --rename 'Renamed CI Project'"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install GNU Make 4.3+ check
+        run: make --version | head -1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Bootstrap the variant
+        run: |
+          python3 bootstrap.py ${{ matrix.flags }}
+
+      - name: Makefile parses
+        run: |
+          make -n environment >/dev/null
+          make -n all >/dev/null
+
+      # Ask what the build WILL DO, not what the source says.
+      #
+      # This is the check that catches the real bug, and it took two failed
+      # attempts to get right. Grepping the Makefile for the removed target name
+      # finds nothing -- the bug DELETED the name, and orphaned its recipe onto
+      # the preceding rule. `make -n` parses the mangled file happily. Only the
+      # dry-run OUTPUT reveals that a --python-only project still shells out to
+      # install_julia.py, because the recipe survived even though its rule did
+      # not. Verified to discriminate: it matches on the broken tree and is
+      # silent on the fixed one.
+      - name: Removed languages are absent from the build plan
+        run: |
+          set -euo pipefail
+          fail=0
+          if [[ "${{ matrix.flags }}" == *"--remove-julia"* || "${{ matrix.flags }}" == *"--python-only"* ]]; then
+            if make -n environment 2>/dev/null | grep -i "julia"; then
+              echo "::error::Julia was removed, but 'make environment' still plans Julia work (orphaned recipe?)"
+              fail=1
+            fi
+            if [[ -e env/scripts/runjulia ]]; then
+              echo "::error::Julia was removed but env/scripts/runjulia still exists"
+              fail=1
+            fi
+          fi
+          if [[ "${{ matrix.flags }}" == *"--remove-stata"* || "${{ matrix.flags }}" == *"--python-only"* ]]; then
+            if make -n environment 2>/dev/null | grep -i "stata"; then
+              echo "::error::Stata was removed, but 'make environment' still plans Stata work"
+              fail=1
+            fi
+          fi
+          exit $fail
+
+      # A backslash followed by a space is an escaped space, not a line
+      # continuation -- so a .PHONY list silently ends there while the file still
+      # parses. This is the exact signature the pruning regexes left behind, and
+      # nothing else in a Makefile legitimately produces it.
+      - name: No mangled line continuations
+        run: |
+          set -euo pipefail
+          if grep -n '\\ ' env/Makefile Makefile; then
+            echo "::error::Backslash-space found: a line continuation was mangled by pruning"
+            exit 1
+          fi
+
+      - name: Set up environment
+        run: make environment
+
+      - name: Verify environment
+        run: make verify
+
+      - name: Run tests
+        run: make test
+
+      - name: Build all artifacts
+        run: make all
+
+      # An empty output tree would let every step above pass while producing
+      # nothing, which is the failure mode this whole workflow exists to prevent.
+      - name: Artifacts were actually produced
+        run: |
+          set -euo pipefail
+          n_prov=$(find output/provenance -name '*.yml' 2>/dev/null | wc -l)
+          echo "provenance records: $n_prov"
+          test "$n_prov" -gt 0 || { echo "::error::make all produced no provenance records"; exit 1; }
