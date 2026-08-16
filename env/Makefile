@@ -91,31 +91,41 @@ julia-install-via-python:
 # look identical to one that is.
 .PHONY: julia-instantiate
 julia-instantiate:
-	@manifest="$(CURDIR)/Manifest.toml"
-	want=$$(grep -m1 '^julia_version' "$$manifest" 2>/dev/null | sed 's/.*"\(.*\)"/\1/')
-	echo ">> Instantiating env/ from Manifest.toml"
+	@echo ">> Instantiating env/ from Manifest.toml"
 	cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
-	got=$$($(REPO_ROOT)/env/scripts/runjulia -e 'print(VERSION)' 2>/dev/null | tail -1)
-	# Always report both values. A check that is silent when it does not fire is
-	# indistinguishable from one that never ran -- which is what happened on the
-	# first attempt here, where a stray `cd` emptied $$want and the comparison was
-	# skipped without a trace. Printing the inputs makes "checked and matched"
-	# distinguishable from "could not check".
-	echo ">> Julia $${got:-<unknown>}; Manifest.toml resolved with $${want:-<unknown>}"
-	if [ -z "$$want" ] || [ -z "$$got" ]; then
-	  echo "   (could not compare versions -- pin NOT verified)"
-	elif [ "$$want" != "$$got" ]; then
-	  echo ""
-	  echo "  ================================================================"
-	  echo "  NOT REPRODUCING THE PINNED VERSIONS"
-	  echo "  Manifest.toml was resolved with Julia $$want; this machine runs $$got."
-	  echo "  Pkg re-resolved instead of honouring the pin, so the installed"
-	  echo "  package versions are not the committed ones."
-	  echo ""
-	  echo "  Run on Julia $$want, or regenerate the Manifest here and commit"
-	  echo "  the change deliberately (make julia-relock, if defined)."
-	  echo "  ================================================================"
-	  echo ""
+	# Ask git, not the file's own contents.
+	#
+	# Comparing the manifest's julia_version against the running Julia does not
+	# work, because Pkg REWRITES Manifest.toml when it cannot honour it: on a
+	# runner with Julia 1.11.9 the committed 1.12.4 manifest was silently
+	# replaced by a 1.11.9 one, so by the time anything looked, the two agreed
+	# and the check reported a match. The evidence had been overwritten by the
+	# thing being checked.
+	#
+	# git still knows what was committed. A dirty Manifest.toml after a build IS
+	# the symptom -- the pin was not honoured, it was replaced -- and it detects
+	# the case regardless of which Julia is involved.
+	cd $(REPO_ROOT) && if git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+	   && git ls-files --error-unmatch env/Manifest.toml >/dev/null 2>&1; then
+	  if git diff --quiet -- env/Manifest.toml; then
+	    echo ">> Manifest.toml unchanged: the committed package versions were installed."
+	  else
+	    echo ""
+	    echo "  ================================================================"
+	    echo "  NOT REPRODUCING THE PINNED VERSIONS"
+	    echo "  The build REWROTE env/Manifest.toml, so the installed package"
+	    echo "  versions are not the committed ones. Pkg does this instead of"
+	    echo "  failing when it cannot satisfy the manifest -- usually because"
+	    echo "  this machine runs a different Julia than the manifest was"
+	    echo "  resolved with."
+	    echo ""
+	    echo "  git diff --stat env/Manifest.toml   # what moved"
+	    echo "  git checkout env/Manifest.toml      # discard, keep the pin"
+	    echo "  ================================================================"
+	    echo ""
+	  fi
+	else
+	  echo ">> (not a git work tree, or Manifest.toml untracked -- pin NOT verified)"
 	fi
 
 all-env: python-env julia-install-via-python julia-instantiate stata-env
