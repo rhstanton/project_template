@@ -96,10 +96,33 @@ tests/TEST_IMPROVEMENTS.md
 .stata/ado/*
 !.stata/ado/plus/
 !.stata/ado/plus/**
-# env/Manifest.toml is COMMITTED, deliberately. Project.toml admits any
-# FixedEffectModels 1.x; the Manifest is the actual pin, and the constitution
-# requires both. It was ignored here until 2026-08-15.
-!/env/Manifest.toml
+# env/Manifest.toml is NOT committed in the TEMPLATE, and that is a considered
+# reversal of 2026-08-15 rather than an oversight.
+#
+# A Julia Manifest pins packages only for the Julia version it was resolved with.
+# On any other Julia, Pkg does not fail -- it rewrites the manifest and carries
+# on. And a template cannot control which Julia a machine can install: juliacall
+# declares OpenSSL_jll as "<=python", tying the maximum usable Julia to the host
+# Python's OpenSSL, so a manifest resolved on 1.12 here is unusable on a GitHub
+# runner capped at 1.11.
+#
+# Committing it therefore meant CI printed "NOT REPRODUCING THE PINNED VERSIONS"
+# on every single run -- a warning that always fires is one people learn to
+# ignore, which is worse than not having it.
+#
+# YOUR project should commit it. It knows its platforms; a template does not.
+# The machinery is all here and stays: install_julia.py restores the manifest
+# rather than deleting it, julia-instantiate reports whether the pin survived,
+# and `make julia-relock` regenerates deliberately. Add the line back once you
+# have run `make environment` on the machines you care about:
+#
+#     !/env/Manifest.toml
+#
+# An explicit ignore is required, not merely the absence of a "!" line: the
+# allowlist above has a general `!*.toml`, which would otherwise track this file
+# anyway. (That also means the `!/env/Manifest.toml` line added on 2026-08-15 was
+# redundant from the start -- `!*.toml` had already allowed it.)
+/env/Manifest.toml
 env/lock.pid
 
 # Python cache

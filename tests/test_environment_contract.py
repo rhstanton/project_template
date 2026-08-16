@@ -270,19 +270,35 @@ class TestCdpathDiscipline:
 class TestJuliaPinning:
     """Project.toml alone admits any 1.x; the Manifest is the real pin."""
 
-    def test_manifest_is_committed(self):
-        manifest = REPO_ROOT / "env" / "Manifest.toml"
-        if not manifest.is_file():
-            pytest.skip("no Julia in this project")
+    def test_template_does_not_commit_the_manifest(self):
+        """The TEMPLATE deliberately does not commit env/Manifest.toml.
+
+        A Julia Manifest pins packages only for the Julia it was resolved with,
+        and on any other Julia Pkg rewrites it rather than failing. A template
+        cannot control which Julia a machine can install -- juliacall ties
+        OpenSSL_jll, and through it the maximum Julia, to the host Python -- so a
+        manifest resolved on 1.12 is unusable on a runner capped at 1.11.
+
+        Committing it made CI report "NOT REPRODUCING THE PINNED VERSIONS" on
+        every run, and a warning that always fires is one people learn to ignore.
+
+        A *generated project* should commit it: it knows its platforms. That is
+        why this test is worded for the template specifically, and why it skips
+        rather than fails once template-origin.toml shows we are in a project.
+        """
+        if (REPO_ROOT / "template-origin.toml").is_file():
+            pytest.skip(
+                "this is a generated project; committing the Manifest is right here"
+            )
         tracked = subprocess.run(
             ["git", "ls-files", "--error-unmatch", "env/Manifest.toml"],
             cwd=REPO_ROOT,
             capture_output=True,
         )
-        assert tracked.returncode == 0, (
-            "env/Manifest.toml is not tracked. Project.toml admits any "
-            "FixedEffectModels 1.x, so without the Manifest nothing is pinned -- "
-            "one real project's Julia stack moved 61 packages under such bounds."
+        assert tracked.returncode != 0, (
+            "env/Manifest.toml is tracked in the template. It pins only on the "
+            "Julia it was resolved with, so here it produces a permanent CI "
+            "warning rather than a guarantee. Commit it in a project instead."
         )
 
     def test_juliapkg_pins_pythoncall_exactly(self):
