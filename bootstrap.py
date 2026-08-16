@@ -135,6 +135,67 @@ def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
     print("  ✓ Removed juliacall dependency (run `uv lock` to refresh the lockfile)")
 
 
+def strip_make_prereq(content: str, name: str) -> str:
+    """Remove `name` from dependency and .PHONY lists, never crossing a newline.
+
+    The character class is `[ \\t]`, not `\\s`, and that is the whole point. The
+    original used `\\s+` + name, which happily ate the newline and indent before
+    a name sitting at the start of a continuation line, welding two lines
+    together:
+
+        .PHONY: julia-env julia-install-via-python ensure-uv \\
+                stata-env stata-clean stata-check \\
+
+    became `julia-env ensure-uv \\ stata-clean stata-check \\` -- and `\\ ` is an
+    escaped space, not a line continuation, so the .PHONY list silently ended
+    there. `\\s` in a multiline substitution is nearly always a bug; bound it to
+    the line unless crossing one is what you actually mean.
+    """
+    return re.sub(rf"[ \t]+{re.escape(name)}\b", "", content)
+
+
+def strip_make_target(content: str, target: str) -> str:
+    """Remove a rule: its comment block, its `target:` line, and its recipe.
+
+    Line-anchored, for the reason above. Removing the bare NAME everywhere also
+    hit the rule's own definition line, deleting `julia-install-via-python` from
+    `julia-install-via-python:` but leaving the orphaned `:` to glue itself onto
+    the comment above -- and re-parenting the recipe onto whichever rule came
+    before. In a --python-only project that put the Julia installer inside
+    `ensure-uv`, so `make environment` tried to install Julia before the venv
+    existed and failed pointing at a target with nothing to do with Julia.
+    """
+    lines = content.splitlines(keepends=True)
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        if not re.match(rf"^{re.escape(target)}\s*:", lines[i]):
+            out.append(lines[i])
+            i += 1
+            continue
+
+        # Drop the comment block directly above the rule, if any.
+        while out and out[-1].lstrip().startswith("#"):
+            out.pop()
+
+        i += 1  # the `target:` line itself
+        # A make recipe line must start with a tab. Blank lines belong to the
+        # recipe only when another tab-indented line follows; otherwise the
+        # blank is the separator before the next rule and must survive.
+        while i < len(lines):
+            if lines[i].startswith("\t"):
+                i += 1
+            elif (
+                not lines[i].strip()
+                and i + 1 < len(lines)
+                and lines[i + 1].startswith("\t")
+            ):
+                i += 1
+            else:
+                break
+    return "".join(out)
+
+
 def update_env_makefile(
     repo_root: Path, remove_julia: bool, remove_stata: bool
 ) -> None:
@@ -150,32 +211,34 @@ def update_env_makefile(
         return
 
     content = env_makefile.read_text()
+    original = content
 
     if remove_julia:
-        # Remove julia-install-via-python from all-env dependencies
-        content = re.sub(r"\s+julia-install-via-python", "", content)
-
-        # Remove the julia-install-via-python target section
-        content = re.sub(
-            r"\.PHONY: julia-install-via-python.*?(?=\n\.PHONY|\n#|\Z)",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
+        content = strip_make_prereq(content, "julia-install-via-python")
+        content = strip_make_target(content, "julia-install-via-python")
         print("  ✓ Removed Julia targets")
 
     if remove_stata:
-        # Remove stata-env from all-env dependencies
-        content = re.sub(r"\s+stata-env", "", content)
+        content = strip_make_prereq(content, "stata-env")
 
-        # Remove the Stata section (marked with # ---------- Stata ----------)
+        # Remove the Stata section (marked with # ---------- Stata ----------).
+        # The lookahead alternatives are anchored to line starts so a stray
+        # ".PHONY" appearing mid-line cannot terminate the match early.
         content = re.sub(
-            r"# ---------- Stata ----------.*?(?=\n# ---|\.PHONY|\Z)",
+            r"# ---------- Stata ----------.*?(?=\n# ---|\n\.PHONY|\Z)",
             "",
             content,
             flags=re.DOTALL,
         )
         print("  ✓ Removed Stata targets")
+
+    if content == original:
+        raise RuntimeError(
+            "env/Makefile was not modified. A pruning pattern matched nothing, "
+            "which produces a project that still references a removed language. "
+            "Check the target and banner names in env/Makefile against "
+            "strip_make_target()/strip_make_prereq() in bootstrap.py."
+        )
 
     env_makefile.write_text(content)
 
