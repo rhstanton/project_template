@@ -82,7 +82,10 @@ tests/TEST_IMPROVEMENTS.md
 .julia/
 .cache/
 .stata/
-env/Manifest.toml
+# env/Manifest.toml is COMMITTED, deliberately. Project.toml admits any
+# FixedEffectModels 1.x; the Manifest is the actual pin, and the constitution
+# requires both. It was ignored here until 2026-08-15.
+!/env/Manifest.toml
 env/lock.pid
 
 # Python cache

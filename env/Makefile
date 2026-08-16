@@ -36,12 +36,36 @@ export PYTHON_JULIAPKG_PROJECT := $(JULIA_DEPOT_PATH)
 ensure-uv:
 	@command -v uv >/dev/null 2>&1 || bash $(ENV_DIR)/scripts/install_uv.sh
 
-# Install Julia via Python (triggers juliacall auto-install)
+# Install Julia via Python (triggers juliacall auto-install).
+#
+# env/juliapkg.json pins the Julia *binary* version and is copied into the
+# juliapkg project before the install runs. Without it, juliapkg takes whatever
+# Julia satisfies PythonCall's loose compat bound -- so two clones of the same
+# commit, built a month apart, can end up on different Julia versions with
+# nothing recording that they differ.
 julia-install-via-python:
+	@echo ">> Pinning Julia binary version from env/juliapkg.json"
+	@mkdir -p "$(JULIA_DEPOT_PATH)"
+	@cp "$(CURDIR)/juliapkg.json" "$(JULIA_DEPOT_PATH)/juliapkg.json"
 	@echo ">> Installing Julia via juliacall..."
 	@cd $(REPO_ROOT) && JULIA_ENABLE_CUDA=$(JULIA_ENABLE_CUDA) env/scripts/runpython env/scripts/install_julia.py
 
-all-env: python-env julia-install-via-python stata-env
+# Instantiate env/Project.toml against the committed env/Manifest.toml.
+#
+# The Manifest is the pin that matters. Project.toml alone admits any
+# FixedEffectModels 1.x, and "any 1.x" is not hypothetical drift: between two
+# runs of a real project seven months apart, the Julia stack moved 61 packages
+# under exactly such bounds -- including FixedEffects 2.4.1 -> 3.3.0 and CUDA
+# 5.9.6 -> 6.2.1, both major bumps, in the stack that computes the results.
+#
+# Kept separate from julia-install-via-python because that step populates the
+# *juliapkg* project (PythonCall), a different environment from this one.
+.PHONY: julia-instantiate
+julia-instantiate:
+	@echo ">> Instantiating env/ from Manifest.toml"
+	@cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
+
+all-env: python-env julia-install-via-python julia-instantiate stata-env
 
 # Main entry point
 environment: all-env

@@ -79,6 +79,12 @@ def remove_julia_files(repo_root: Path) -> None:
 
     files_to_remove = [
         "env/Project.toml",
+        # The two pins that go with Project.toml. Leaving them behind would give
+        # a Python-only project a committed Julia manifest and a pinned Julia
+        # binary version for a language it does not have -- files that look
+        # authoritative and describe nothing.
+        "env/Manifest.toml",
+        "env/juliapkg.json",
         "env/scripts/runjulia",
         "env/scripts/install_julia.py",
         "env/examples/sample_julia.jl",
@@ -133,6 +139,21 @@ def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
 
     pyproject.write_text(content)
     print("  ✓ Removed juliacall dependency (run `uv lock` to refresh the lockfile)")
+
+
+# Every env/Makefile target that exists only because Julia does. Listed here
+# rather than inline so adding a Julia target is one edit, not two in different
+# files -- `julia-instantiate` was added to env/Makefile and immediately produced
+# a --python-only project whose all-env still called the deleted runjulia.
+#
+# The CI variant matrix is what catches an omission here: it asserts that a
+# pruned tree's `make -n environment` plans no Julia work at all.
+JULIA_MAKE_TARGETS = (
+    "julia-install-via-python",
+    "julia-instantiate",
+    "julia-env",
+    "juliacall-clean",
+)
 
 
 def strip_make_prereq(content: str, name: str) -> str:
@@ -214,9 +235,10 @@ def update_env_makefile(
     original = content
 
     if remove_julia:
-        content = strip_make_prereq(content, "julia-install-via-python")
-        content = strip_make_target(content, "julia-install-via-python")
-        print("  ✓ Removed Julia targets")
+        for target in JULIA_MAKE_TARGETS:
+            content = strip_make_prereq(content, target)
+            content = strip_make_target(content, target)
+        print(f"  ✓ Removed Julia targets ({', '.join(JULIA_MAKE_TARGETS)})")
 
     if remove_stata:
         content = strip_make_prereq(content, "stata-env")
