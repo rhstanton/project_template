@@ -3,68 +3,71 @@
 # Stata Environment Runner
 # ==============================================================================
 #
-# This script runs Stata do-files with proper environment checking.
-#
 # Usage:
 #   env/scripts/runstata script.do [args...]
 #
+# Sources env/env.sh so the project root and DATA_DIR are resolved the same way
+# as everywhere else, rather than by a local `cd`.
 # ==============================================================================
 
-set -eu  # Removed -o pipefail to allow grep filtering
+# pipefail is deliberately ON, unlike the previous version. Without it, the
+# `| tee` below made $? report tee's status -- effectively always 0 -- so a Stata
+# crash or a timeout kill looked like success. The grep for execute.ado's error
+# marker caught do-file errors and hid how narrow that safety net was.
+set -euo pipefail
 
-# Unset CDPATH to prevent cd from printing directories
+# Executed, not sourced, so `unset` is correct here.
 unset CDPATH
 
-DO_FILE="$1"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -z "$DO_FILE" ]; then
-    echo "Usage: runstata <file.do>"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/../env.sh"
+
+# Checked before use: with `set -u`, a bare $1 would abort with an unbound
+# variable error instead of showing the usage line.
+if [[ $# -lt 1 || -z "${1:-}" ]]; then
+    echo "Usage: runstata <file.do>" >&2
     exit 1
 fi
+DO_FILE="$1"
 
-# Get to project root (two levels up from env/scripts/)
-cd "$(dirname "$0")/../.."
-PROJECT_ROOT="$(pwd)"
+cd -- "$REPRO_PROJECT_ROOT"
 
-# Extract base name for log file
-BASE="${DO_FILE%.do}"
-LOG_FILE="output/logs/${BASE##*/}.log"
+TEMP_DO=$(mktemp "${TMPDIR:-/tmp}/stata_XXXXXX.do")
+TEMP_OUT=$(mktemp "${TMPDIR:-/tmp}/stata_out_XXXXXX.txt")
+trap 'rm -f "$TEMP_DO" "$TEMP_OUT"' EXIT
 
-# Create temporary setup file
-TEMP_DO=$(mktemp /tmp/stata_XXXXXX.do)
-trap "rm -f $TEMP_DO" EXIT
+{
+    echo "quietly adopath ++ \"${REPRO_PROJECT_ROOT}/.stata/ado/plus\""
+    echo "quietly adopath ++ \"${REPRO_PROJECT_ROOT}/env/scripts\""
+    echo "execute ${DO_FILE}"
+} > "$TEMP_DO"
 
-# Write the setup commands
-echo "quietly adopath ++ \"${PROJECT_ROOT}/.stata/ado/plus\"" > "$TEMP_DO"
-echo "quietly adopath ++ \"${PROJECT_ROOT}/env/scripts\"" >> "$TEMP_DO"
-echo "execute ${DO_FILE}" >> "$TEMP_DO"
-
-# Run Stata, capturing output to detect errors
-# - timeout (default 10s, override with STATA_TIMEOUT): kill hung Stata runs
-# - -q flag: Quiet mode (suppress Stata banner)
-# - execute.ado displays errors with "Error in do-file (return code: ###)"
-# - TERM=dumb prevents Stata from waiting for terminal input
-# - </dev/null ensures Stata can't wait for stdin
-# 
-# Note: Stata batch mode always returns exit code 0 unless it crashes.
-# We must parse output to detect script errors.
+# - timeout (default 10s, override with STATA_TIMEOUT) kills hung runs
+# - -q suppresses the banner; TERM=dumb stops Stata waiting on the terminal
+# - </dev/null ensures it cannot wait on stdin
+#
+# Stata batch mode returns 0 even when a do-file fails, so the grep below is
+# still required; execute.ado prints the marker it looks for. PIPESTATUS gives
+# the real status of the timeout/stata side of the pipe.
 echo ""
-set +e  # Disable exit on error for stata call
-TEMP_OUT=$(mktemp /tmp/stata_out_XXXXXX.txt)
-trap "rm -f $TEMP_DO $TEMP_OUT" EXIT
-
+set +e
 TERM=dumb timeout "${STATA_TIMEOUT:-10}" stata-mp -q do "$TEMP_DO" </dev/null 2>&1 | tee "$TEMP_OUT"
-STATA_EXIT=$?
+STATA_EXIT=${PIPESTATUS[0]}
+set -e
 
-# Check if output contains error pattern from execute.ado
+if [[ "$STATA_EXIT" -eq 124 ]]; then
+    echo "Stata timed out after ${STATA_TIMEOUT:-10}s" >&2
+    exit 124
+fi
+
 if grep -q "Error in do-file (return code:" "$TEMP_OUT"; then
-    # Extract error code
-    ERROR_CODE=$(grep "Error in do-file (return code:" "$TEMP_OUT" | sed 's/.*return code: \([0-9]\+\).*/\1/' | tail -1)
+    ERROR_CODE=$(grep "Error in do-file (return code:" "$TEMP_OUT" \
+        | sed 's/.*return code: \([0-9]\+\).*/\1/' | tail -1)
     echo "Stata script failed with return code $ERROR_CODE" >&2
     exit 1
 fi
 
-set -e  # Re-enable
 echo ""
-exit $STATA_EXIT
-
+exit "$STATA_EXIT"

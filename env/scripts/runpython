@@ -1,53 +1,31 @@
 #!/usr/bin/env bash
-# Julia/Python bridge configuration - prevent juliacall from downloading its own Julia
+# Run Python inside this project's environment.
+#
+# Carries no environment of its own. Everything comes from env/env.sh, which
+# sources the shared toolchain from the repro-tools submodule. This script used
+# to restate the Julia bridge itself, and so did runjulia, runstata and
+# runnotebook -- four copies that had drifted apart, with runnotebook missing
+# JULIA_LOAD_PATH entirely and runjulia setting a differently-named variable to a
+# different value. One copy, or they diverge again.
 set -euo pipefail
+
+# This script is EXECUTED, so `unset` is correct. In env/env.sh, which is
+# *sourced*, the same hazard must be handled with `CDPATH= cd --` inside the
+# command substitution instead, so it does not mutate the caller's shell.
 unset CDPATH
 
-# Find repo root (where env/ is located)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
-if [[ ! -x "$PYTHON_BIN" ]]; then
-  echo "❌ Python env not found at: '$PYTHON_BIN'"
-  echo "   Run: make environment"
-  exit 1
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/../env.sh"
+
+# env.sh deliberately does not fail on a missing environment -- a fresh clone
+# should still get a usable interactive shell. This is the layer that must fail
+# loudly, because something is about to run.
+if [[ -z "${REPRO_PYTHON:-}" || ! -x "$REPRO_PYTHON" ]]; then
+    echo "❌ Python env not found at: '${REPRO_PROJECT_ROOT:-?}/.venv/bin/python'"
+    echo "   Run: make environment"
+    exit 1
 fi
 
-# Julia/Python bridge configuration
-export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
-export PYTHON_JULIAPKG_PROJECT="$REPO_ROOT/.julia"
-export JULIA_PROJECT="$REPO_ROOT/env"
-export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
-# Make shared juliapkg project visible alongside env
-export JULIA_LOAD_PATH="$JULIA_PROJECT:$PYTHON_JULIAPKG_PROJECT:@stdlib"
-
-# Disable CondaPkg and use this Python environment
-export JULIA_CONDAPKG_BACKEND=Null
-export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
-
-# Add repo root to PYTHONPATH so scripts can import from scripts/
-export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
-
-# Always strip juliaup from PATH so a global juliaup Julia can never be used,
-# whether or not a bundled Julia exists yet. The project is self-contained and
-# must use its own repo-local Julia (bundled, or installed locally by juliacall).
-SAFE_PATH=""
-IFS=':' read -r -a PARTS <<< "${PATH:-}"
-for P in "${PARTS[@]}"; do
-  # Convert to lowercase for case-insensitive match (bash 3.2 compatible)
-  P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
-  if [[ "$P_LOWER" == *juliaup* ]]; then
-    continue
-  fi
-  SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
-done
-export PATH="$SAFE_PATH"
-
-# Prefer the bundled Julia inside the repo (juliacall installs it locally if absent).
-BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
-if [[ -x "$BUNDLED_JULIA" ]]; then
-  export PYTHON_JULIAPKG_EXE="$BUNDLED_JULIA"
-fi
-
-exec "$PYTHON_BIN" -u "$@"
+exec "$REPRO_PYTHON" -u "$@"

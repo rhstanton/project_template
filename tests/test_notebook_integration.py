@@ -11,6 +11,7 @@ Tests cover:
 - Output verification
 """
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -114,26 +115,112 @@ class TestNotebookEnvironment:
             content = f.read()
         assert "unset CDPATH" in content, "runnotebook doesn't unset CDPATH"
 
-    def test_runnotebook_sets_pythonpath(self, runnotebook_wrapper):
-        """Test that runnotebook sets PYTHONPATH."""
-        with open(runnotebook_wrapper) as f:
-            content = f.read()
-        assert "PYTHONPATH" in content, "runnotebook doesn't set PYTHONPATH"
+    def test_env_sh_sets_the_whole_bridge(self, repo_root):
+        """env/env.sh must export a complete Julia/Python bridge.
 
-    def test_runnotebook_sets_julia_env(self, runnotebook_wrapper):
-        """Test that runnotebook configures Julia/Python bridge."""
-        with open(runnotebook_wrapper) as f:
-            content = f.read()
+        Checks the resulting environment, not the text of a script. The version
+        of this test that grepped runnotebook for variable NAMES passed for the
+        entire time runnotebook was missing JULIA_LOAD_PATH -- because the list
+        it grepped for did not happen to include it. A test that inspects the
+        mechanism can only ever verify the part of the mechanism it was told
+        about; running the thing and looking at the result cannot miss a
+        variable that way.
+        """
+        env_sh = repo_root / "env" / "env.sh"
+        assert env_sh.is_file(), f"missing {env_sh}"
 
-        required_vars = [
+        wanted = [
             "PYTHON_JULIACALL_HANDLE_SIGNALS",
             "PYTHON_JULIAPKG_PROJECT",
             "JULIA_PROJECT",
+            "JULIA_DEPOT_PATH",
+            "JULIA_LOAD_PATH",
             "JULIA_CONDAPKG_BACKEND",
+            "JULIA_NUM_THREADS",
+            "PYTHONPATH",
+            "DATA_DIR",
         ]
+        probe = "; ".join(f'echo "{v}=${{{v}:-}}"' for v in wanted)
+        result = subprocess.run(
+            ["bash", "-c", f"source '{env_sh}' >/dev/null 2>&1; {probe}"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        values = dict(
+            line.split("=", 1) for line in result.stdout.splitlines() if "=" in line
+        )
+        missing = [v for v in wanted if not values.get(v)]
+        assert not missing, f"env/env.sh left these unset: {', '.join(missing)}"
 
-        for var in required_vars:
-            assert var in content, f"runnotebook doesn't set {var}"
+    def test_env_sh_ignores_a_polluted_ambient_environment(self, repo_root):
+        """Project-scoped values must not be inherited from the calling shell.
+
+        DATA_DIR written as ${DATA_DIR:-default} once caused a run in one
+        project to read a DIFFERENT project's licensed data, because that other
+        project's direnv had exported it. `:-` defers to whatever the shell
+        happens to hold, and the shell holds whatever project you were last in,
+        so for project-scoped settings it is not a default at all.
+        """
+        env_sh = repo_root / "env" / "env.sh"
+        polluted = {
+            "DATA_DIR": "/somewhere/else/entirely",
+            "JULIA_NUM_THREADS": "32",
+        }
+        probe = "; ".join(f'echo "{v}=${{{v}:-}}"' for v in polluted)
+        result = subprocess.run(
+            ["bash", "-c", f"source '{env_sh}' >/dev/null 2>&1; {probe}"],
+            capture_output=True,
+            text=True,
+            check=True,
+            env={**os.environ, **polluted},
+        )
+        values = dict(
+            line.split("=", 1) for line in result.stdout.splitlines() if "=" in line
+        )
+        assert values["DATA_DIR"] != polluted["DATA_DIR"], (
+            "DATA_DIR was inherited from the ambient environment; "
+            "it must be set from the project root, with env/local.sh as the "
+            "only sanctioned override"
+        )
+        assert values["JULIA_NUM_THREADS"] == "1", (
+            "JULIA_NUM_THREADS was inherited; thread count changes "
+            "floating-point reduction order, so it must not vary with whatever "
+            f"the calling shell held (got {values['JULIA_NUM_THREADS']})"
+        )
+
+    def test_wrappers_do_not_restate_the_environment(self, repo_root):
+        """Each wrapper must source env/env.sh and export no bridge var itself.
+
+        This is the anti-drift invariant, and drift is precisely what happened:
+        four wrappers each carried their own copy and they disagreed -- one
+        omitted JULIA_LOAD_PATH, another exported JULIAPKG_PROJECT (a name
+        juliapkg does not read) pointing somewhere different again. A wrapper
+        that starts exporting these again has restarted that process.
+        """
+        bridge_vars = [
+            "PYTHON_JULIACALL_HANDLE_SIGNALS",
+            "PYTHON_JULIAPKG_PROJECT",
+            "PYTHON_JULIAPKG_EXE",
+            "JULIA_PROJECT",
+            "JULIA_DEPOT_PATH",
+            "JULIA_LOAD_PATH",
+            "JULIA_CONDAPKG_BACKEND",
+            "JULIA_PYTHONCALL_EXE",
+        ]
+        wrappers = [
+            p for p in (repo_root / "env" / "scripts").glob("run*") if p.is_file()
+        ]
+        assert wrappers, "no run* wrappers found"
+
+        for wrapper in wrappers:
+            content = wrapper.read_text()
+            assert "env.sh" in content, f"{wrapper.name} does not source env/env.sh"
+            for var in bridge_vars:
+                assert f"export {var}=" not in content, (
+                    f"{wrapper.name} exports {var} itself; "
+                    "it belongs in env/env.sh so the wrappers cannot disagree"
+                )
 
     def test_runnotebook_executes_papermill(self, runnotebook_wrapper):
         """Test that runnotebook executes papermill."""
@@ -258,9 +345,9 @@ class TestNotebookExecution:
                 "tags", []
             ):
                 assert "injected_value" in cell.source, "Parameter not injected"
-                assert "custom_output.txt" in cell.source, (
-                    "Custom parameter not injected"
-                )
+                assert (
+                    "custom_output.txt" in cell.source
+                ), "Custom parameter not injected"
                 break
         else:
             pytest.fail("Injected parameters cell not found")
@@ -340,9 +427,9 @@ class TestNotebookProvenance:
 
         # Command should reference papermill or notebook
         cmd_str = " ".join(prov.get("command", []))
-        assert "papermill" in cmd_str or "notebook" in cmd_str.lower(), (
-            "Provenance doesn't record notebook execution"
-        )
+        assert (
+            "papermill" in cmd_str or "notebook" in cmd_str.lower()
+        ), "Provenance doesn't record notebook execution"
 
     def test_provenance_includes_inputs(self, repo_root):
         """Test that provenance includes input files."""
@@ -358,9 +445,9 @@ class TestNotebookProvenance:
 
         # Check that data file is included
         input_paths = [inp["path"] for inp in prov["inputs"]]
-        assert any("panel_data.csv" in path for path in input_paths), (
-            "Data file not in inputs"
-        )
+        assert any(
+            "panel_data.csv" in path for path in input_paths
+        ), "Data file not in inputs"
 
     def test_provenance_includes_outputs(self, repo_root):
         """Test that provenance includes all output files."""
@@ -375,12 +462,12 @@ class TestNotebookProvenance:
         assert len(prov["outputs"]) >= 2, "Missing outputs (should have figure + table)"
 
         output_paths = [out["path"] for out in prov["outputs"]]
-        assert any("correlation.pdf" in path for path in output_paths), (
-            "Figure not in outputs"
-        )
-        assert any("correlation.tex" in path for path in output_paths), (
-            "Table not in outputs"
-        )
+        assert any(
+            "correlation.pdf" in path for path in output_paths
+        ), "Figure not in outputs"
+        assert any(
+            "correlation.tex" in path for path in output_paths
+        ), "Table not in outputs"
 
 
 # ==============================================================================
@@ -586,9 +673,9 @@ class TestMakefileIntegration:
         # Find correlation.runner definition
         for line in content.split("\n"):
             if "correlation.runner" in line:
-                assert "$(NOTEBOOK)" in line or "$(RUNNOTEBOOK)" in line, (
-                    "Notebook doesn't use NOTEBOOK runner"
-                )
+                assert (
+                    "$(NOTEBOOK)" in line or "$(RUNNOTEBOOK)" in line
+                ), "Notebook doesn't use NOTEBOOK runner"
                 break
 
     def test_make_correlation_succeeds(self, repo_root):
@@ -660,9 +747,9 @@ class TestNotebookErrorHandling:
         )
 
         assert result.returncode != 0, "Notebook with error should fail"
-        assert "ValueError" in result.stderr or "error" in result.stderr.lower(), (
-            "Error not reported in stderr"
-        )
+        assert (
+            "ValueError" in result.stderr or "error" in result.stderr.lower()
+        ), "Error not reported in stderr"
 
     def test_missing_parameters_cell_fails(self, tmp_path, repo_root):
         """Test that notebook without parameters cell fails with clear error."""

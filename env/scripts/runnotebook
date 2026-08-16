@@ -1,54 +1,34 @@
 #!/usr/bin/env bash
-# Execute Jupyter notebook with environment configured (via papermill)
-# This wrapper ensures the notebook runs with the same Julia/Python bridge
-# configuration as runpython scripts.
+# Execute a Jupyter notebook via papermill, inside this project's environment.
 #
 # Usage: runnotebook input.ipynb output.ipynb [papermill options]
-#   Example: runnotebook notebooks/analysis.ipynb output.ipynb -p param1 value1
-
+#   Example: runnotebook notebooks/analysis.ipynb out.ipynb -p param1 value1
+#
+# Sources env/env.sh rather than restating the bridge. It previously carried its
+# own copy that was missing JULIA_LOAD_PATH, which runpython did set -- so a
+# notebook resolved Julia packages differently from a script running the same
+# analysis, and nothing announced it.
 set -euo pipefail
 
-# Unset CDPATH to prevent it from polluting command substitutions
+# Executed, not sourced, so `unset` is right here. See env/env.sh for why the
+# sourced side must use `CDPATH= cd --` instead.
 unset CDPATH
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-# Check if environment is installed
-if [[ ! -x "$PYTHON_BIN" ]]; then
-  echo "❌ Python environment not found. Run: make environment" >&2
-  exit 1
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/../env.sh"
+
+if [[ -z "${REPRO_PYTHON:-}" || ! -x "$REPRO_PYTHON" ]]; then
+    echo "❌ Python environment not found. Run: make environment" >&2
+    exit 1
 fi
 
-# Julia/Python bridge configuration (same as runpython)
-export PYTHON_JULIACALL_HANDLE_SIGNALS=yes
-export PYTHON_JULIAPKG_PROJECT="$REPO_ROOT/.julia"
-export JULIA_PROJECT="$REPO_ROOT/env"
-export JULIA_DEPOT_PATH="$REPO_ROOT/.julia"
-export JULIA_CONDAPKG_BACKEND=Null
-export JULIA_PYTHONCALL_EXE="$PYTHON_BIN"
-
-# Always strip juliaup from PATH so a global juliaup Julia can never be used
-# (same hardening as runpython); then prefer the repo's bundled Julia.
-SAFE_PATH=""
-IFS=':' read -r -a PARTS <<< "${PATH:-}"
-for P in "${PARTS[@]}"; do
-  P_LOWER=$(echo "$P" | tr '[:upper:]' '[:lower:]')
-  if [[ "$P_LOWER" == *juliaup* ]]; then
-    continue
-  fi
-  SAFE_PATH="${SAFE_PATH:+$SAFE_PATH:}$P"
-done
-export PATH="$SAFE_PATH"
-
-BUNDLED_JULIA="$REPO_ROOT/.julia/pyjuliapkg/install/bin/julia"
-if [[ -x "$BUNDLED_JULIA" ]]; then
-  export PYTHON_JULIAPKG_EXE="$BUNDLED_JULIA"
+PAPERMILL="$REPRO_VENV/bin/papermill"
+if [[ ! -x "$PAPERMILL" ]]; then
+    echo "❌ papermill not found at: '$PAPERMILL'" >&2
+    echo "   Run: make environment" >&2
+    exit 1
 fi
 
-# Add repo root to PYTHONPATH for imports
-export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
-
-# Execute via papermill
-exec "$REPO_ROOT/.venv/bin/papermill" "$@"
+exec "$PAPERMILL" "$@"
