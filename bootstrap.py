@@ -285,6 +285,45 @@ JULIA_MAKE_TARGETS = (
     "juliacall-clean",
 )
 
+# Same for Stata. These names appear in the combined .PHONY list and in all-env,
+# both of which sit ABOVE the "# ---------- Stata ----------" banner, so removing
+# the section does not remove them.
+STATA_MAKE_TARGETS = (
+    "stata-env",
+    "stata-check",
+    "stata-clean",
+    "stata-requirements",
+    "stata-update",
+)
+
+
+def strip_marked_section(content: str, name: str) -> str:
+    """Remove everything between `# ---------- NAME ----------` and its end marker.
+
+    Both markers are explicit, and a missing end marker is an error rather than
+    a best guess. The version this replaces ended the match at a lookahead for
+    the next `\\n.PHONY` or `\\n# ---`, which silently truncated the moment the
+    section itself grew a `.PHONY:` line -- and it did. `--remove-stata` then cut
+    the section in half, leaving stata-env, the stamp rule and stata-check behind
+    while deleting the variables they referenced.
+
+    Anchoring to a delimiter that the content can contain is the recurring bug in
+    this file. An explicit end marker cannot be produced by accident.
+    """
+    start = f"# ---------- {name} ----------"
+    end = f"# ---------- end {name} ----------"
+    i = content.find(start)
+    if i == -1:
+        return content
+    j = content.find(end, i)
+    if j == -1:
+        raise RuntimeError(
+            f"env/Makefile has '{start}' but no '{end}'. Refusing to guess where "
+            f"the section ends: guessing is what silently left half the {name} "
+            "rules behind, referencing variables that had just been deleted."
+        )
+    return content[:i] + content[j + len(end) :].lstrip("\n")
+
 
 def strip_make_prereq(content: str, name: str) -> str:
     """Remove `name` from dependency and .PHONY lists, never crossing a newline.
@@ -371,18 +410,13 @@ def update_env_makefile(
         print(f"  ✓ Removed Julia targets ({', '.join(JULIA_MAKE_TARGETS)})")
 
     if remove_stata:
-        content = strip_make_prereq(content, "stata-env")
-
-        # Remove the Stata section (marked with # ---------- Stata ----------).
-        # The lookahead alternatives are anchored to line starts so a stray
-        # ".PHONY" appearing mid-line cannot terminate the match early.
-        content = re.sub(
-            r"# ---------- Stata ----------.*?(?=\n# ---|\n\.PHONY|\Z)",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
-        print("  ✓ Removed Stata targets")
+        # Prerequisite and .PHONY entries first: the section removal takes the
+        # rules, but the names also appear in the combined .PHONY list and in
+        # all-env, which live above the banner.
+        for target in STATA_MAKE_TARGETS:
+            content = strip_make_prereq(content, target)
+        content = strip_marked_section(content, "Stata")
+        print(f"  ✓ Removed Stata targets ({', '.join(STATA_MAKE_TARGETS)})")
 
     if content == original:
         raise RuntimeError(

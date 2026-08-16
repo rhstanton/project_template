@@ -276,3 +276,5 @@ stata-update:
 .PHONY: stata-clean
 stata-clean:
 	rm -rf ../.stata
+
+# ---------- end Stata ----------

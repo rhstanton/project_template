@@ -89,8 +89,13 @@ jobs:
         run: |
           set -euo pipefail
           fail=0
+          # Strip absolute paths before matching. The checkout directory and the
+          # variant name can both contain the language name (a tree at
+          # .../no-stata/ makes every path a false positive), so match on the
+          # COMMANDS the plan would run, not on any occurrence of the word.
+          plan=$(make -n environment 2>/dev/null | sed 's#/[^ ]*/##g')
           if [[ "${{ matrix.flags }}" == *"--remove-julia"* || "${{ matrix.flags }}" == *"--python-only"* ]]; then
-            if make -n environment 2>/dev/null | grep -i "julia"; then
+            if echo "$plan" | grep -Ei "runjulia|install_julia|juliacall|julia-instantiate|juliapkg"; then
               echo "::error::Julia was removed, but 'make environment' still plans Julia work (orphaned recipe?)"
               fail=1
             fi
@@ -100,8 +105,13 @@ jobs:
             fi
           fi
           if [[ "${{ matrix.flags }}" == *"--remove-stata"* || "${{ matrix.flags }}" == *"--python-only"* ]]; then
-            if make -n environment 2>/dev/null | grep -i "stata"; then
+            if echo "$plan" | grep -Ei "runstata|stata-mp|ssc install|stata-packages"; then
               echo "::error::Stata was removed, but 'make environment' still plans Stata work"
+              fail=1
+            fi
+            # The section removal is the part that silently half-worked before.
+            if grep -qE "^stata-env:|^\.\./\.stata/" env/Makefile; then
+              echo "::error::Stata rules survive in env/Makefile after --remove-stata"
               fail=1
             fi
           fi
