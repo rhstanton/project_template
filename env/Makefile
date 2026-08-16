@@ -96,7 +96,15 @@ julia-instantiate:
 	echo ">> Instantiating env/ from Manifest.toml"
 	cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
 	got=$$($(REPO_ROOT)/env/scripts/runjulia -e 'print(VERSION)' 2>/dev/null | tail -1)
-	if [ -n "$$want" ] && [ -n "$$got" ] && [ "$$want" != "$$got" ]; then
+	# Always report both values. A check that is silent when it does not fire is
+	# indistinguishable from one that never ran -- which is what happened on the
+	# first attempt here, where a stray `cd` emptied $$want and the comparison was
+	# skipped without a trace. Printing the inputs makes "checked and matched"
+	# distinguishable from "could not check".
+	echo ">> Julia $${got:-<unknown>}; Manifest.toml resolved with $${want:-<unknown>}"
+	if [ -z "$$want" ] || [ -z "$$got" ]; then
+	  echo "   (could not compare versions -- pin NOT verified)"
+	elif [ "$$want" != "$$got" ]; then
 	  echo ""
 	  echo "  ================================================================"
 	  echo "  NOT REPRODUCING THE PINNED VERSIONS"
