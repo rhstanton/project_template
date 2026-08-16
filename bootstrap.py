@@ -41,7 +41,9 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -139,6 +141,88 @@ def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
 
     pyproject.write_text(content)
     print("  ✓ Removed juliacall dependency (run `uv lock` to refresh the lockfile)")
+
+
+TEMPLATE_ORIGIN_FILE = "template-origin.toml"
+
+
+def _git(repo_root: Path, *args: str) -> str:
+    """Run git in repo_root, returning stdout stripped, or '' on failure."""
+    try:
+        r = subprocess.run(
+            ["git", *args],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ""
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def write_template_origin(repo_root: Path, args) -> None:
+    """Record which template version this project was generated from.
+
+    This is the missing primitive for propagating template fixes. Without it,
+    nothing in a generated project says where it came from, so no tool can work
+    out which template changes have not yet been applied -- `_version.py` is the
+    TEMPLATE's version, and a project bumps that as its own the first time it
+    releases, erasing the origin.
+
+    Deliberately a separate file that the project never bumps: it records where
+    the project CAME FROM, not what it is now. `make template-diff` reads it.
+    """
+    commit = _git(repo_root, "rev-parse", "HEAD")
+    sub_commit = _git(repo_root, "rev-parse", "HEAD:lib/repro-tools")
+
+    flags = []
+    if args.remove_julia:
+        flags.append("--remove-julia")
+    if args.remove_stata:
+        flags.append("--remove-stata")
+    if args.rename:
+        flags.append("--rename")
+
+    version = "unknown"
+    version_py = repo_root / "_version.py"
+    if version_py.is_file():
+        m = re.search(r'__version__\s*=\s*"([^"]+)"', version_py.read_text())
+        if m:
+            version = m.group(1)
+
+    # Date comes from the git commit rather than the clock, so re-running
+    # bootstrap on the same checkout is reproducible and the file does not
+    # churn. Falls back to empty rather than inventing a date.
+    created = _git(repo_root, "log", "-1", "--format=%ad", "--date=short", "HEAD")
+
+    lines = [
+        "# Where this project came from. Written by bootstrap.py at creation.",
+        "#",
+        "# Do NOT edit or bump this by hand. It records the template version this",
+        "# project was generated from, which is what `make template-diff` needs to",
+        "# work out which template changes have not been applied here yet. Your",
+        "# project's own version lives in _version.py and moves independently.",
+        "",
+        "[template]",
+        'name = "project_template"',
+        'url = "https://github.com/rhstanton/project_template"',
+        f'version = "{version}"',
+        f'commit = "{commit}"',
+        f'created = "{created}"',
+        f"bootstrap_flags = {json.dumps(flags)}",
+        "",
+        "[repro_tools]",
+        f'commit = "{sub_commit}"',
+        "",
+    ]
+    path = repo_root / TEMPLATE_ORIGIN_FILE
+    path.write_text("\n".join(lines))
+
+    if not commit:
+        print(f"  ⚠ wrote {TEMPLATE_ORIGIN_FILE} without a commit (not a git repo?)")
+    else:
+        print(f"\n📌 Recorded template origin in {TEMPLATE_ORIGIN_FILE} ({commit[:8]})")
 
 
 # Every env/Makefile target that exists only because Julia does. Listed here
@@ -516,6 +600,8 @@ def main():
 
     if args.rename:
         rename_project(repo_root, args.rename)
+
+    write_template_origin(repo_root, args)
 
     print()
     print("=" * 60)
