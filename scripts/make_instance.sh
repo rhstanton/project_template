@@ -124,21 +124,42 @@ else
 fi
 
 # git archive skips gitlinks entirely, so the submodule directory does not even
-# get created. Copy the pinned content in from the submodule's own HEAD; the
-# instance is disposable, so it wants the files, not a working git repo.
+# get created. Copy its content in separately; the instance is disposable, so it
+# wants the files, not a working git repo.
+#
+# --dirty has to apply here too. Taking the superproject from the working tree
+# but the submodule from its HEAD produces an instance that is neither state, and
+# silently ignores exactly the submodule edit you are trying to test -- which is
+# the case that matters now that the shared machinery lives in the submodule.
 mkdir -p -- "$DEST/lib/repro-tools"
-( cd -- "$SUBMODULE" && git archive HEAD ) | tar -x -C "$DEST/lib/repro-tools"
+if [[ "$DIRTY" == 1 ]]; then
+    ( cd -- "$SUBMODULE" && git ls-files -z --cached --others --exclude-standard ) \
+        | rsync -a --from0 --files-from=- -- "$SUBMODULE/" "$DEST/lib/repro-tools/"
+else
+    ( cd -- "$SUBMODULE" && git archive HEAD ) | tar -x -C "$DEST/lib/repro-tools"
+fi
 
 N_FILES="$(find "$DEST" -type f | wc -l | tr -d ' ')"
 echo "Materialized $N_FILES files."
 
+# The template's real HEAD, passed to bootstrap explicitly. The instance is a
+# `git archive` export with no history of its own, and git searches UPWARDS for a
+# repository -- so left to itself, bootstrap.py records whatever ancestor
+# directory happens to be a repo. That is not theoretical: the first run here
+# stamped a commit from ~/01_work/research, an unrelated repo two levels up,
+# as this project's template origin. Wrong provenance is worse than none.
+TEMPLATE_COMMIT="$(cd -- "$REPO_ROOT" && git rev-parse HEAD 2>/dev/null || true)"
+
+echo
 if [[ ${#BOOTSTRAP_FLAGS[@]} -gt 0 ]]; then
-    echo
     echo "Running bootstrap.py ${BOOTSTRAP_FLAGS[*]} ..."
-    # Use the system interpreter on purpose: the instance has no environment yet,
-    # and bootstrap.py must run before one is built. It is stdlib-only.
-    ( cd -- "$DEST" && python3 bootstrap.py "${BOOTSTRAP_FLAGS[@]}" )
+else
+    echo "Recording template origin (no pruning for the full variant) ..."
 fi
+# System interpreter on purpose: the instance has no environment yet, and
+# bootstrap.py must run before one is built. It is stdlib-only.
+( cd -- "$DEST" && python3 bootstrap.py "${BOOTSTRAP_FLAGS[@]}" \
+    ${TEMPLATE_COMMIT:+--template-commit "$TEMPLATE_COMMIT"} )
 
 if [[ "$BUILD" == 1 ]]; then
     echo

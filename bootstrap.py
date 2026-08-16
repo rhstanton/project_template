@@ -161,6 +161,28 @@ def _git(repo_root: Path, *args: str) -> str:
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
+def _own_git_repo(repo_root: Path) -> bool:
+    """True only if repo_root is itself the top of a git repo.
+
+    git searches UPWARDS for a repository, so running it in a directory with no
+    .git of its own cheerfully answers about some ancestor. That is not an edge
+    case here: a template exported with `git archive` has no history, and if it
+    is unpacked anywhere beneath another repo -- a projects directory that is
+    itself versioned, say -- then `git rev-parse HEAD` returns that repo's commit
+    and the provenance file records a confident, entirely wrong origin.
+
+    Wrong provenance is worse than none: absent provenance asks a question,
+    while wrong provenance answers it incorrectly and is believed.
+    """
+    top = _git(repo_root, "rev-parse", "--show-toplevel")
+    if not top:
+        return False
+    try:
+        return Path(top).resolve() == repo_root.resolve()
+    except OSError:
+        return False
+
+
 def write_template_origin(repo_root: Path, args) -> None:
     """Record which template version this project was generated from.
 
@@ -173,8 +195,13 @@ def write_template_origin(repo_root: Path, args) -> None:
     Deliberately a separate file that the project never bumps: it records where
     the project CAME FROM, not what it is now. `make template-diff` reads it.
     """
-    commit = _git(repo_root, "rev-parse", "HEAD")
-    sub_commit = _git(repo_root, "rev-parse", "HEAD:lib/repro-tools")
+    # An explicit commit always wins: `make instance` exports the template with
+    # `git archive`, which carries no history, so it passes the real one in.
+    commit = args.template_commit or ""
+    sub_commit = ""
+    if not commit and _own_git_repo(repo_root):
+        commit = _git(repo_root, "rev-parse", "HEAD")
+        sub_commit = _git(repo_root, "rev-parse", "HEAD:lib/repro-tools")
 
     flags = []
     if args.remove_julia:
@@ -191,10 +218,13 @@ def write_template_origin(repo_root: Path, args) -> None:
         if m:
             version = m.group(1)
 
-    # Date comes from the git commit rather than the clock, so re-running
-    # bootstrap on the same checkout is reproducible and the file does not
-    # churn. Falls back to empty rather than inventing a date.
-    created = _git(repo_root, "log", "-1", "--format=%ad", "--date=short", "HEAD")
+    # Date comes from the template's own commit rather than the clock, so
+    # re-running bootstrap on the same checkout is reproducible and the file does
+    # not churn. Same repo guard as above: a date from an ancestor repo's HEAD
+    # would be as wrong as the commit, and less obviously so.
+    created = ""
+    if _own_git_repo(repo_root):
+        created = _git(repo_root, "log", "-1", "--format=%ad", "--date=short", "HEAD")
 
     lines = [
         "# Where this project came from. Written by bootstrap.py at creation.",
@@ -551,6 +581,15 @@ def main():
         help="Rename project (updates README, QUICKSTART, config.py)",
     )
     parser.add_argument(
+        "--template-commit",
+        metavar="SHA",
+        help=(
+            "Template commit to record in template-origin.toml. Needed when the "
+            "tree has no git history of its own (e.g. a `git archive` export); "
+            "otherwise read from HEAD."
+        ),
+    )
+    parser.add_argument(
         "--interactive",
         action="store_true",
         help="Interactive mode (prompts for each option)",
@@ -571,8 +610,12 @@ def main():
         interactive_mode(repo_root)
         return
 
-    # Non-interactive mode
-    if not any([args.remove_julia, args.remove_stata, args.rename]):
+    # Non-interactive mode. --template-commit counts as an action on its own:
+    # a project that keeps all three languages still needs its origin recorded,
+    # and that is exactly the full-variant case `make instance` produces.
+    if not any(
+        [args.remove_julia, args.remove_stata, args.rename, args.template_commit]
+    ):
         parser.print_help()
         print()
         print("Error: No actions specified. Use --interactive or provide options.")
