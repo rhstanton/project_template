@@ -48,6 +48,7 @@ class TestPythonEnvironment:
         version_str = result.stdout + result.stderr
         assert "Python 3.12" in version_str
 
+    @pytest.mark.julia
     def test_required_packages_installed(self):
         """Required Python packages should be installed."""
         python_exe = REPO_ROOT / ".venv" / "bin" / "python"
@@ -71,9 +72,9 @@ class TestPythonEnvironment:
                 cmd = [str(python_exe), "-c", f"import {package}"]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
-            assert result.returncode == 0, (
-                f"Package {package} not installed: {result.stderr}"
-            )
+            assert (
+                result.returncode == 0
+            ), f"Package {package} not installed: {result.stderr}"
 
     def test_repro_tools_installed(self):
         """repro_tools should be installed in editable mode."""
@@ -108,6 +109,7 @@ class TestPythonEnvironment:
         assert isinstance(config["project"].get("dependencies"), list)
 
 
+@pytest.mark.julia
 class TestJuliaEnvironment:
     """Test Julia environment setup."""
 
@@ -289,12 +291,14 @@ class TestEnvironmentWrappers:
         assert runpython.exists(), "runpython wrapper not found"
         assert os.access(runpython, os.X_OK), "runpython not executable"
 
+    @pytest.mark.julia
     def test_runjulia_exists(self):
         """runjulia wrapper should exist and be executable."""
         runjulia = REPO_ROOT / "env" / "scripts" / "runjulia"
         assert runjulia.exists(), "runjulia wrapper not found"
         assert os.access(runjulia, os.X_OK), "runjulia not executable"
 
+    @pytest.mark.stata
     def test_runstata_exists(self):
         """runstata wrapper should exist and be executable."""
         runstata = REPO_ROOT / "env" / "scripts" / "runstata"
@@ -405,6 +409,7 @@ class TestEnvironmentIsolation:
         # Environment should be inside repo
         assert env_dir.parent == REPO_ROOT
 
+    @pytest.mark.julia
     def test_julia_depot_is_local(self):
         """Julia depot should be local to repo."""
         julia_dir = REPO_ROOT / ".julia"
@@ -414,6 +419,7 @@ class TestEnvironmentIsolation:
         # Julia depot should be inside repo
         assert julia_dir.parent == REPO_ROOT
 
+    @pytest.mark.stata
     def test_stata_packages_are_local(self):
         """Stata packages should be local to repo if Stata is used."""
         stata_dir = REPO_ROOT / ".stata"
@@ -439,9 +445,9 @@ class TestEnvironmentReproducibility:
             config = tomllib.load(f)
 
         requires_python = config.get("project", {}).get("requires-python", "")
-        assert "3.12" in requires_python, (
-            "Python 3.12 not constrained in requires-python"
-        )
+        assert (
+            "3.12" in requires_python
+        ), "Python 3.12 not constrained in requires-python"
 
     def test_project_toml_has_compat_section(self):
         """Project.toml should have [compat] section for version constraints."""

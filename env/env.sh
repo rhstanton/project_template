@@ -54,12 +54,22 @@ unset _project_shared_env
 export DATA_DIR="$REPRO_PROJECT_ROOT/data"
 
 # --- import path ---------------------------------------------------------
-# Repo root on PYTHONPATH so analyses can import shared/ and config.py.
-# Guarded so a direnv reload does not stack duplicate entries.
-case ":${PYTHONPATH:-}:" in
-    *":$REPRO_PROJECT_ROOT:"*) ;;
-    *) export PYTHONPATH="$REPRO_PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}" ;;
-esac
+# This project's root, and nothing inherited. Appending to an existing
+# PYTHONPATH looks harmless and is not: it puts ANOTHER project's root on
+# sys.path, so `import shared` can resolve to the wrong shared/, and -- the way
+# this was actually found -- juliapkg scans sys.path for juliapkg.json and
+# happily picked up a different repo's Julia pin:
+#
+#   [juliapkg] Found dependencies: /…/fire/env/juliapkg.json
+#   Error: 'version' entries have empty intersection:
+#     '=0.9.34' at /…/this-project/env/juliapkg.json
+#     '=0.9.31' at /…/fire/env/juliapkg.json
+#
+# A fresh clone therefore failed to build purely because of which directory the
+# shell had been in. Same rule as DATA_DIR and JULIA_NUM_THREADS: the ambient
+# environment is not a statement of intent about THIS project. Add extra entries
+# from env/local.sh, which is sourced after this.
+export PYTHONPATH="$REPRO_PROJECT_ROOT"
 
 # --- machine-local overrides ---------------------------------------------
 # env/local.sh is gitignored and optional, and is sourced LAST so it can

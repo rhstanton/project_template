@@ -49,32 +49,118 @@ The Nix shell provides:
   - Stats: Distributions, StatsModels, FixedEffectModels
   - Data: Arrow, RDatasets
   - Utils: Adapt (GPU), OpenSSL_jll
-- `env/Manifest.toml`: Julia lockfile (auto-generated during `make environment`)
-- `env/stata-packages.txt`: Stata packages (reghdfe, ftools, estout 3.1.2, coefplot 2.0.0)
-- `env/scripts/runpython`: Wrapper that activates the uv virtualenv and configures Julia/Python bridge
-- `env/scripts/runstata`: Wrapper that runs Stata with local package path
+- `env/Manifest.toml`: Julia lockfile — **committed**, not regenerated per build.
+  `Project.toml` alone admits any `FixedEffectModels` 1.x, so the Manifest is
+  what actually pins.
+- `env/juliapkg.json`: pins the Julia **binary** version, which `Project.toml`
+  cannot. Copied into the juliapkg project before install.
+- `env/stata-packages.txt`: Stata package **names only**, no versions — see
+  [Stata packages](#stata-packages).
+- `env/stata-requirements.txt`: the version record, generated from what is
+  installed and verified by `make stata-check`.
+- `env/env.sh`: **the single source of truth for the environment.** Every wrapper
+  and `.envrc` sources it; none declares environment variables of its own.
+- `env/scripts/runpython`, `runjulia`, `runstata`, `runnotebook`: thin wrappers
+  that source `env/env.sh` and exec.
 - `env/scripts/execute.ado`: Stata helper for running .do files with logging
 - `env/scripts/install_uv.sh`: Auto-installs uv if not found
 - `env/scripts/install_julia.py`: Triggers Julia installation via juliacall
-- `lib/repro-tools/`: Git submodule with reproducibility tools (installed in editable mode)
+- `lib/repro-tools/`: Git submodule with reproducibility tools (editable install).
+  Also holds the **shared half** of the environment,
+  `src/repro_tools/lib/env.sh`, so environment fixes reach projects generated
+  before the fix existed.
 
 **See also:** [docs/repro_tools_submodule.md](repro_tools_submodule.md) for details on the repro-tools git submodule.
 
+## Where the environment is defined
+
+Two files, and the split is deliberate:
+
+| | |
+|---|---|
+| `lib/repro-tools/src/repro_tools/lib/env.sh` | Toolchain: which Python, which Julia, how they bridge. Identical in every project, so it lives in the submodule and **updates**. |
+| `env/env.sh` | Project-specific: `DATA_DIR`, `PYTHONPATH`, `env/local.sh`. Yours to edit. |
+
+Machinery copied into a project at creation is frozen there forever. Every
+environment bug found in this template so far has been in the toolchain half, so
+that half lives where a fix can propagate: update the submodule, get the fix.
+
+Two rules that look like style but are not:
+
+- **Sourced vs executed decides how you handle `CDPATH`.** A script that is
+  *executed* uses `unset CDPATH`. A file that is *sourced* must instead use
+  `CDPATH= cd -- ...` inside the command substitution, because `unset` in a
+  sourced file mutates the caller's interactive shell. When `cd` resolves through
+  `CDPATH` it echoes the directory, and inside `$( )` that lands in your variable
+  — so the repo root silently becomes two newline-separated paths, and the damage
+  surfaces much later as a missing module or a second Julia depot.
+- **Project-scoped values are assigned unconditionally, never `${VAR:-default}`.**
+  The `:-` form defers to whatever the calling shell holds, and the calling shell
+  holds whatever project you were last in. Written that way, `DATA_DIR` once
+  pointed a run in this template at *another repository's licensed data*. The
+  sanctioned override is `env/local.sh`, sourced last so a deliberate choice
+  still wins.
+
+`PYTHON_JULIAPKG_EXE` follows the same logic and is the sharpest case: it is set
+from this project's bundled Julia, or **unset**. Leaving an inherited value is
+not neutral — building a fresh clone from a shell that still had another
+checkout's environment loaded silently builds against that other project's Julia
+and reports success, GPU check included.
+
 ## Python/Julia Integration
 
-The `runpython` wrapper:
-- Activates the `.venv` Python environment
-- Configures `JULIA_PROJECT` to point to `env/`
-- Sets `PYTHON_JULIAPKG_EXE` to use the bundled Julia in `.julia/pyjuliapkg/`
-- Prevents juliacall from downloading a duplicate Julia
+`env/env.sh` (via the shared toolchain file):
+- Selects `.venv/bin/python` — with no fallback, so a missing environment is an
+  error rather than a quiet switch to some other interpreter
+- Points `JULIA_PROJECT` at `env/` and the depot at `.julia/`
+- Sets `JULIA_LOAD_PATH`, `JULIA_CONDAPKG_BACKEND=Null`, `JULIA_PYTHONCALL_EXE`
+- Sets `PYTHON_JULIAPKG_EXE` to the bundled Julia, or unsets it
+- Strips `juliaup` from `PATH` unconditionally, so nothing can resolve a
+  different `julia` by lookup
+- Pins `JULIA_NUM_THREADS=1`: thread count changes floating-point reduction
+  order, so it is the only setting that gives the same answer on every machine.
+  Override in `env/local.sh` when you want speed more than bit-identity.
+
+<a name="stata-packages"></a>
+## Stata packages
+
+**SSC has no versioned install.** `ssc install estout 3.1.2` is not a version
+request — it is a syntax error (`varlist not allowed`, r(101)) — and SSC serves
+only whatever is current today. A version number in `stata-packages.txt`
+therefore could not be enforced by anything, so there are none there.
+
+The pin is the packages themselves: `.stata/ado/plus` is **committed**. This is
+what the AEA Data Editor asks for — *"provide copies of such packages/modules
+when the package repository does not allow you to specify a version."*
+
+```bash
+make stata-env           # installs nothing for already-vendored packages
+make stata-check         # verifies the tree against env/stata-requirements.txt
+make stata-requirements  # regenerate that record from what is installed
+make stata-update        # deliberately refresh from SSC, then review the diff
+```
+
+`make stata-update` is the only path back to SSC, and it is never automatic: it
+replaces reviewed, committed versions with whatever SSC serves today. Review
+`git diff` on `.stata/ado/plus` and commit deliberately.
+
+Stata returns exit status 0 even when a do-file aborts, so every rule here
+judges success by the **log**, not by `$?`.
 
 ## Reproducibility
 
 For exact reproducibility:
-- Python: `pyproject.toml` declares dependencies; `uv.lock` pins exact versions for full reproducibility
-- Julia: `env/Manifest.toml` provides exact version locking
-- Stata: `env/stata-packages.txt` specifies package names and optional versions
+- **Python**: `pyproject.toml` declares; `uv.lock` pins the full transitive closure
+- **Julia**: `env/Manifest.toml` pins packages, `env/juliapkg.json` pins the binary
+- **Stata**: the ado files are committed; `env/stata-requirements.txt` records
+  their versions and `make stata-check` verifies them
 - All are captured in per-artifact provenance via `repro_tools`
+
+Every one of these is checkable, and there is a test for each:
+
+```bash
+pytest tests/test_environment_contract.py -v
+```
 
 ## Alternative Environment Managers
 

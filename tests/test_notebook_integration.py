@@ -242,6 +242,7 @@ class TestNotebookStructure:
         nb_path = notebook_dir / "correlation_analysis.ipynb"
         assert nb_path.exists(), "correlation_analysis.ipynb not found"
 
+    @pytest.mark.julia
     def test_julia_demo_notebook_exists(self, notebook_dir):
         """Test that Julia demo notebook exists."""
         nb_path = notebook_dir / "julia_demo.ipynb"
@@ -364,6 +365,7 @@ class TestNotebookExecution:
         assert result.returncode == 0, f"Make failed: {result.stderr}"
         assert fig_path.exists(), "correlation.pdf not created"
 
+    @pytest.mark.julia
     def test_julia_demo_notebook_builds(self, repo_root):
         """Test that Julia demo notebook builds via make."""
         # Clean outputs first
@@ -475,6 +477,7 @@ class TestNotebookProvenance:
 # ==============================================================================
 
 
+@pytest.mark.julia
 class TestJuliaIntegration:
     """Test Julia integration via juliacall in notebooks."""
 
@@ -632,6 +635,7 @@ class TestNotebookOutputs:
 class TestMakefileIntegration:
     """Test Makefile integration for notebooks."""
 
+    @pytest.mark.julia
     def test_notebook_in_analyses_list(self, repo_root):
         """Test that notebook analyses are in ANALYSES variable."""
         makefile = repo_root / "Makefile"
@@ -691,6 +695,7 @@ class TestMakefileIntegration:
 
         assert success, f"make correlation failed: {result.stderr}"
 
+    @pytest.mark.julia
     def test_make_julia_demo_succeeds(self, repo_root):
         """Test that 'make julia_demo' runs without error."""
         result = run_command(["make", "julia_demo"], cwd=repo_root, check=False)

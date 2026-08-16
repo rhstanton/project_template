@@ -154,9 +154,18 @@ class TestConfigImport:
         """Test that config paths are correct relative to project root."""
         from shared.config import DATA_DIR, OUTPUT_DIR, REPO_ROOT
 
-        # REPO_ROOT should be the project root, not shared/
-        assert REPO_ROOT.name == "project_template"
-        assert (REPO_ROOT / "shared" / "config.py").exists()
+        # REPO_ROOT should be the project root, not shared/.
+        #
+        # Identified by what the root CONTAINS, not by its name. Asserting it is
+        # called "project_template" made this pass only in the template itself:
+        # every generated project fails it, as does a clone into a
+        # differently-named directory. The property actually under test is "this
+        # is the root, not shared/", and shared/config.py living beneath it
+        # establishes that without naming anyone.
+        assert (
+            REPO_ROOT / "shared" / "config.py"
+        ).exists(), f"REPO_ROOT does not look like a project root: {REPO_ROOT}"
+        assert REPO_ROOT.name != "shared", "REPO_ROOT points at shared/, not the root"
 
         # Paths should be correct
         assert DATA_DIR == REPO_ROOT / "data"
