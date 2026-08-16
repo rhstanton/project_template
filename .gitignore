@@ -81,7 +81,21 @@ tests/TEST_IMPROVEMENTS.md
 .env/
 .julia/
 .cache/
-.stata/
+# .stata/ is generated -- EXCEPT ado/plus, which is COMMITTED. SSC serves only
+# the current release and has no versioned install, so the only way to pin these
+# packages is to ship them: "provide copies of such packages/modules when the
+# package repository does not allow you to specify a version" (AEA Data Editor
+# guidance). Refresh deliberately with `make stata-update`, never automatically.
+#
+# Without these five lines the vendoring mechanism is inert: env/Makefile would
+# install into a directory git refuses to track, `make stata-check` would verify
+# a tree no clone ever receives, and the pin would exist only on the machine that
+# happened to create it.
+.stata/*
+!.stata/ado/
+.stata/ado/*
+!.stata/ado/plus/
+!.stata/ado/plus/**
 # env/Manifest.toml is COMMITTED, deliberately. Project.toml admits any
 # FixedEffectModels 1.x; the Manifest is the actual pin, and the constitution
 # requires both. It was ignored here until 2026-08-15.
