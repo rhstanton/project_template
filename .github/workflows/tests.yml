@@ -63,6 +63,21 @@ jobs:
       run: |
         make test-outputs
 
+    # `test-outputs` only checks that files exist and are non-empty, so it
+    # passes on outputs whose every number is wrong. This step reads them.
+    #
+    # It can run in CI only because the reference is committed. `make
+    # diff-outputs` compares against paper/, which is gitignored on purpose --
+    # it is meant to be a separate, Overleaf-synced repository -- so on a runner
+    # there is nothing to compare against and it quietly does no work.
+    # env/baseline/published.json lives inside this repository for that reason.
+    #
+    # Depends on SOURCE_DATE_EPOCH being fixed in env/env.sh: without it the
+    # rebuilt artifacts differ run to run and this step would be noise.
+    - name: Check published numbers
+      run: |
+        make check-baseline
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7

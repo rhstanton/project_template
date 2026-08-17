@@ -284,6 +284,24 @@ def plot_event_study(coef_df: pd.DataFrame, config: dict) -> None:
     print(f"\n✓ Figure saved: {output_path}")
 
 
+def fmt_number(x: float, places: int = 3) -> str:
+    """Format a float, collapsing anything that rounds to zero onto "0.000".
+
+    Plain "%.3f" prints a coefficient of -1e-18 as "-0.000". That minus sign
+    carries no information about the estimate, but it does carry the sign bit of
+    a floating-point value near zero -- which depends on the order the sum was
+    reduced in, and therefore on BLAS version and thread count. Two runs that
+    are correct and agree to every digit anyone would report then differ
+    byte-for-byte, and every downstream comparison inherits that noise.
+
+    Found 2026-08-17 by `make check-baseline`, on its first run against a real
+    rebuild: a confidence bound had moved from "[0.000, 0.000]" to
+    "[-0.000, 0.000]".
+    """
+    s = f"{x:.{places}f}"
+    return s.lstrip("-") if float(s) == 0.0 else s
+
+
 def save_table(coef_df: pd.DataFrame, config: dict) -> None:
     """Save regression table as LaTeX"""
     output_path = Path(config["table"])
@@ -292,14 +310,15 @@ def save_table(coef_df: pd.DataFrame, config: dict) -> None:
     # Format table
     table_df = coef_df.copy()
     table_df["conf_int"] = table_df.apply(
-        lambda row: f"[{row['ci_lower']:.3f}, {row['ci_upper']:.3f}]", axis=1
+        lambda row: f"[{fmt_number(row['ci_lower'])}, {fmt_number(row['ci_upper'])}]",
+        axis=1,
     )
 
     latex_str = table_df[
         ["relative_year", "estimate", "std_error", "conf_int"]
     ].to_latex(
         index=False,
-        float_format="%.3f",
+        float_format=fmt_number,
         column_format="rccc",
         caption="DiD Event Study Coefficients",
         label="tab:did_results",

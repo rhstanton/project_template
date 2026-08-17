@@ -413,6 +413,31 @@ remove-analysis:
 	@python3 scripts/remove_analysis.py "$(NAME)" $(if $(APPLY),--apply,)
 
 # ==============================================================================
+# Acceptance test: do we still produce the numbers we published?
+# ==============================================================================
+# `make diff-outputs` compares output/ against paper/, which is the right check
+# when paper/ is present -- but paper/ is gitignored, because this template
+# intends it to be a SEPARATE repository synced with Overleaf. So on a CI
+# runner, or in a fresh clone, there is no reference and the comparison has
+# nothing to do. The check does not fail; it simply does not happen.
+#
+# env/baseline/published.json closes that hole: a small record of the published
+# numbers, committed INSIDE the analysis repository, so the claim "the code
+# still produces what we published" can be checked by anyone who clones it with
+# no manuscript anywhere in sight.
+#
+# A difference is a failure unless it is listed under `deviations` with a
+# reason. Numbers are allowed to change; changing them unnoticed is not.
+.PHONY: check-baseline check-baseline-record
+check-baseline:
+	@env/scripts/runpython env/scripts/check_baseline.py
+
+# Records current outputs AS the baseline. This agrees with the pipeline by
+# construction -- see the warning it prints before you rely on it.
+check-baseline-record:
+	@env/scripts/runpython env/scripts/check_baseline.py --record
+
+# ==============================================================================
 # Publishing
 # ==============================================================================
 # Publishes build outputs from output/ to paper/ with provenance tracking.
