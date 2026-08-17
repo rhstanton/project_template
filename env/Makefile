@@ -29,7 +29,7 @@ export PYTHON_JULIAPKG_PROJECT := $(JULIA_DEPOT_PATH)
 
 .PHONY: python-env python-check python-clean \
         julia-env julia-install-via-python ensure-uv \
-        stata-env stata-clean stata-check \
+        stata-env stata-clean stata-check stata-vendored-clean \
         all-env environment
 
 # Ensure uv is installed (installs to ~/.local/bin if missing)
@@ -293,10 +293,48 @@ stata-requirements:
 	rm -rf $$d
 	echo ">> Wrote env/stata-requirements.txt"
 
+# Assert the vendored ado tree still matches what is committed.
+#
+# Needs no Stata, and it is the check that catches the failure actually observed
+# in a downstream project on 2026-08-17: estout/esttab modified, both .trk
+# indexes rewritten, and require.ado DELETED -- SSC versions overwriting the
+# pinned ones, which is precisely what committing them exists to prevent. A
+# `make stata-update` does exactly this, by design; the defect was that nothing
+# afterwards said so.
+#
+# It runs before the Stata-based check for two reasons. It is instant, and
+# `stata-check` verifies versions by invoking Stata's `require` command -- which
+# is itself one of the vendored packages. When require.ado is the file that went
+# missing, the checker cannot report its own absence. Comparing against git has
+# no such circularity.
+.PHONY: stata-vendored-clean
+stata-vendored-clean:
+	@if ! git -C .. rev-parse --git-dir >/dev/null 2>&1; then \
+	  echo ">> Not a git checkout; skipping vendored-tree comparison."; \
+	  exit 0; \
+	fi
+	@if ! git -C .. ls-files --error-unmatch .stata/ado/plus >/dev/null 2>&1; then \
+	  echo ">> No vendored Stata tree committed; nothing to compare."; \
+	  exit 0; \
+	fi
+	@if ! git -C .. diff --quiet -- .stata/ado/plus 2>/dev/null; then \
+	  echo "ERROR: the vendored Stata tree differs from what is committed." >&2; \
+	  echo "" >&2; \
+	  git -C .. status --short -- .stata/ado/plus >&2; \
+	  echo "" >&2; \
+	  echo "  These files are PINS. SSC serves no versioned install, so the ado" >&2; \
+	  echo "  files themselves are the version record." >&2; \
+	  echo "" >&2; \
+	  echo "  To discard the drift:      git restore .stata/ado/plus" >&2; \
+	  echo "  To adopt it deliberately:  make stata-requirements && review the diff" >&2; \
+	  exit 1; \
+	fi
+	@echo ">> Vendored Stata tree matches HEAD."
+
 # Assert the installed tree still matches stata-requirements.txt. This is the
 # check the old "with version 3.1.2" console line only pretended to be.
 .PHONY: stata-check
-stata-check:
+stata-check: stata-vendored-clean
 	@if [ ! -f stata-requirements.txt ]; then
 	  echo "No env/stata-requirements.txt yet. Installed packages:"
 	  find ../.stata/ado/plus -name "*.ado" -exec basename {} \; 2>/dev/null \
