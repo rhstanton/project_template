@@ -53,6 +53,35 @@ unset _project_shared_env
 # a deliberate choice still wins over this default.
 export DATA_DIR="$REPRO_PROJECT_ROOT/data"
 
+# --- reproducible figure output ------------------------------------------
+# matplotlib stamps the wall-clock time into every PDF it writes:
+#
+#   /CreationDate (D:20260817024208)
+#
+# so two runs producing IDENTICAL figures produce different bytes if they land
+# in different seconds. That makes the sha256 of a figure useless as a check on
+# whether the figure changed -- and this template records exactly those hashes,
+# in output/provenance/, on every build. Without this line it was recording a
+# number guaranteed to differ every run regardless of content, which is the one
+# thing a hash exists not to do.
+#
+# SOURCE_DATE_EPOCH is the cross-tool convention for this and matplotlib honors
+# it. The value is deliberately a FIXED constant rather than the current time or
+# the commit date: the point is that identical content hashes identically, so a
+# changed hash means changed content and nothing else.
+#
+# What it gives up is worth naming. An embedded CreationDate is real evidence
+# about when an artifact was made, and in one downstream project it was the ONLY
+# surviving evidence -- it dated a published table's numbers to the second after
+# the provenance directory turned out to be empty. The answer is not to keep
+# relying on that accident: the timestamp belongs in the provenance record,
+# beside the git SHA and the input hashes, where it can be read without a PDF
+# parser. This template writes that record, so it can afford to make the
+# artifact content-addressed.
+#
+# 2025-01-01 00:00:00 UTC. Any fixed value works; a round one is recognizable.
+export SOURCE_DATE_EPOCH=1735689600
+
 # --- import path ---------------------------------------------------------
 # This project's root, and nothing inherited. Appending to an existing
 # PYTHONPATH looks harmless and is not: it puts ANOTHER project's root on
