@@ -42,6 +42,26 @@ MAINTENANCE_TARGETS = {
     "stata-list": "list the local Stata adopath",
 }
 
+# bootstrap.py --python-only (and --remove-stata) prunes Stata support entirely,
+# taking env/stata-packages.txt and the include of the shared Stata rules with
+# it. The CI "Bootstrap variants" workflow builds exactly that project, so a
+# Stata target legitimately does not exist there and asserting it does would
+# mean a pruned project could never have a green suite.
+#
+# Keyed on the packages file rather than on the target: that file is the input
+# the rules read, so its absence is what "this project has no Stata support"
+# means, and the check does not have to know how the rules are wired.
+STATA_SUPPORT = (REPO_ROOT / "env" / "stata-packages.txt").is_file()
+STATA_TARGETS = {"stata-list"}
+
+
+def skip_if_pruned(target: str) -> None:
+    if target in STATA_TARGETS and not STATA_SUPPORT:
+        pytest.skip(
+            "Stata support pruned (no env/stata-packages.txt); "
+            "bootstrap.py --python-only builds this variant"
+        )
+
 
 REPRO_LIB = REPO_ROOT / "lib/repro-tools/src/repro_tools/lib"
 
@@ -95,6 +115,7 @@ def make_n(target: str, directory: Path) -> subprocess.CompletedProcess:
 @pytest.mark.parametrize("target", sorted(MAINTENANCE_TARGETS))
 def test_target_exists_and_expands(target):
     """`make -n` fails loudly on an undefined target."""
+    skip_if_pruned(target)
     result = make_n(target, REPO_ROOT / "env")
     assert result.returncode == 0, (
         f"`make -C env {target}` does not expand: {result.stderr.strip()}"
@@ -109,6 +130,7 @@ def test_target_is_phony(target):
     Searches every contributing makefile, not just env/Makefile: a target may
     be declared in a shared fragment that env/Makefile includes.
     """
+    skip_if_pruned(target)
     declared = any(
         re.search(
             rf"^\.PHONY:.*\b{re.escape(target)}\b", path.read_text(), re.MULTILINE
@@ -205,6 +227,7 @@ class TestHelpDocumentsThem:
 
     @pytest.mark.parametrize("target", sorted(MAINTENANCE_TARGETS))
     def test_every_maintenance_target_is_in_help(self, target):
+        skip_if_pruned(target)
         assert target in self.help_text(), (
             f"{target} exists but `make help` never mentions it, so nobody will find it"
         )
