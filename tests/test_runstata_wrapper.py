@@ -31,7 +31,6 @@ anywhere, which is what makes this useful in CI where Stata is absent.
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -53,13 +52,13 @@ EXECUTE_ADO = REPO_ROOT / "env" / "scripts" / "execute.ado"
 # ERROR on the no-stata variant, which is a worse signal than a failure: it
 # looks like the suite is broken rather than the project legitimately lacking
 # a feature.
-pytestmark = pytest.mark.skipif(
-    not (RUNSTATA.is_file() and EXECUTE_ADO.is_file()),
-    reason="env/scripts/runstata or execute.ado absent (Stata pruned by bootstrap.py)",
-)
+# conftest.py derives Stata support from env/stata-packages.txt and skips
+# marked tests when bootstrap has pruned it.
+pytestmark = pytest.mark.stata
 
-has_stata = shutil.which("stata-mp") is not None
-needs_stata = pytest.mark.skipif(not has_stata, reason="stata-mp not on PATH")
+# Configured-for-Stata and able-to-run-Stata are different questions: CI commits
+# the ado files but has no stata-mp.
+needs_stata = pytest.mark.stata_binary
 
 
 @pytest.fixture(scope="module")

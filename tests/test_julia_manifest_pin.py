@@ -38,10 +38,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_MAKEFILE = REPO_ROOT / "env" / "Makefile"
 MANIFEST = REPO_ROOT / "env" / "Manifest.toml"
 
-pytestmark = pytest.mark.skipif(
-    not ENV_MAKEFILE.is_file(),
-    reason="env/Makefile absent",
-)
+# Use the project's own marker rather than a bespoke skipif. conftest.py already
+# derives "does this project have Julia?" from env/Project.toml and skips marked
+# tests accordingly, which is what bootstrap.py --python-only produces. Three of
+# my new modules reinvented that check before I noticed it existed.
+pytestmark = pytest.mark.julia
 
 
 def recipe(target: str) -> str:

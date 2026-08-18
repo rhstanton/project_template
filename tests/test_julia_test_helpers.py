@@ -37,10 +37,7 @@ JULIA_PROJECT_TOML = REPO_ROOT / "env" / "Project.toml"
 # tests describe the Julia environment, so in a project with no Julia they have
 # no subject -- skipping is correct, whereas failing would mean a legitimately
 # pruned project could never have a green suite.
-needs_julia_project = pytest.mark.skipif(
-    not JULIA_PROJECT_TOML.is_file(),
-    reason="env/Project.toml absent (Julia pruned by bootstrap.py --remove-julia)",
-)
+needs_julia_project = pytest.mark.julia
 
 
 @needs_julia_project

@@ -42,25 +42,17 @@ MAINTENANCE_TARGETS = {
     "stata-list": "list the local Stata adopath",
 }
 
-# bootstrap.py --python-only (and --remove-stata) prunes Stata support entirely,
-# taking env/stata-packages.txt and the include of the shared Stata rules with
-# it. The CI "Bootstrap variants" workflow builds exactly that project, so a
-# Stata target legitimately does not exist there and asserting it does would
-# mean a pruned project could never have a green suite.
-#
-# Keyed on the packages file rather than on the target: that file is the input
-# the rules read, so its absence is what "this project has no Stata support"
-# means, and the check does not have to know how the rules are wired.
-STATA_SUPPORT = (REPO_ROOT / "env" / "stata-packages.txt").is_file()
+# Stata targets are skipped by conftest.py's `stata` marker when bootstrap
+# has pruned Stata; see the parametrized tests below.
 STATA_TARGETS = {"stata-list"}
 
 
 def skip_if_pruned(target: str) -> None:
-    if target in STATA_TARGETS and not STATA_SUPPORT:
-        pytest.skip(
-            "Stata support pruned (no env/stata-packages.txt); "
-            "bootstrap.py --python-only builds this variant"
-        )
+    if (
+        target in STATA_TARGETS
+        and not (REPO_ROOT / "env" / "stata-packages.txt").is_file()
+    ):
+        pytest.skip("Stata pruned by bootstrap.py (no env/stata-packages.txt)")
 
 
 REPRO_LIB = REPO_ROOT / "lib/repro-tools/src/repro_tools/lib"
