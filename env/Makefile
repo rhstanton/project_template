@@ -92,6 +92,20 @@ julia-install-via-python:
 .PHONY: julia-instantiate
 julia-instantiate:
 	@echo ">> Instantiating env/ from Manifest.toml"
+	# Refuse to instantiate without a manifest. Ported from fire 2026-08-18.
+	#
+	# Pkg.instantiate() with no Manifest.toml does not fail -- it RESOLVES from
+	# Project.toml and writes a new manifest. Since Project.toml admits a range
+	# (any FixedEffectModels 1.x, say), that silently produces whatever versions
+	# are current today and calls the build a success. A missing pin is a
+	# different problem from an unsatisfiable one and deserves its own message,
+	# rather than being converted into a fresh resolution nobody asked for.
+	@if [ ! -f "$(JULIA_PROJECT)/Manifest.toml" ]; then \
+		echo "ERROR: env/Manifest.toml missing -- Julia versions would float."; \
+		echo "       Restore it from git, or regenerate it deliberately with"; \
+		echo "       'make -C env julia-relock' and re-run the acceptance test."; \
+		exit 1; \
+	fi
 	cd $(REPO_ROOT) && env/scripts/runjulia -e 'using Pkg; Pkg.instantiate()'
 	# Ask git, not the file's own contents.
 	#
