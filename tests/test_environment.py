@@ -2,15 +2,91 @@
 Tests for environment setup and update functionality.
 
 Tests environment installation, configuration, and updates.
+
+A NOTE ON SKIPPING, WHICH THIS FILE GETS WRONG EASILY
+
+Julia and Stata are optional in this template, so tests that need them must
+skip on a machine that does not have them. That is legitimate. What is not
+legitimate is deciding "not available" from the failure of the very command
+under test: `using DataFrames` failing means the environment is broken far more
+often than it means Julia is missing, and reporting it as a skip turns a broken
+environment into silence.
+
+Two tests here did exactly that until 2026-08-17, and both had an unreachable
+`assert` sitting after the skip. The rule this file now follows:
+
+  * decide availability up front, from its own evidence (`require_julia`)
+  * after that point, a failure is a failure
+
+`git log -S "Julia not available"` finds the change and its reasoning.
 """
 
 import os
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).parent.parent
+RUNJULIA = REPO_ROOT / "env" / "scripts" / "runjulia"
+
+
+def run_julia(
+    code: str, *, timeout: int = 120, env=None
+) -> subprocess.CompletedProcess:
+    """Run a Julia snippet through the repo's runjulia wrapper.
+
+    Always the wrapper, never a bare `julia`: the wrapper is what sets
+    JULIA_PROJECT, JULIA_DEPOT_PATH and JULIA_LOAD_PATH, so a bare interpreter
+    would resolve packages from a different project (or the user's global depot)
+    and report on an environment this repository does not control.
+    """
+    return subprocess.run(
+        [str(RUNJULIA), "-e", code],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=env,
+    )
+
+
+def require_julia() -> None:
+    """Skip the calling test unless a working Julia is reachable.
+
+    "Working" is established by a trivial snippet that touches no project
+    dependency, so the answer cannot be confounded with the thing a caller is
+    about to test. A caller that has passed this point is entitled to treat any
+    later failure as a real failure.
+    """
+    if not RUNJULIA.exists():
+        pytest.skip("runjulia wrapper not found (Julia support not installed)")
+
+    try:
+        result = run_julia("print(VERSION)", timeout=120)
+    except subprocess.TimeoutExpired:  # pragma: no cover - environment-dependent
+        pytest.skip("Julia did not start within the timeout")
+
+    if result.returncode != 0:
+        pytest.skip(
+            "Julia is not installed or cannot start "
+            f"(run `make environment`): {result.stderr.strip()[:400]}"
+        )
+
+
+def julia_project_deps() -> set[str]:
+    """Package names declared in env/Project.toml [deps].
+
+    Parsed as TOML rather than searched for as substrings. The substring version
+    of this question is what made the CUDA test unrunnable: "CUDA" appears in
+    env/Project.toml only inside a comment saying CUDA is deliberately not a
+    dependency, and a substring check cannot tell a declaration from prose
+    denying it.
+    """
+    project_toml = REPO_ROOT / "env" / "Project.toml"
+    if not project_toml.is_file():
+        return set()
+    return set(tomllib.loads(project_toml.read_text()).get("deps", {}))
 
 
 class TestPythonEnvironment:
@@ -151,25 +227,39 @@ class TestJuliaEnvironment:
         assert project_toml.exists(), "env/Project.toml not found"
 
     def test_julia_packages_installed(self):
-        """Required Julia packages should be installed."""
-        runjulia = REPO_ROOT / "env" / "scripts" / "runjulia"
-        if not runjulia.exists():
-            pytest.skip("runjulia wrapper not found")
+        """Every package declared in env/Project.toml [deps] must actually load.
 
-        # NOTE: PythonCall is managed by juliacall in .julia/pyjuliapkg/
-        # It should NOT be in env/Project.toml (see docs/julia_python_integration.md)
-        # We test juliacall integration separately in test_notebook_integration.py
+        Julia is optional in this template, so a machine without it skips. But
+        once Julia IS installed, a package that will not load is a broken
+        environment and must fail.
 
-        # Test DataFrames package (should be in env/Project.toml)
-        result = subprocess.run(
-            [str(runjulia), "-e", "using DataFrames"],
-            capture_output=True,
-            text=True,
-            timeout=60,
+        This test used to end with:
+
+            if result.returncode != 0:
+                pytest.skip(f"Julia not available: {result.stderr}")
+            assert result.returncode == 0, ...
+
+        which reported EVERY failure -- a missing package, a corrupt depot, an
+        incompatible version -- as "Julia not available", and left the assert on
+        the next line unreachable. It could not fail. `require_julia()` now makes
+        the availability decision once, up front, on its own evidence, so
+        anything after it is a real assertion.
+
+        It also checks the whole [deps] table rather than DataFrames alone: the
+        old version would have passed with every other dependency missing.
+        """
+        require_julia()
+
+        # PythonCall is deliberately absent from env/Project.toml -- juliacall
+        # manages it in .julia/pyjuliapkg/. See docs/julia_python_integration.md
+        # and test_pythoncall_not_in_env_project below.
+        deps = sorted(julia_project_deps())
+        assert deps, "env/Project.toml declares no [deps] to check"
+
+        result = run_julia("; ".join(f"using {name}" for name in deps))
+        assert result.returncode == 0, (
+            f"declared Julia dependencies failed to load: {deps}\n{result.stderr}"
         )
-        if result.returncode != 0:
-            pytest.skip(f"Julia not available: {result.stderr}")
-        assert result.returncode == 0, f"DataFrames not installed: {result.stderr}"
 
     def test_condapkg_disabled(self):
         """CondaPkg should be disabled."""
@@ -256,30 +346,59 @@ class TestJuliaEnvironment:
         assert len(result.stdout.strip()) > 0, "Julia version not printed"
 
     def test_cuda_available_if_enabled(self):
-        """Test CUDA.jl is available if GPU support was enabled."""
-        runjulia = REPO_ROOT / "env" / "scripts" / "runjulia"
-        if not runjulia.exists():
-            pytest.skip("Julia not installed")
+        """If the opt-in GPU environment exists, CUDA.jl must load from it.
 
-        # Check if CUDA.jl is in Project.toml (indicates GPU support requested)
-        project_toml = REPO_ROOT / "env" / "Project.toml"
-        content = project_toml.read_text()
+        HOW GPU SUPPORT ACTUALLY WORKS HERE, because the previous version of
+        this test looked for it in the wrong place:
 
-        if "CUDA" not in content:
-            pytest.skip("CUDA not in Project.toml - GPU support not enabled")
+        CUDA.jl is never a dependency in env/Project.toml. `JULIA_ENABLE_CUDA=1
+        make environment` installs it into `.julia/gpu-env`, which is gitignored,
+        and run_did.py appends that directory to JULIA_LOAD_PATH when
+        `.julia/gpu-env/Project.toml` exists. A machine without a GPU never
+        installs it and stays CPU-only with no switching. So the presence of
+        that Project.toml -- not any string in env/Project.toml -- is what
+        "GPU support was enabled" means.
 
-        # CUDA should be loadable
-        result = subprocess.run(
-            [str(runjulia), "-e", "using CUDA; println(CUDA.functional())"],
-            capture_output=True,
-            text=True,
-            timeout=30,
+        The old gate was:
+
+            content = (REPO_ROOT / "env" / "Project.toml").read_text()
+            if "CUDA" not in content:
+                pytest.skip("CUDA not in Project.toml - GPU support not enabled")
+
+        a substring search over the entire file. The only occurrences of "CUDA"
+        in env/Project.toml are in a comment explaining that CUDA is
+        intentionally NOT a dependency -- so the guard read a comment saying
+        "CUDA is not here" as evidence that it was, fell through to `using
+        CUDA`, failed, and skipped with "Julia not available: ...". Julia was
+        available; it was 1.12.4 and working. Measured 2026-08-17.
+
+        A test whose enabling condition is satisfied by prose about the feature
+        being absent is testing the documentation, not the environment.
+        """
+        require_julia()
+
+        gpu_env = REPO_ROOT / ".julia" / "gpu-env"
+        if not (gpu_env / "Project.toml").is_file():
+            pytest.skip(
+                "GPU support not enabled: no .julia/gpu-env/Project.toml "
+                "(enable with `JULIA_ENABLE_CUDA=1 make environment`)"
+            )
+
+        # No load-path juggling here on purpose. env.sh appends gpu-env when it
+        # exists, so every entry point -- runjulia, runpython/juliacall, make --
+        # sees the same environment, and this test exercises the real one. Doing
+        # it in the test instead would test the test.
+        # See repro-tools tests/test_env_sh_julia_load_path.py.
+        result = run_julia("using CUDA; println(CUDA.functional())", timeout=900)
+        assert result.returncode == 0, (
+            f"the GPU environment exists but CUDA.jl will not load: {result.stderr}"
         )
-        if result.returncode != 0:
-            pytest.skip(f"Julia not available: {result.stderr}")
-        assert result.returncode == 0, f"CUDA.jl not functional: {result.stderr}"
-        # Note: CUDA.functional() will be true if GPU is available, false if not
-        # We just check it doesn't error
+        # CUDA.functional() is False on a machine with the package but no usable
+        # device. That is a legitimate state -- the package loading is the claim
+        # being tested here -- so its value is reported, not asserted.
+        assert result.stdout.strip() in {"true", "false"}, (
+            f"CUDA.functional() printed something unexpected: {result.stdout!r}"
+        )
 
 
 class TestEnvironmentWrappers:
