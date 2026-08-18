@@ -30,7 +30,20 @@ from tests.test_environment import (
     run_julia,
 )
 
+JULIA_PROJECT_TOML = REPO_ROOT / "env" / "Project.toml"
 
+# bootstrap.py --remove-julia deletes env/Project.toml and env/scripts/runjulia,
+# and the CI "Bootstrap variants" workflow builds exactly that variant. These
+# tests describe the Julia environment, so in a project with no Julia they have
+# no subject -- skipping is correct, whereas failing would mean a legitimately
+# pruned project could never have a green suite.
+needs_julia_project = pytest.mark.skipif(
+    not JULIA_PROJECT_TOML.is_file(),
+    reason="env/Project.toml absent (Julia pruned by bootstrap.py --remove-julia)",
+)
+
+
+@needs_julia_project
 class TestJuliaProjectDeps:
     """julia_project_deps() must read declarations, not prose."""
 
@@ -102,8 +115,19 @@ class TestRequireJulia:
         with pytest.raises(pytest.skip.Exception, match="runjulia wrapper not found"):
             require_julia()
 
-    def test_skips_when_julia_cannot_start(self, monkeypatch):
-        """A wrapper that exists but fails is 'Julia not installed', not a pass."""
+    def test_skips_when_julia_cannot_start(self, monkeypatch, tmp_path):
+        """A wrapper that exists but fails is 'Julia not installed', not a pass.
+
+        RUNJULIA is pointed at a real file so the earlier wrapper-existence
+        check passes and this exercises the branch it is about. Without that,
+        the test silently measured the wrong branch in any project where Julia
+        had been pruned -- which is precisely what happened in the no-julia
+        bootstrap variant.
+        """
+        wrapper = tmp_path / "runjulia"
+        wrapper.write_text("#!/bin/sh\nexit 1\n")
+        wrapper.chmod(0o755)
+        monkeypatch.setattr("tests.test_environment.RUNJULIA", wrapper)
         monkeypatch.setattr(
             "tests.test_environment.run_julia",
             lambda *a, **k: subprocess.CompletedProcess(
@@ -113,8 +137,12 @@ class TestRequireJulia:
         with pytest.raises(pytest.skip.Exception, match="cannot start"):
             require_julia()
 
-    def test_does_not_skip_when_julia_works(self, monkeypatch):
+    def test_does_not_skip_when_julia_works(self, monkeypatch, tmp_path):
         """The property that makes every later assertion meaningful."""
+        wrapper = tmp_path / "runjulia"
+        wrapper.write_text("#!/bin/sh\nexit 0\n")
+        wrapper.chmod(0o755)
+        monkeypatch.setattr("tests.test_environment.RUNJULIA", wrapper)
         monkeypatch.setattr(
             "tests.test_environment.run_julia",
             lambda *a, **k: subprocess.CompletedProcess(
