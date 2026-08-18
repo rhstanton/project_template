@@ -379,3 +379,77 @@ stata-clean:
 	rm -rf ../.stata
 
 # ---------- end Stata ----------
+
+# ==============================================================================
+# Re-pinning and inspection
+# ==============================================================================
+#
+# Until 2026-08-17 this template had NO supported way to re-pin its environment:
+# `uv lock --upgrade`, `Pkg.update()` and the word "relock" appeared nowhere in
+# any Makefile. A project generated from it could install a pinned environment
+# and then had no sanctioned route to update one -- awkward for a scaffold whose
+# whole argument is that pins are load-bearing, and an invitation to run
+# something ad hoc that leaves the lockfile and the installed environment
+# disagreeing.
+#
+# Re-pinning is deliberate and never automatic. Nothing here runs as part of
+# `make environment` or `make all`; each target rewrites a pin and then tells
+# you to re-run the acceptance test, because that is the only thing that can say
+# whether the new pin still produces the same numbers.
+
+.PHONY: python-relock
+python-relock:
+	@cd "$(REPO_ROOT)" && uv lock --upgrade
+	@echo ""
+	@echo ">> uv.lock rewritten."
+	@echo "   Install it:      make python-env"
+	@echo "   Then verify:     make check-baseline"
+	@echo "   A rewritten lockfile that has not been checked against the"
+	@echo "   published numbers is an untested change to every result."
+
+# Rewrites env/Manifest.toml, which is the pin that matters most for results:
+# env/Project.toml alone admits any FixedEffectModels 1.x, and Julia computes
+# the estimates. Uses the repo-local bundled Julia, never a global juliaup one.
+.PHONY: julia-relock
+julia-relock:
+	@JULIA_DEPOT_PATH="$(JULIA_DEPOT_PATH)" JULIA_CONDAPKG_BACKEND=Null \
+	  "$(JULIA_DEPOT_PATH)/pyjuliapkg/install/bin/julia" --project="$(JULIA_PROJECT)" \
+	  -e 'using Pkg; Pkg.update()'
+	@echo ""
+	@echo ">> env/Manifest.toml rewritten."
+	@echo "   Verify with:     make verify && make check-baseline"
+	@echo "   Then review 'git diff env/Manifest.toml' before committing --"
+	@echo "   a major bump under a permissive [compat] range is easy to miss."
+
+# Report which Julia the bridge actually resolves, through juliacall rather than
+# by inspecting paths. Cheap to run and the fastest way to catch a depot or
+# bridge variable pointing somewhere unintended.
+.PHONY: julia-check
+julia-check:
+	@echo ">> Checking Julia via juliacall..."
+	@echo "JULIA_PROJECT=$(JULIA_PROJECT)"
+	@echo "JULIA_DEPOT_PATH=$(JULIA_DEPOT_PATH)"
+	@echo "PYTHON_JULIAPKG_PROJECT=$(PYTHON_JULIAPKG_PROJECT)"
+	@$(abspath $(ENV_DIR))/scripts/runpython -c \
+	  "import juliacall; print('Julia via juliacall:', juliacall.Main.VERSION)"
+
+# Where the Python pins live and whether they exist. Prints paths rather than
+# guessing at them, which matters because $(REPO_ROOT) is derived and a wrong
+# value shows up much later as a mysterious import error.
+.PHONY: python-paths
+python-paths:
+	@printf 'ENV_DIR     = %s\n' "$(ENV_DIR)"
+	@printf 'REPO_ROOT   = %s\n' "$(REPO_ROOT)"
+	@printf 'PYPROJECT   = %s\n' "$(REPO_ROOT)/pyproject.toml"
+	@printf 'UV_LOCK     = %s\n' "$(REPO_ROOT)/uv.lock"
+	@printf 'VENV        = %s\n' "$(REPO_ROOT)/.venv"
+	@printf 'lock exists? '; [ -f "$(REPO_ROOT)/uv.lock" ] && echo yes || echo no
+	@printf 'venv exists? '; [ -d "$(REPO_ROOT)/.venv" ] && echo yes || echo no
+
+# What is actually installed in the repo-local Stata adopath, as opposed to what
+# env/stata-requirements.txt claims.
+.PHONY: stata-list
+stata-list:
+	@echo "Installed Stata packages (.stata/ado/plus):"
+	@find $(STATA_LOCAL) -name "*.ado" -exec basename {} \; 2>/dev/null \
+	  | sort | uniq || echo "  none installed"

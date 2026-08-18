@@ -1,16 +1,15 @@
 # SHA256 Checksums for Data Files
-# Generated: 2026-01-17
-# 
-# Verify with: sha256sum -c CHECKSUMS.txt
-# Or individual: sha256sum data/housing_panel.csv
+# Generated: 2026-08-17 by scripts/update_checksums.py
 #
-# These checksums allow verification that data files have not been modified.
-# Checksums are also recorded in provenance records (output/provenance/*.yml)
-# when each artifact is built.
+# Verify with: make data-checksums-check
+# Or by hand:  cd data && sha256sum -c CHECKSUMS.txt
+#
+# Regenerate with `make data-checksums` -- do not edit by hand. This file was
+# hand-maintained until 2026-08-17 and had drifted from the data it describes.
+#
+# Checksums are also recorded per artifact in output/provenance/*.yml at build
+# time; this file pins the INPUTS, those record what a given result was built
+# from.
 
-# Sample data (included in repository)
-48917387ef250e81b4ec8a43e25a01f512a5c00c857614f82fee0729e48f91ce  housing_panel.csv
-
-# Add additional data files here as needed:
-# [checksum]  processed/dataset1.csv
-# [checksum]  processed/dataset2.csv
+010770e0f31dbb0d23917c88076eeacd851f4b98b07891235ccfedf543e6eb4e  housing_panel.csv
+812692c7da7fb6386d6b28dab74a6d62a782307c68596bedbb678e09f1cb7f45  panel_data.csv

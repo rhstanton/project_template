@@ -51,13 +51,43 @@ jobs:
         make format-check
         make type-check
 
-    - name: Run tests
+    # Inputs before anything is built from them. data/CHECKSUMS.txt pins the
+    # data; a silent change to it invalidates every result downstream, and until
+    # 2026-08-17 nothing in CI looked.
+    - name: Check data checksums
       run: |
-        make test
+        make data-checksums-check
 
     - name: Build all artifacts
       run: |
         make all
+
+    # Publishing runs BEFORE `make test`, and the order is the point.
+    #
+    # `make publish` is described throughout the docs as the only sanctioned
+    # route from output/ into paper/, and it carries the git safety gates --
+    # clean tree, not behind upstream, artifacts built from the current HEAD.
+    # Nothing in CI exercised it. Worse, tests/test_publishing.py skips every
+    # one of its cases with "Nothing has been published yet", so on a runner
+    # eleven tests silently did not run: the component with the strongest
+    # claims had the least coverage.
+    #
+    # Publishing here satisfies that precondition, so those tests execute
+    # against artifacts this job actually built. A runner is publish's happy
+    # path: the checkout is clean and at the commit under test, and `behind` is
+    # None on a detached HEAD, which the gate treats as "not behind".
+    #
+    # Note this ran green for months while doing nothing at all -- `$(PYTHON) -m
+    # repro_tools.cli publish` had no module entry point, so it ignored its
+    # arguments and exited 0, and make then touched the stamp recording the work
+    # as done.
+    - name: Publish artifacts to paper/
+      run: |
+        make publish
+
+    - name: Run tests
+      run: |
+        make test
 
     - name: Test outputs exist
       run: |

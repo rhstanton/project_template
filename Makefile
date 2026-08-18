@@ -413,6 +413,25 @@ remove-analysis:
 	@python3 scripts/remove_analysis.py "$(NAME)" $(if $(APPLY),--apply,)
 
 # ==============================================================================
+# Data checksums
+# ==============================================================================
+# data/CHECKSUMS.txt pins the INPUTS; output/provenance/*.yml records what each
+# result was built from. Both are needed: provenance tells you which data
+# produced a figure, checksums tell you whether that data has since changed.
+#
+# The file was hand-maintained until 2026-08-17 and had drifted -- the committed
+# housing_panel.csv no longer matched its recorded hash, and panel_data.csv was
+# not listed at all. `make pre-submit` is the only thing that reads it, and that
+# command was a silent no-op, so nothing reported the drift. Regenerate rather
+# than edit.
+.PHONY: data-checksums data-checksums-check
+data-checksums:
+	@env/scripts/runpython scripts/update_checksums.py
+
+data-checksums-check:
+	@env/scripts/runpython scripts/update_checksums.py --check
+
+# ==============================================================================
 # Acceptance test: do we still produce the numbers we published?
 # ==============================================================================
 # `make diff-outputs` compares output/ against paper/, which is the right check
@@ -463,7 +482,13 @@ PUBLISH_STAMP_DIR := .publish_stamps
 
 .PHONY: publish publish-force
 publish:
-	@$(REPRO_CHECK) --allow-dirty $(ALLOW_DIRTY) --require-not-behind $(REQUIRE_NOT_BEHIND) --require-current-head $(REQUIRE_CURRENT_HEAD) --artifacts "$(PUBLISH_ANALYSES)"
+	# No pre-flight `repro-check` here. It used to be called with
+	# --allow-dirty/--require-not-behind/--require-current-head/--artifacts,
+	# none of which that command accepts -- repro-check takes only --strict and
+	# --repo-root. The flags are publish's own, and the git gating they name is
+	# enforced where it belongs: inside publish_analyses, invoked by the stamp
+	# rules below with exactly these values. The stray call was invisible while
+	# `python -m repro_tools.cli` had no entry point and ignored everything.
 	@echo ""
 	@echo "=========================================="
 	@echo "Publishing outputs to paper/..."
@@ -525,19 +550,20 @@ publish-tables:
 .PHONY: publish-files
 publish-files:
 	@for file in $(PUBLISH_FILES); do [ -f "$$file" ] || { echo "Error: File not found: $$file"; exit 1; }; done
-	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
-	  --files "$(PUBLISH_FILES)" \
+	@$(REPRO_PUBLISH) files $(PUBLISH_FILES) \
+	  --paper-root $(PAPER_DIR) \
+	  --project-root $(REPO_ROOT) \
 	  --allow-dirty 0 \
-	  --require-not-behind 1 \
-	  --require-current-head $(REQUIRE_CURRENT_HEAD)
+	  --require-not-behind 1
 	@touch .publish_marker
 
 # Individual stamp files (for incremental publishing)
 $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_FIG_DIR)
-	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
+	@$(REPRO_PUBLISH) analyses "$*" \
+	  --paper-root $(PAPER_DIR) \
+	  --project-root $(REPO_ROOT) \
 	  --kind figures \
-	  --analyses "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
@@ -546,9 +572,10 @@ $(PUBLISH_STAMP_DIR)/%.figures.stamp: $(OUT_FIG_DIR)/%.pdf $(OUT_PROV_DIR)/%.yml
 
 $(PUBLISH_STAMP_DIR)/%.tables.stamp: $(OUT_TBL_DIR)/%.tex $(OUT_PROV_DIR)/%.yml
 	@mkdir -p $(PUBLISH_STAMP_DIR) $(PAPER_TBL_DIR)
-	@$(REPRO_PUBLISH) --paper-root $(PAPER_DIR) \
+	@$(REPRO_PUBLISH) analyses "$*" \
+	  --paper-root $(PAPER_DIR) \
+	  --project-root $(REPO_ROOT) \
 	  --kind tables \
-	  --analyses "$*" \
 	  --allow-dirty 0 \
 	  --require-not-behind 1 \
 	  --require-current-head $(REQUIRE_CURRENT_HEAD)
@@ -658,6 +685,7 @@ default:
 	@echo "  make verify             Quick environment check (~1 min)"
 	@echo "  make test               Run test suite"
 	@echo "  make check              Run all quality checks (lint + format + type + test)"
+	@echo "  make check-baseline     Verify tables still match the published numbers"
 	@echo "  make publish            Publish to paper/"
 	@echo "  make clean              Remove outputs"
 	@echo ""
@@ -704,12 +732,22 @@ help:
 	@echo "  make sample-juliacall   Run Python/Julia interop example"
 	@echo "  make sample-stata       Run Stata example (if installed)"
 	@echo ""
+	@echo "RE-PINNING (deliberate; never part of a normal build):"
+	@echo "  make -C env python-relock   uv lock --upgrade, then re-verify"
+	@echo "  make -C env julia-relock    Pkg.update(), rewrites env/Manifest.toml"
+	@echo "  make -C env julia-check     Report the Julia juliacall resolves"
+	@echo "  make -C env python-paths    Show where the Python pins live"
+	@echo "  make -C env stata-list      List packages in the local adopath"
+	@echo "  After any relock: make check-baseline, or the new pin is untested."
+	@echo ""
 	@echo "BUILD:"
 	@echo "  make all              Run all analyses (~5 min)"
 	@echo "  make price_base       Run price_base analysis only"
 	@echo "  make remodel_base     Run remodel_base analysis only"
 	@echo ""
 	@echo "VERIFICATION:"
+	@echo "  make check-baseline   Compare tables against env/baseline/published.json"
+	@echo "  make data-checksums-check  Verify data/ against CHECKSUMS.txt"
 	@echo "  make test-outputs     Verify all expected outputs exist"
 	@echo "  make test             Run test suite (pytest)"
 	@echo "  make test-cov         Run tests with coverage report"
