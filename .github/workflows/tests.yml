@@ -81,6 +81,39 @@ jobs:
     # repro_tools.cli publish` had no module entry point, so it ignored its
     # arguments and exited 0, and make then touched the stamp recording the work
     # as done.
+    # Publishing requires a clean tree, and building here legitimately dirties
+    # exactly one tracked file.
+    #
+    # juliapkg installs the newest Julia that satisfies env/juliapkg.json, and on
+    # these runners OpenSSL_jll caps that at 1.11.9 while env/Manifest.toml was
+    # resolved with 1.12.4. Pkg REWRITES a manifest it cannot honor rather than
+    # failing, so `make environment` leaves env/Manifest.toml modified. That is a
+    # recorded limitation of pinning a manifest a template cannot control the
+    # Julia for -- see the comment at env/Makefile around the manifest check.
+    #
+    # The file is restored rather than the gate relaxed. Publishing with
+    # ALLOW_DIRTY=1 would make this step pass while testing nothing, which is the
+    # failure mode this whole step exists to correct. And the restore is not
+    # blanket: if anything ELSE is dirty, that is unexplained and the job stops,
+    # because "the build modified a tracked file" is exactly what the publish
+    # gate is for.
+    - name: Restore the Julia manifest rewritten by the build
+      run: |
+        echo "Working tree after build:"
+        git status --porcelain
+        unexpected="$(git status --porcelain | grep -v ' env/Manifest.toml$' || true)"
+        if [ -n "$unexpected" ]; then
+          echo ""
+          echo "ERROR: the build dirtied files other than env/Manifest.toml:" >&2
+          echo "$unexpected" >&2
+          echo "" >&2
+          echo "A build must not modify tracked files. Investigate rather than" >&2
+          echo "widening this exception." >&2
+          exit 1
+        fi
+        git checkout -- env/Manifest.toml || true
+        git status --porcelain
+
     - name: Publish artifacts to paper/
       run: |
         make publish
