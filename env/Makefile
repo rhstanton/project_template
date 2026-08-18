@@ -149,9 +149,25 @@ environment: all-env
 	@echo "=========================================================================="
 
 # ---------- Python / uv ----------
+# --frozen is load-bearing: install what uv.lock says, and never rewrite it.
+#
+# Plain `uv sync` re-resolves whenever it judges the lockfile out of date and
+# writes the result back. On a GitHub runner that happened on every build, so
+# `make environment` left uv.lock modified -- caught 2026-08-18 by the publish
+# gate refusing a dirty tree, having gone unnoticed here because the same
+# re-resolution on one developer machine tends to be a no-op.
+#
+# A build that can silently change its own pins is the defect this project's
+# whole toolchain policy exists to prevent: it is what conda did, re-solving
+# python.yml on every `conda env create`, and it is why the environment behind a
+# submitted paper turned out not to be reconstructible.
+#
+# With --frozen, a lockfile that no longer matches pyproject.toml is an ERROR
+# rather than a silent update. That is the point. Re-pinning is a deliberate
+# act: `make -C env python-relock`, then re-run the acceptance test.
 python-env: ensure-uv
 	@echo ">> Syncing Python environment with uv -> $(VENV)"
-	@cd $(REPO_ROOT) && uv sync
+	@cd $(REPO_ROOT) && uv sync --frozen
 
 python-check:
 	@echo ">> checking Python can import juliacall from $(VENV)"

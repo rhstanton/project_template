@@ -185,3 +185,50 @@ class TestHelpDocumentsThem:
                 f"`make help` advertises `{target}`, but it does not exist "
                 f"({result.stderr.strip()[:200]})"
             )
+
+
+class TestBuildsDoNotRewritePins:
+    """A build must install from the pins, never silently change them.
+
+    `make environment` used plain `uv sync`, which re-resolves whenever uv
+    judges the lockfile out of date and writes the result back. On a GitHub
+    runner that happened on every build and left uv.lock modified; it went
+    unnoticed locally because the same re-resolution on one developer machine is
+    usually a no-op.
+
+    Found 2026-08-18, and only because the publish gate refused to publish from
+    a dirty working tree. That is the failure mode the toolchain policy exists
+    to prevent -- it is what conda did, re-solving on every `conda env create`,
+    and why the environment behind a submitted paper turned out not to be
+    reconstructible.
+    """
+
+    def test_python_env_syncs_frozen(self):
+        expanded = make_n("python-env", REPO_ROOT / "env").stdout
+        assert "uv sync --frozen" in expanded, (
+            "python-env must sync with --frozen; plain `uv sync` re-resolves and "
+            "rewrites uv.lock, so a build can silently change its own pins"
+        )
+
+    def test_no_bare_uv_sync_anywhere_in_the_env_makefile(self):
+        """Catch a new target reintroducing it, not just this one."""
+        text = ENV_MAKEFILE.read_text()
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or "uv sync" not in stripped:
+                continue
+            assert "--frozen" in stripped, f"bare `uv sync` in env/Makefile: {stripped}"
+
+    def test_environment_target_does_not_rewrite_the_lockfile(self):
+        """The whole-build view: nothing reachable from `make environment`."""
+        result = subprocess.run(
+            ["make", "-n", "environment"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+        for forbidden in ("uv lock --upgrade", "uv lock\n"):
+            assert forbidden not in result.stdout, (
+                f"`make environment` would run `{forbidden.strip()}`"
+            )
