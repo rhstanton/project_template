@@ -148,28 +148,34 @@ command:
   - python
   - run_analysis.py
   - price_base
+repo_root: /home/you/projects/housing
+path_convention: relative-to-repo-root-where-possible
 git:
   is_git_repo: true
   commit: abc123def456789...
   branch: main
   dirty: false
+  untracked_count: 0
+  untracked: []
+  untracked_truncated: false
+  upstream: origin/main
   ahead: 0
   behind: 0
 inputs:
-  - path: /full/path/to/data/housing_panel.csv
+  - path: data/housing_panel.csv
     sha256: 48917387ef250e81b4ec8a43e25a01f512a5c00c857614f82fee0729e48f91ce
     bytes: 325
-    mtime: 1737115200.0
 outputs:
-  - path: /full/path/to/output/figures/price_base.pdf
+  - path: output/figures/price_base.pdf
     sha256: 3855687dcbeff3673679f5bb05a2019f94987f19e1c6d8fc5c2284fec73f9025
     bytes: 12482
-    mtime: 1737115210.0
-  - path: /full/path/to/output/tables/price_base.tex
+  - path: output/tables/price_base.tex
     sha256: 958062fbe20ff4dee6ad0ae6af81fc45c8c4c2408418fabee0810fb4bc5a19bc
     bytes: 193
-    mtime: 1737115210.0
 ```
+
+Paths are relative to `repo_root`, and `mtime` is not recorded — see
+[provenance.md](provenance.md) for why both changed on 2026-08-18.
 
 ---
 

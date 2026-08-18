@@ -24,28 +24,52 @@ command:
   - python
   - run_analysis.py
   - price_base
+repo_root: /home/you/projects/housing
+path_convention: relative-to-repo-root-where-possible
 git:
   is_git_repo: true
   commit: cbb163e7a1b2c3d4e5f6...
   branch: main
   dirty: false
+  untracked_count: 0
+  untracked: []
+  untracked_truncated: false
+  upstream: origin/main
   ahead: 0
   behind: 0
 inputs:
-  - path: /path/to/data/housing_panel.csv
+  - path: data/housing_panel.csv
     sha256: 48917387ef250e81b4ec8a43e25a01f512a5c00c857614f82fee0729e48f91ce
     bytes: 325
-    mtime: 1768622679.5022135
 outputs:
-  - path: /path/to/output/figures/price_base.pdf
+  - path: output/figures/price_base.pdf
     sha256: 3855687dcbeff3673679f5bb05a2019f94987f19e1c6d8fc5c2284fec73f9025
     bytes: 12482
-    mtime: 1768622689.4427366
-  - path: /path/to/output/tables/price_base.tex
+  - path: output/tables/price_base.tex
     sha256: 958062fbe20ff4dee6ad0ae6af81fc45c8c4c2408418fabee0810fb4bc5a19bc
     bytes: 193
-    mtime: 1768622689.2007284
 ```
+
+Three details of this format are decisions rather than accidents, changed on
+2026-08-18:
+
+**Paths are relative to `repo_root`.** They were absolute, which meant records
+could not be compared across machines — every path differed, so diffing two
+byte-identical builds was noise — and since `paper/provenance.yml` is committed
+to the paper repository, it published the author's home directory. A file
+outside the repository is still recorded absolute, which tells a replicator the
+build depended on something the repository does not contain.
+
+**`mtime` is not recorded.** It changes on every checkout and every copy, so it
+made two identical builds produce different records while adding nothing to
+`sha256`.
+
+**`dirty` covers tracked files only; untracked files are counted separately.**
+`dirty` is what `make publish` gates on, and a gate that fires constantly gets
+switched off. But an untracked script is a perfectly good candidate for whatever
+produced the artifact, so `untracked_count` and `untracked` record it without
+blocking publication. Gitignored files do not appear, so a project that ignores
+its outputs sees an empty list.
 
 ### 2. Publication Provenance (`paper/provenance.yml`)
 
@@ -206,7 +230,6 @@ This ensures all artifacts were built from the current HEAD commit, preventing a
 
 ## Limitations
 
-- File modification times (`mtime`) may vary across systems (timezones, filesystems)
 - Only tracks files explicitly listed as inputs/outputs
 - Doesn't capture environment variables or system state
 - Assumes git repo exists (gracefully degrades if not)
