@@ -41,6 +41,23 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNSTATA = REPO_ROOT / "env" / "scripts" / "runstata"
 EXECUTE_ADO = REPO_ROOT / "env" / "scripts" / "execute.ado"
 
+# bootstrap.py --remove-stata (and --python-only) deletes env/scripts/runstata
+# outright, and the "Bootstrap variants" workflow builds exactly that project.
+# Two different absences have to be distinguished here:
+#
+#   * the SCRIPT is gone      -> this whole file has no subject; skip it.
+#   * the BINARY is missing   -> the script exists and its text can still be
+#                               checked; only the tests that invoke Stata skip.
+#
+# Getting that wrong the first time turned every test in this module into an
+# ERROR on the no-stata variant, which is a worse signal than a failure: it
+# looks like the suite is broken rather than the project legitimately lacking
+# a feature.
+pytestmark = pytest.mark.skipif(
+    not (RUNSTATA.is_file() and EXECUTE_ADO.is_file()),
+    reason="env/scripts/runstata or execute.ado absent (Stata pruned by bootstrap.py)",
+)
+
 has_stata = shutil.which("stata-mp") is not None
 needs_stata = pytest.mark.skipif(not has_stata, reason="stata-mp not on PATH")
 
