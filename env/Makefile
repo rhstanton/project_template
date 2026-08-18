@@ -300,3 +300,107 @@ python-paths:
 	@printf 'lock exists? '; [ -f "$(REPO_ROOT)/uv.lock" ] && echo yes || echo no
 	@printf 'venv exists? '; [ -d "$(REPO_ROOT)/.venv" ] && echo yes || echo no
 
+
+# ==============================================================================
+# The replicator's path: hash-pinned requirements, installable by plain pip
+# ==============================================================================
+#
+# Required by the replication constitution, which is explicit about it:
+#
+#   "uv is how the authors *author* the environment. It must never be what a
+#    journal data editor is required to install."
+#
+# and requires uv.lock to be exported to hash-pinned requirements.txt files that
+# plain pip can install, with that path tested with uv absent from PATH.
+#
+# This template shipped neither target until 2026-08-18, so every project
+# generated from it violated that clause on arrival -- the only documented way
+# to build the environment needed uv. fire had both; they are ported here.
+#
+# The exported file is a derived artifact of uv.lock and must be regenerated
+# whenever the lock moves. python-env-pip refuses to run against an export older
+# than uv.lock rather than installing a stale set quietly.
+
+.PHONY: python-export
+python-export:
+	@command -v uv >/dev/null 2>&1 || { \
+		echo "ERROR: uv is needed to EXPORT (not to install). See"; \
+		echo "       https://docs.astral.sh/uv/"; \
+		exit 1; \
+	}
+	@mkdir -p "$(ENV_DIR)/requirements"
+	@# --no-emit-project: this project itself is not a dependency.
+	@# --no-emit-package repro-tools: a local editable path, meaningless to pip
+	@# on another machine; a replicator gets it as a git submodule.
+	@cd "$(REPO_ROOT)" && uv export --no-emit-project --no-emit-package repro-tools \
+		--format requirements-txt -o env/requirements/base.txt
+	@echo ">> Wrote env/requirements/base.txt from uv.lock"
+	@echo "   Commit it: it is the only environment a data editor can install"
+	@echo "   without uv, and it is stale the moment uv.lock moves."
+
+.PHONY: python-env-pip
+python-env-pip:
+	@REQ="$(ENV_DIR)/requirements/base.txt"; \
+	if [ ! -f "$$REQ" ]; then \
+		echo "ERROR: $$REQ missing. Run 'make -C env python-export' (needs uv)."; \
+		exit 1; \
+	fi; \
+	if command -v uv >/dev/null 2>&1 && [ "$(REPO_ROOT)/uv.lock" -nt "$$REQ" ]; then \
+		echo "ERROR: $$REQ is older than uv.lock -- regenerate it with"; \
+		echo "       'make -C env python-export'. Installing a stale export"; \
+		echo "       would build an environment nobody has pinned."; \
+		exit 1; \
+	fi; \
+	PY="$${PYTHON_312:-python3.12}"; \
+	command -v "$$PY" >/dev/null 2>&1 || { \
+		echo "ERROR: python3.12 not found. These requirements are pinned for"; \
+		echo "       Python 3.12 (see requires-python in pyproject.toml);"; \
+		echo "       another version resolves different wheels and fails the"; \
+		echo "       hash check confusingly. Set PYTHON_312=/path/to/python3.12"; \
+		exit 1; \
+	}; \
+	VER=$$("$$PY" -c 'import sys;print("%d.%d"%sys.version_info[:2])' 2>/dev/null); \
+	if [ "$$VER" != "3.12" ]; then \
+		echo "ERROR: $$PY reports version '$$VER', need 3.12"; exit 1; \
+	fi; \
+	if [ -e "$(VENV)" ] && [ -z "$${FORCE:-}" ]; then \
+		echo "ERROR: $(VENV) already exists. Refusing to overwrite -- if it was"; \
+		echo "       built by uv, mixing a pip install into it produces an"; \
+		echo "       environment matching neither. Remove it, or set FORCE=1."; \
+		exit 1; \
+	fi; \
+	echo ">> Building $(VENV) with $$PY and pip alone (no uv)"; \
+	"$$PY" -m venv "$(VENV)"; \
+	if ! "$(VENV)/bin/python" -c 'import sys' >/dev/null 2>&1; then \
+		echo "ERROR: the venv just created by '$$PY' cannot start."; \
+		echo "       This happens when \$$PY is a symlink shim -- a uv-managed"; \
+		echo "       interpreter linked into ~/.local/bin, say: the venv records"; \
+		echo "       that directory as its home and then cannot find the stdlib."; \
+		echo "       Point PYTHON_312 at the REAL interpreter:"; \
+		echo "       PYTHON_312=\$$(readlink -f \"$$PY\") make -C env python-env-pip"; \
+		"$(VENV)/bin/python" -c 'import sys' 2>&1 | head -5; \
+		exit 1; \
+	fi; \
+	"$(VENV)/bin/python" -m pip install --upgrade pip >/dev/null; \
+	"$(VENV)/bin/python" -m pip install --require-hashes -r "$$REQ"; \
+	echo ">> Installed from $$REQ with hashes verified"; \
+	echo ">> Installing the local repro-tools submodule"; \
+	"$(VENV)/bin/python" -m pip install --no-deps "$(REPO_ROOT)/lib/repro-tools"; \
+	echo ">> Replicator environment ready (uv was not used)"
+
+# --no-deps, and not optional.
+#
+# The export deliberately omits repro-tools: it is a local editable path, which
+# means nothing to pip on someone else's machine. But the analysis IMPORTS it,
+# so a venv built from requirements alone installs every dependency and then
+# cannot run anything -- `import repro_tools` raises ModuleNotFoundError.
+# Measured 2026-08-18 in a clean venv: 149 packages installed, hashes verified,
+# and run_analysis.py could not start.
+#
+# That gap is easy to miss because the constitution's test -- "the replicator's
+# path must be tested with uv absent from PATH" -- was read as a test of
+# INSTALLATION. Installing is not the claim being made; running is.
+#
+# --no-deps because the dependency set is already pinned by hash above, and
+# letting pip resolve repro-tools' own requirements would silently pull
+# unpinned versions into an environment whose whole point is that it is pinned.
