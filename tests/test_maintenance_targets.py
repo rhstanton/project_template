@@ -43,6 +43,37 @@ MAINTENANCE_TARGETS = {
 }
 
 
+ALL_MAKEFILES = [
+    REPO_ROOT / "Makefile",
+    REPO_ROOT / "env" / "Makefile",
+    REPO_ROOT / "lib/repro-tools/src/repro_tools/lib/common.mk",
+]
+
+
+def defined_targets() -> set[str]:
+    """Every explicit target name defined across the project's makefiles.
+
+    Parsed rather than obtained from `make -p`, because the database dump also
+    runs the makefile's own $(shell ...) calls. Pattern rules and variable
+    assignments are ignored: this answers "is this literal name defined", which
+    is exactly what an entry in `make help` claims.
+    """
+    names: set[str] = set()
+    for path in ALL_MAKEFILES:
+        if not path.is_file():
+            continue
+        for line in path.read_text().splitlines():
+            if line.startswith("\t") or line.lstrip().startswith("#"):
+                continue
+            if line.startswith(".PHONY:"):
+                names.update(line.split(":", 1)[1].split())
+                continue
+            match = re.match(r"^([A-Za-z0-9_.\-/ $()%]+):(?!=)", line)
+            if match:
+                names.update(match.group(1).split())
+    return names
+
+
 def make_n(target: str, directory: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["make", "-n", "--no-print-directory", target],
@@ -170,21 +201,52 @@ class TestHelpDocumentsThem:
     def test_help_does_not_advertise_targets_that_do_not_exist(self):
         """The other direction, which is the one that embarrasses a public repo.
 
-        Every `make <target>` named in help must resolve. Parameterized examples
-        (make show-analysis-<name>) and variable assignments are skipped.
+        Every `make <target>` named in help must be a target something defines.
+
+        Defined-ness is established by PARSING the makefiles, not by running
+        `make -n`. Dry-run is not side-effect free: make deliberately executes
+        recipe lines containing $(MAKE) even under -n, so probing
+        `journal-package-tarball` this way really ran its `tar`, which failed on
+        a runner because the directory it archives had not been built. The test
+        then reported a perfectly real target as missing. Asking "is this name
+        defined" by executing the recipe was the wrong question.
         """
         text = self.help_text()
         named = set(re.findall(r"\bmake (?:-C env )?([a-z][a-z0-9-]{2,})\b", text))
         skip = {"help"}  # recursion into itself is pointless, not wrong
-        for target in sorted(named - skip):
-            directory = (
-                REPO_ROOT / "env" if f"make -C env {target}" in text else REPO_ROOT
+        missing = sorted(t for t in named - skip if t not in defined_targets())
+        assert not missing, (
+            f"`make help` advertises target(s) nothing defines: {missing}"
+        )
+
+
+class TestTargetParser:
+    """Guard the guard: the help check is only as good as this parser.
+
+    A parser that silently returned everything, or nothing useful, would make
+    test_help_does_not_advertise_targets_that_do_not_exist pass unconditionally.
+    """
+
+    def test_finds_targets_from_every_makefile(self):
+        targets = defined_targets()
+        assert "all" in targets, "missing a target from the root Makefile"
+        assert "python-relock" in targets, "missing a target from env/Makefile"
+        assert "diff-outputs" in targets, "missing a target from common.mk"
+
+    def test_does_not_invent_targets(self):
+        assert "definitely-not-a-real-target" not in defined_targets()
+
+    def test_ignores_variable_assignments(self):
+        """`FOO := bar` is not a target, and `:=` must not be read as `:`."""
+        targets = defined_targets()
+        for variable in ("REPO_ROOT", "PYTHON", "ANALYSES", "PAPER_DIR"):
+            assert variable not in targets, (
+                f"{variable} is a variable assignment, not a target"
             )
-            result = make_n(target, directory)
-            assert result.returncode == 0, (
-                f"`make help` advertises `{target}`, but it does not exist "
-                f"({result.stderr.strip()[:200]})"
-            )
+
+    def test_phony_declarations_contribute_names(self):
+        """Some targets are only discoverable via .PHONY in practice."""
+        assert "check-baseline" in defined_targets()
 
 
 class TestBuildsDoNotRewritePins:
