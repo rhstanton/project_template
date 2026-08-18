@@ -32,6 +32,23 @@ if [[ $# -lt 1 || -z "${1:-}" ]]; then
 fi
 DO_FILE="$1"
 
+if ! command -v stata-mp >/dev/null 2>&1; then
+    echo "❌ stata-mp not found on PATH." >&2
+    echo "   Stata is optional in this template; install it, or run the" >&2
+    echo "   Python or Julia paths instead." >&2
+    exit 127
+fi
+
+# Resolve the do-file BEFORE changing directory, so a path relative to wherever
+# the caller stood keeps working. Without this, `runstata examples/foo.do` run
+# from env/ cd'd to the repo root and then asked Stata for examples/foo.do
+# THERE, which fails with r(601) -- a file-not-found reported as though the
+# do-file itself were broken. Found 2026-08-18 while porting these fixes to
+# fire, which had the same bug and could not even report it.
+if [[ -f "$DO_FILE" ]]; then
+    DO_FILE="$(cd -- "$(dirname -- "$DO_FILE")" && pwd)/$(basename -- "$DO_FILE")"
+fi
+
 cd -- "$REPRO_PROJECT_ROOT"
 
 TEMP_DO=$(mktemp "${TMPDIR:-/tmp}/stata_XXXXXX.do")
