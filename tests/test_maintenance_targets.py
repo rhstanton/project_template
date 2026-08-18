@@ -43,10 +43,18 @@ MAINTENANCE_TARGETS = {
 }
 
 
+REPRO_LIB = REPO_ROOT / "lib/repro-tools/src/repro_tools/lib"
+
+# Every makefile that contributes targets, including the shared fragments the
+# project `include`s. Listing the included files explicitly rather than only the
+# top-level ones matters: when the Stata rules were hoisted into
+# repro-tools/lib/stata.mk on 2026-08-18, stata-list stopped being found here
+# and two tests failed for a reason that had nothing to do with the target.
 ALL_MAKEFILES = [
     REPO_ROOT / "Makefile",
     REPO_ROOT / "env" / "Makefile",
-    REPO_ROOT / "lib/repro-tools/src/repro_tools/lib/common.mk",
+    REPRO_LIB / "common.mk",
+    REPRO_LIB / "stata.mk",
 ]
 
 
@@ -96,11 +104,19 @@ def test_target_exists_and_expands(target):
 
 @pytest.mark.parametrize("target", sorted(MAINTENANCE_TARGETS))
 def test_target_is_phony(target):
-    """These produce no file, so make must not skip them as up to date."""
-    text = ENV_MAKEFILE.read_text()
-    assert re.search(rf"^\.PHONY:.*\b{re.escape(target)}\b", text, re.MULTILINE), (
-        f"{target} is not declared .PHONY"
+    """These produce no file, so make must not skip them as up to date.
+
+    Searches every contributing makefile, not just env/Makefile: a target may
+    be declared in a shared fragment that env/Makefile includes.
+    """
+    declared = any(
+        re.search(
+            rf"^\.PHONY:.*\b{re.escape(target)}\b", path.read_text(), re.MULTILINE
+        )
+        for path in ALL_MAKEFILES
+        if path.is_file()
     )
+    assert declared, f"{target} is not declared .PHONY in any makefile"
 
 
 def test_relock_recipes_reference_no_empty_variables():
