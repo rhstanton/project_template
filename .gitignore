@@ -24,6 +24,14 @@
 !*.md
 !*.py
 !*.sh
+# Machine-local environment overrides. env/env.sh sources this last, so it can
+# override anything, and says in its own comments that it "is gitignored and
+# optional" -- which was not true until 2026-08-19. The allowlist's !*.sh made
+# it TRACKED, so a DATA_DIR pointing at someone's private path, or any other
+# machine-specific setting, would have been committed. This rule has to come
+# after !*.sh to win.
+env/local.sh
+
 !.envrc
 !.editorconfig
 !*.toml
