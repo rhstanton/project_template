@@ -467,6 +467,9 @@ make clean            # Remove all outputs
 - [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
 - [docs/vscode_integration.md](docs/vscode_integration.md) - Working entirely in VS Code
 - [docs/directory_structure.md](docs/directory_structure.md) - Project organization
+<!-- template-only:start -->
+- [docs/bootstrap_and_markers.md](docs/bootstrap_and_markers.md) - What `bootstrap.py` does, and how to mark docs so they prune correctly
+<!-- template-only:end -->
 <!-- julia:start -->
 - [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
 <!-- julia:end -->

@@ -629,6 +629,149 @@ make cleanall  # Remove .venv, .julia, output/
 
 ---
 
+## Problems caused by how you obtained the project
+
+These four have one thing in common: nothing is wrong with your code, and the
+error message points somewhere other than the cause. They are grouped here
+because the trigger is how the working tree came to exist, not anything you did
+in it.
+
+### "clone of 'git@github.com:...' failed" — which is usually not an auth problem
+
+```
+fatal: destination path '.../lib/repro-tools' already exists and is not an empty directory.
+fatal: clone of 'git@github.com:owner/repro-tools.git' into submodule path '...' failed
+Failed to clone 'lib/repro-tools' a second time, aborting
+```
+
+**Read the first line, not the second.** The second names a GitHub URL and reads
+exactly like a credentials failure; the first says the real cause. This happens
+whenever a *working tree* is copied over a clone — `rsync`, `cp -r`, restoring a
+backup — so `lib/repro-tools/` contains plain files and git refuses to clone
+into it.
+
+**Fix**: remove the directory and let git populate it.
+
+```bash
+rm -rf lib/repro-tools
+git submodule update --init --recursive
+```
+
+**Before assuming credentials are broken, test them:**
+
+```bash
+ssh -T git@github.com          # expect: "Hi <you>! You've successfully authenticated"
+git ls-remote <submodule-url>  # expect: a list of refs
+```
+
+An error message that offers a single hypothesis invites you to accept it. Test
+the hypothesis before acting on it.
+
+### Tests fail on `AGENTS.md` / `CLAUDE.md` with a `pathlib` traceback
+
+```
+FAILED tests/test_documented_commands_exist.py::test_the_sweep_finds_commands
+  .../pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+```
+
+`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md` and
+`COAUTHOR_SETUP.md` are symlinks into the gitignored `private/` overlay created
+by `make private-init`. A fresh clone has neither the links nor their target,
+which is fine. A **copied** working tree keeps the links and loses the target,
+leaving them dangling.
+
+**Fix**: recreate the overlay with `make private-init`, or delete the dangling
+links. Current versions skip unreadable documents rather than crashing, so this
+appears only on older checkouts.
+
+```bash
+find . -maxdepth 2 -type l ! -exec test -e {} \; -print   # list dangling symlinks
+```
+
+### A wrapper looks correctly configured because your shell already was
+
+If you use `direnv`, `env/env.sh` is loaded into **every shell inside the
+repository**. A wrapper that fails to set up the environment therefore *inherits
+a correct one*, and any measurement taken from an interactive shell agrees with
+a wrapper that is actually broken. The failure appears only for callers that
+were not already handed the environment — cron, CI, an editor, another
+project's shell.
+
+**Test wrappers with the environment stripped**, never from a shell inside the
+project:
+
+```bash
+env -u JULIA_PROJECT -u JULIA_LOAD_PATH -u JULIA_DEPOT_PATH -u PYTHONPATH \
+    -u VIRTUAL_ENV env/scripts/runpython -c "import sys; print(sys.prefix)"
+```
+
+`tests/test_entry_points_agree.py` does this, and compares the entry points
+against each other rather than against the shell that launched them.
+
+### Paths mysteriously become two paths (`CDPATH`)
+
+If `CDPATH` is set in your shell, `cd` **prints the directory it resolved** when
+it resolves through `CDPATH`. Every script here finds itself with
+
+```bash
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+```
+
+so that printed line is captured too, and `ROOT` silently becomes two
+newline-separated paths. Nothing errors. It surfaces much later as a module that
+will not import, or a second package depot appearing out of nowhere.
+
+**Fix, and the two cases differ:**
+
+- A script that is **executed**: `unset CDPATH` near the top.
+- A file that is **sourced** (`env/env.sh`, anything `.envrc` pulls in): clear it
+  inside the subshell instead — `ROOT="$(CDPATH= cd -- ... && pwd)"`. Using
+  `unset` in a sourced file mutates the interactive shell of whoever sourced it.
+
+Check this first after touching any wrapper.
+
+---
+
+## How to investigate something not listed here
+
+**Ask make what it will do, rather than reading the Makefile.** The build is
+heavily pattern-generated, so make is the only thing that knows the expanded
+rules:
+
+```bash
+make dryrun                  # or: make -n all
+make list-analyses           # what analyses exist
+make list-analyses-names     # the same, machine-readable
+make show-analysis-<name>    # one analysis: script, runner, inputs, outputs
+make info                    # version and layout
+make system-info             # OS, Make, Python, and language versions
+```
+
+**Narrow before you dig.**
+
+```bash
+make test-fast               # ~1 minute; skips the integration tests
+make test                    # everything
+python3 -m pytest tests/test_foo.py::TestClass::test_case -v
+```
+
+**Never invoke the interpreters directly.** Use `env/scripts/runpython` and its
+siblings. They source `env/env.sh`, which is the single source of truth for the
+environment — `PYTHONPATH`, the language bridges, and the thread-count pin that
+keeps floating-point reduction order identical across machines. A bare `python`
+gets whichever interpreter your shell happens to offer, and the results may
+differ in the last digits.
+
+**When a check passes, ask what it would look like if it were broken.** If the
+answer is "the same", it is not a check. Several bugs in this project's own
+machinery were exactly that: output redirected to `/dev/null` with `|| true`
+appended and a stamp file touched afterwards; a command with no entry point that
+ignored its arguments and exited 0; a test whose skip condition matched a
+comment saying the feature was absent. All reported success indefinitely.
+
+---
+
 ## Debugging Tips
 
 ### Enable verbose output

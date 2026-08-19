@@ -34,6 +34,13 @@ Complete guide to the reproducible research template.
   - Updating to latest version
   - Troubleshooting
 
+<!-- template-only:start -->
+- **[bootstrap_and_markers.md](bootstrap_and_markers.md)** - What `bootstrap.py` does, and how to mark documentation so it prunes correctly
+  - The four passes, and why bootstrap runs before `make environment`
+  - Block markers, and why they cannot go inside a code fence
+  - Checking your work against a real generated project
+<!-- template-only:end -->
+
 - **[submodule_cheatsheet.md](submodule_cheatsheet.md)** - Quick reference for submodule workflows
   - Creating new projects from template
   - Editing repro-tools
@@ -175,6 +182,8 @@ Complete guide to the reproducible research template.
 ### Problem Solving
 - **[troubleshooting.md](troubleshooting.md)** - Solutions to common issues
   - Quick diagnostics
+  - Problems caused by how you obtained the project (copied trees, dangling symlinks, direnv, `CDPATH`)
+  - How to investigate something not listed
   - Make errors
   - Environment setup errors
   - Build errors
@@ -270,6 +279,7 @@ project_template/
 │   ├── directory_structure.md          # Project organization
 │   │
 │   ├── julia_python_integration.md     # Julia/Python bridge
+│   ├── bootstrap_and_markers.md        # Instantiation and doc markers
 │   ├── platform_compatibility.md       # System requirements
 │   └── troubleshooting.md              # Problem solving
 │

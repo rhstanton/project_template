@@ -517,6 +517,22 @@ def strip_marked_doc_sections(content: str, name: str, source: str = "") -> str:
 TREE_CONNECTORS = ("├── ", "└── ")
 
 
+def _tree_connector(line: str):
+    """The tree connector this line is drawn with, or None if it is not a row.
+
+    Strict about what precedes the connector: only box-drawing verticals and
+    whitespace. A prose line *about* trees -- "a row carrying `├── ` or `└── `"
+    -- contains the connectors but is not a row, and the loose test (does the
+    connector appear anywhere) matched it. That let the terminator repair
+    rewrite a sentence in the documentation, which the no-op-prune test caught.
+    """
+    for conn in TREE_CONNECTORS:
+        i = line.find(conn)
+        if i != -1 and set(line[:i]) <= {"\u2502", " ", "\t"}:
+            return conn
+    return None
+
+
 def prune_tree_lines(content: str, basenames: set) -> str:
     """Drop directory-diagram lines naming a file that no longer exists.
 
@@ -544,7 +560,7 @@ def prune_tree_lines(content: str, basenames: set) -> str:
     lines = content.split("\n")
     kept = []
     for line in lines:
-        conn = next((c for c in TREE_CONNECTORS if c in line), None)
+        conn = _tree_connector(line)
         if conn is None:
             kept.append(line)
             continue
@@ -558,13 +574,13 @@ def prune_tree_lines(content: str, basenames: set) -> str:
     # Repair terminators: walk each row and decide whether it is now last.
     indents = []
     for line in kept:
-        conn = next((c for c in TREE_CONNECTORS if c in line), None)
+        conn = _tree_connector(line)
         indents.append(len(line.split(conn)[0]) if conn else None)
 
     for i, line in enumerate(kept):
         if indents[i] is None:
             continue
-        conn = next(c for c in TREE_CONNECTORS if c in line)
+        conn = _tree_connector(line)
         is_last = True
         for j in range(i + 1, len(kept)):
             if indents[j] is None:
@@ -784,6 +800,15 @@ def update_main_makefile(
     makefile.write_text(content)
 
 
+# Documents that exist only to explain instantiation. A generated project has
+# already been through it and will never run bootstrap again, so these describe
+# a step that cannot recur -- and one of them tells the reader how to mark
+# documentation for a pruning pass that has already happened.
+TEMPLATE_ONLY_FILES = [
+    "docs/bootstrap_and_markers.md",
+]
+
+
 def remove_template_self_description(repo_root: Path) -> None:
     """Strip prose that is about the TEMPLATE, not about the generated project.
 
@@ -804,7 +829,13 @@ def remove_template_self_description(repo_root: Path) -> None:
     keep the customization guidance it will actually use.
     """
     print("\n📝 Removing template-only documentation...")
+    for rel in TEMPLATE_ONLY_FILES:
+        path = repo_root / rel
+        if path.exists():
+            path.unlink()
+            print(f"  ✓ Removed {rel}")
     remove_language_doc_sections(repo_root, "template-only")
+    remove_language_tree_lines(repo_root, TEMPLATE_ONLY_FILES)
 
 
 def update_readme(

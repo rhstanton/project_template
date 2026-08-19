@@ -31,6 +31,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from bootstrap import (  # noqa: E402
     JULIA_FILES,
     STATA_FILES,
+    TEMPLATE_ONLY_FILES,
     prunable_docs,
     prune_analysis_names,
     prune_tree_lines,
@@ -209,11 +210,16 @@ def test_no_marker_sits_inside_a_code_fence():
     """An HTML comment inside ``` renders as literal text to the reader."""
     offenders = []
     for md in prunable_docs(REPO_ROOT):
-        in_fence = False
+        if md in {REPO_ROOT / p for p in TEMPLATE_ONLY_FILES}:
+            continue  # documents the marker syntax; its examples are the point
+        fence = 0  # length of the open fence, 0 when outside one
         for i, line in enumerate(md.read_text().split("\n"), 1):
-            if line.startswith("```"):
-                in_fence = not in_fence
-            elif in_fence and MARKER.search(line):
+            ticks = len(line) - len(line.lstrip("`"))
+            if fence == 0 and ticks >= 3:
+                fence = ticks
+            elif fence and ticks >= fence and not line.strip("`").strip():
+                fence = 0
+            elif fence and MARKER.search(line):
                 offenders.append(f"{md.relative_to(REPO_ROOT)}:{i}")
     assert not offenders, "markers inside code fences: " + ", ".join(offenders)
 
@@ -240,7 +246,7 @@ def test_the_marked_files_actually_lose_their_commands(lang):
     files = JULIA_FILES if lang == "julia" else STATA_FILES
     removed = {Path(p).name for p in files}
     # Documents bootstrap deletes outright need no markers inside them.
-    deleted = {REPO_ROOT / p for p in files}
+    deleted = {REPO_ROOT / p for p in files + TEMPLATE_ONLY_FILES}
     offenders = []
     for md in prunable_docs(REPO_ROOT):
         if md in deleted:
@@ -261,8 +267,11 @@ def test_no_document_tells_a_generated_project_to_instantiate_the_template():
     the reader is already standing in. Re-running bootstrap there is at best
     confusing and at worst destructive.
     """
+    deleted = {REPO_ROOT / p for p in TEMPLATE_ONLY_FILES}
     offenders = []
     for md in prunable_docs(REPO_ROOT):
+        if md in deleted:
+            continue  # bootstrap removes the whole file, markers or not
         stripped = strip_marked_doc_sections(md.read_text(), "template-only", md.name)
         for i, line in enumerate(stripped.split("\n"), 1):
             if "bootstrap.py" in line or "Use this template" in line:
@@ -278,3 +287,25 @@ def test_the_template_itself_still_explains_how_to_instantiate_it():
     readme = (REPO_ROOT / "README.md").read_text()
     assert "Use this template" in readme
     assert "bootstrap.py" in readme
+
+
+def test_every_template_only_file_is_actually_deleted():
+    """Guard the exemptions above: they only make sense if bootstrap really
+    removes these files. An entry naming a file bootstrap keeps would silently
+    exempt a live document from every marker check."""
+    for rel in TEMPLATE_ONLY_FILES:
+        assert (REPO_ROOT / rel).is_file(), f"{rel} is listed but does not exist"
+    text = (REPO_ROOT / "bootstrap.py").read_text()
+    assert "for rel in TEMPLATE_ONLY_FILES:" in text
+    assert "path.unlink()" in text
+
+
+def test_prose_about_tree_rows_is_not_treated_as_one():
+    """`├── ` inside a sentence is not a directory entry.
+
+    The first detector asked only whether a connector appeared anywhere in the
+    line, so documentation explaining the tree rules matched its own examples
+    and the terminator repair rewrote the prose.
+    """
+    prose = "A row carrying `├── ` or `└── ` is a tree row.\n"
+    assert prune_tree_lines(prose, {"anything"}) == prose
