@@ -784,6 +784,29 @@ def update_main_makefile(
     makefile.write_text(content)
 
 
+def remove_template_self_description(repo_root: Path) -> None:
+    """Strip prose that is about the TEMPLATE, not about the generated project.
+
+    A generated project inherited README sections telling its reader to click
+    "Use this template" on GitHub and run `python bootstrap.py --python-only` --
+    instructions for creating the project they are already standing in. Running
+    bootstrap a second time in a real project is at best confusing and at worst
+    destructive, and "one, two, or three languages -- your choice" is a choice
+    that has already been made by the time anyone reads it there.
+
+    Same marker mechanism as the language pruning, under the name
+    `template-only`, and it runs on EVERY bootstrap: instantiating the template
+    is exactly the moment this text stops being true.
+
+    The test is "does this instruct the reader to instantiate the template",
+    not "does this mention the template". A generated project should still say
+    where it came from -- template-origin.toml records the commit -- and should
+    keep the customization guidance it will actually use.
+    """
+    print("\n📝 Removing template-only documentation...")
+    remove_language_doc_sections(repo_root, "template-only")
+
+
 def update_readme(
     repo_root: Path, remove_julia: bool, remove_stata: bool, new_name: str | None
 ) -> None:
@@ -910,6 +933,7 @@ def interactive_mode(repo_root: Path) -> None:
 
     update_env_makefile(repo_root, remove_julia, remove_stata)
     update_main_makefile(repo_root, remove_julia, remove_stata)
+    remove_template_self_description(repo_root)
     update_readme(repo_root, remove_julia, remove_stata, new_name)
 
     if new_name:
@@ -1015,6 +1039,7 @@ def main():
     if args.remove_julia or args.remove_stata:
         update_env_makefile(repo_root, args.remove_julia, args.remove_stata)
         update_main_makefile(repo_root, args.remove_julia, args.remove_stata)
+        remove_template_self_description(repo_root)
         update_readme(repo_root, args.remove_julia, args.remove_stata, args.rename)
 
     if args.rename:

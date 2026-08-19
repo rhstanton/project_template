@@ -8,9 +8,13 @@
 [![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 
+<!-- template-only:start -->
 **A minimal template for reproducible research in Python, Julia, and Stata — use all three or just one — with provenance tracking and automated builds**
 
-This template provides a complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results. It ships with Python, Julia, and Stata wired together — Julia runs standalone *or* from within Python (via `juliacall`) — and **one `bootstrap.py` command prunes it to whatever subset you need** (Python is the one constant).
+It ships with Python, Julia, and Stata wired together — Julia runs standalone *or* from within Python (via `juliacall`) — and **one `bootstrap.py` command prunes it to whatever subset you need** (Python is the one constant).
+<!-- template-only:end -->
+
+A complete workflow for building research artifacts (figures and tables) with full provenance tracking, separating build outputs from published results.
 
 ```mermaid
 flowchart LR
@@ -21,6 +25,7 @@ flowchart LR
 
 *Every build stamps the git commit and the SHA256 of each input and output; `make publish` is the only sanctioned path from `output/` to `paper/`.*
 
+<!-- template-only:start -->
 > **🧩 One, two, or three languages — your choice.** Start with Python + Julia + Stata, then run a single command to drop what you don't need and get a project that still builds cleanly:
 > ```bash
 > python bootstrap.py --python-only      # just Python
@@ -29,9 +34,11 @@ flowchart LR
 > python bootstrap.py --interactive      # choose interactively
 > ```
 > Python is always kept (the harness runs on it). Dropping a language also removes the example analyses that need it, so nothing breaks. See [Get started](#-get-started).
+<!-- template-only:end -->
 
 ---
 
+<!-- template-only:start -->
 ## 👥 Who Is This For?
 
 This template is designed for:
@@ -48,6 +55,7 @@ This template is designed for:
 **Not a fit if:**
 - You only need a simple Jupyter notebook (this adds structure for complex projects)
 - You don't care about reproducibility or provenance tracking
+<!-- template-only:end -->
 - You're doing pure software development (not research)
 
 ---
@@ -64,6 +72,7 @@ This template is designed for:
 
 ## 🚀 Get started
 
+<!-- template-only:start -->
 This is a **GitHub template**. Click **"Use this template"** at the top of the page to create your **own repo** (its own history), then **set up** the project:
 
 ```bash
@@ -73,6 +82,9 @@ python bootstrap.py --interactive   # choose languages (Python ± Julia ± Stata
 ```
 
 Then **build the artifacts** — pick one path (both run from inside `my-project`, so the clone + `cd` above are needed either way):
+<!-- template-only:end -->
+
+**Build the artifacts** — pick one path:
 
 **Locally** (uv; fastest, best for day-to-day work):
 ```bash
@@ -89,9 +101,13 @@ docker run --rm -v "$PWD/output:/project/output" my-project   # runs `make all` 
 ```
 
 - **Full 5-minute walkthrough:** [QUICKSTART.md](QUICKSTART.md) · **local vs. Docker:** [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)
+<!-- template-only:start -->
 - **One, two, or three languages?** Python is always included (the harness runs on it); Julia and Stata are optional. Run `bootstrap.py` once, *before* `make environment`, to prune the template to your stack: `--python-only`, or `--remove-julia` / `--remove-stata`, or `--interactive` to choose. It also drops the example analyses that need the removed language (e.g. `julia_demo`, `did_example`), so `make all` still builds cleanly.
+<!-- template-only:end -->
 - The bundled **example analyses are runnable demos** — keep them to learn the workflow, then remove any with `make remove-analysis NAME=<name>`.
+<!-- template-only:start -->
 - **Starting your own repo without the button** (clone + reset history): [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)
+<!-- template-only:end -->
 - **Cloned without `--recursive`?** `lib/repro-tools/` is empty — run `git submodule update --init --recursive`. Update it later with `make update-submodules` (or `make update-environment` to also reinstall); see [docs/submodule_cheatsheet.md](docs/submodule_cheatsheet.md). Never copy `lib/repro-tools/` by hand — let git manage the submodule.
 
 ---
@@ -139,7 +155,9 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Reproducible builds**: GNU Make orchestration with grouped targets
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
+<!-- template-only:start -->
 - **Multi-language support**: Python, Julia, Stata — keep all three or drop any with `bootstrap.py` (Python is always kept)
+<!-- template-only:end -->
 <!-- julia:start -->
 - **Julia two ways**: run Julia standalone (`runjulia script.jl`) *or* call it from Python via `juliacall` — both are wired up out of the box (the `julia_demo` notebook calls Julia from Python; `run_did.py` runs its regression in Julia with a Python fallback)
 <!-- julia:end -->
@@ -468,7 +486,7 @@ See [env/examples/](env/examples/) for a sample script in each language the proj
 
 ## 🔒 Git Integration
 
-Provenance is tied to git: every build records the commit (and dirty state) it came from. Your project is already a git repo — from **"Use this template"** / `git clone` — so there's nothing extra to set up; just keep your work committed so the records are meaningful:
+Provenance is tied to git: every build records the commit (and dirty state) it came from. Your project is already a git repo, so there's nothing extra to set up; just keep your work committed so the records are meaningful:
 
 ```bash
 make all       # build records embed the current git commit + dirty state

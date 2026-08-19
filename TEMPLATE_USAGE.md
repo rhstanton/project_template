@@ -4,6 +4,7 @@ How to customize this template for your own research project.
 
 ---
 
+<!-- template-only:start -->
 ## Starting a New Project
 
 ### Option 1: Clone as Template (Recommended)
@@ -79,6 +80,8 @@ Dropping a language removes its environment plumbing **and** the example analyse
 The manual checklist below covers anything `bootstrap.py` doesn't.
 
 ---
+
+<!-- template-only:end -->
 
 ## Customization Checklist
 
@@ -703,9 +706,12 @@ A: Yes, but you'll need to:
 
 A: Yes (conda, venv, poetry, etc.), but update `env/Makefile` accordingly.
 
+<!-- template-only:start -->
 **Q: Do I need both Python and Julia?**
 
 A: No — Python is required (the harness runs on it), but Julia is optional. Drop it with `python bootstrap.py --remove-julia`, which removes the `juliacall` dependency, `env/Project.toml`, the Julia wrappers/examples, **and** the Julia-backed example analyses (`julia_demo`, `did_example`) so `make all` still builds. (Likewise `--remove-stata`, or `--python-only` for both.) Don't remove these by hand — the pieces are spread across the Makefile, `shared/config.py`, and `pyproject.toml`, and a partial removal breaks the build.
+
+<!-- template-only:end -->
 
 **Q: Can I add more output types (not just PDF/TEX)?**
 

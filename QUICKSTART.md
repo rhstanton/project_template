@@ -10,14 +10,18 @@
 
 ## TL;DR - Copy-Paste Commands
 
+<!-- template-only:start -->
 ```bash
 # 1. Start YOUR project: click "Use this template" on GitHub for your OWN repo
 #    (details in "Starting your own project" below). Then clone it and customize:
 git clone --recursive <your-repo-url>   # YOUR repo, cloned WITH --recursive
 cd <your-project>
 python bootstrap.py --interactive        # choose languages, rename
+```
+<!-- template-only:end -->
 
-# 2. Install environment (~5 minutes)
+```bash
+# Install environment (~5 minutes)
 make environment
 # Installs:
 #   - Git submodules (repro-tools automatically)
@@ -62,6 +66,7 @@ See the full comparison — and how to *develop* inside a container — in **[do
 
 ---
 
+<!-- template-only:start -->
 ## Starting your own project
 
 This repo is a **template**. Your project should be **its own git repository** — don't just keep working inside a clone of the template, or you'd be committing to the template's history and remote. Pick one:
@@ -101,6 +106,8 @@ python bootstrap.py --remove-stata --rename "Housing Market Analysis"
 > **Always clone with `--recursive`** (or run `git submodule update --init --recursive`) so `lib/repro-tools/` is populated — the build depends on it, and `make environment` stops with a clear error if it's missing. Full customization checklist: **[TEMPLATE_USAGE.md](TEMPLATE_USAGE.md)**.
 
 ---
+
+<!-- template-only:end -->
 
 ## What Success Looks Like
 

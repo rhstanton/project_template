@@ -39,6 +39,9 @@ from bootstrap import (  # noqa: E402
 
 MARKER = re.compile(r"<!--\s*(\w+):(start|end)\s*-->")
 LANGUAGES = ("julia", "stata")
+# Stripped on EVERY bootstrap, not per language: instantiating the template is
+# the moment its self-description stops being true.
+ALL_MARKERS = LANGUAGES + ("template-only",)
 
 
 # ---------------------------------------------------------------- the stripper
@@ -182,7 +185,7 @@ def test_prunable_docs_visits_each_real_file_once():
 # ------------------------------------------------------- the markers in situ
 
 
-@pytest.mark.parametrize("lang", LANGUAGES)
+@pytest.mark.parametrize("lang", ALL_MARKERS)
 def test_markers_are_balanced_and_unnested(lang):
     """An unbalanced pair makes bootstrap raise; a nested one silently strips
     the wrong span and leaves a stray end marker. Both have happened."""
@@ -215,7 +218,7 @@ def test_no_marker_sits_inside_a_code_fence():
     assert not offenders, "markers inside code fences: " + ", ".join(offenders)
 
 
-@pytest.mark.parametrize("lang", LANGUAGES)
+@pytest.mark.parametrize("lang", ALL_MARKERS)
 def test_stripping_leaves_valid_markdown_fences(lang):
     """Splitting a fence to place markers around part of it is easy to get
     wrong: an odd number of ``` afterwards means the rest of the page renders
@@ -250,3 +253,28 @@ def test_the_marked_files_actually_lose_their_commands(lang):
                     f"{md.relative_to(REPO_ROOT)}:{i}: {line.strip()[:60]}"
                 )
     assert not offenders, f"{lang} commands survive pruning:\n" + "\n".join(offenders)
+
+
+def test_no_document_tells_a_generated_project_to_instantiate_the_template():
+    """A generated project inherited "click Use this template" and
+    `python bootstrap.py --python-only` -- instructions for creating the project
+    the reader is already standing in. Re-running bootstrap there is at best
+    confusing and at worst destructive.
+    """
+    offenders = []
+    for md in prunable_docs(REPO_ROOT):
+        stripped = strip_marked_doc_sections(md.read_text(), "template-only", md.name)
+        for i, line in enumerate(stripped.split("\n"), 1):
+            if "bootstrap.py" in line or "Use this template" in line:
+                offenders.append(
+                    f"{md.relative_to(REPO_ROOT)}:{i}: {line.strip()[:60]}"
+                )
+    assert not offenders, "template-only prose survives:\n" + "\n".join(offenders)
+
+
+def test_the_template_itself_still_explains_how_to_instantiate_it():
+    """Guard the guard: marking everything would pass the test above while
+    making the template unusable for its actual purpose."""
+    readme = (REPO_ROOT / "README.md").read_text()
+    assert "Use this template" in readme
+    assert "bootstrap.py" in readme
