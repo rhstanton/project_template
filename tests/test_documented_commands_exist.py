@@ -28,11 +28,17 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 REPRO_LIB = REPO_ROOT / "lib/repro-tools/src/repro_tools/lib"
+# Globbed, not listed. When the Stata rules were hoisted into
+# repro-tools/lib/stata.mk on 2026-08-18, stata-list stopped being found here and
+# two tests failed for a reason that had nothing to do with the target. The fix
+# then was to add stata.mk to the list -- and on 2026-08-19, when common.mk was
+# split into tools/repro/git/layout.mk, twenty-four tests failed the same way for
+# the same reason. Enumerating the shared fragments makes every reorganization of
+# them look like a product bug. Glob instead.
 MAKEFILES = [
     REPO_ROOT / "Makefile",
     REPO_ROOT / "env" / "Makefile",
-    REPRO_LIB / "common.mk",
-    REPRO_LIB / "stata.mk",
+    *sorted(REPRO_LIB.glob("*.mk")),
 ]
 
 # Files that are proposals or historical records rather than instructions.

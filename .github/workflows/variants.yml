@@ -149,3 +149,87 @@ jobs:
           n_prov=$(find output/provenance -name '*.yml' 2>/dev/null | wc -l)
           echo "provenance records: $n_prov"
           test "$n_prov" -gt 0 || { echo "::error::make all produced no provenance records"; exit 1; }
+
+  # A CLEAN CLONE is not how these trees usually reach a second machine.
+  #
+  # Every job above starts from actions/checkout, which is a fresh clone. Real
+  # working trees get COPIED -- rsync to a second machine, cp -r, a restored
+  # backup -- and fire itself was created that way. Two defects live only in that
+  # path, both found by hand on 2026-08-19 and neither visible to a clone:
+  #
+  #   1. private/ is gitignored, so a clone has neither the overlay nor the
+  #      AGENTS.md / CLAUDE.md / COAUTHOR_SETUP.md symlinks into it. A copied tree
+  #      that omits private/ keeps the links and loses the target, and reading a
+  #      dangling symlink took four tests down with a pathlib traceback naming
+  #      neither the file nor the reason.
+  #   2. A working tree copied OVER a clone leaves lib/repro-tools full of plain
+  #      files, and `git submodule update` then refuses. Its own message names a
+  #      github.com URL and reads exactly like an auth failure, which is how it
+  #      cost twenty minutes and put a false claim into another repo's docs.
+  #
+  # This job reproduces both deliberately. Each step asserts its PRECONDITION
+  # first: without that, a change that stopped producing the dangling symlinks
+  # would leave the job green while testing nothing.
+  copied-tree:
+    name: copied working tree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Copy the tree without the private overlay
+        run: |
+          set -euo pipefail
+          make private-init
+          test -L AGENTS.md || { echo "::error::private-init made no AGENTS.md symlink; this job would test nothing"; exit 1; }
+          mkdir -p /tmp/copied
+          rsync -a --exclude 'private/' ./ /tmp/copied/
+          cd /tmp/copied
+          # Precondition: the links must now dangle, or the case is not reproduced.
+          test -L AGENTS.md || { echo "::error::AGENTS.md is not a symlink in the copy"; exit 1; }
+          if [ -e AGENTS.md ]; then
+            echo "::error::AGENTS.md still resolves; the overlay was copied and nothing is being tested"
+            exit 1
+          fi
+          echo "Dangling symlinks reproduced:"
+          find . -maxdepth 2 -type l ! -exec test -e {} \; -print
+
+      - name: Environment builds despite the dangling symlinks
+        run: |
+          cd /tmp/copied
+          make environment
+
+      - name: Tests skip unreadable docs rather than crashing
+        run: |
+          cd /tmp/copied
+          make test-fast
+
+      # The second defect, and the assertion is about the MESSAGE. A failure here
+      # is correct behavior; what must not regress is a failure that sends the
+      # reader to check credentials that are fine.
+      - name: A tree copied over a clone fails with a message naming the real cause
+        run: |
+          set -euo pipefail
+          git clone --quiet "$GITHUB_WORKSPACE" /tmp/over-clone
+          rsync -a --exclude '.git/' --exclude 'private/' "$GITHUB_WORKSPACE"/ /tmp/over-clone/
+          cd /tmp/over-clone
+          test -n "$(ls -A lib/repro-tools)" || { echo "::error::lib/repro-tools is empty; the case is not reproduced"; exit 1; }
+          set +e
+          out="$(make init-submodules 2>&1)"
+          rc=$?
+          set -e
+          echo "$out"
+          if [ "$rc" -eq 0 ]; then
+            echo "::error::init-submodules succeeded; expected it to fail on a non-empty submodule path"
+            exit 1
+          fi
+          echo "$out" | grep -q "already exists and is not empty" || {
+            echo "::error::the failure message does not mention the non-empty-directory cause"
+            exit 1
+          }
