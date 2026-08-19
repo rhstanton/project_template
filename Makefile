@@ -830,7 +830,7 @@ info:
 	@echo ""
 	@echo "PIPELINE FLOW:"
 	@echo "  1. make environment      → Install Python 3.12, Julia, Stata packages"
-	@echo "     Runtime: ~10 min      → Creates .env/ (~2GB), .julia/ (~500MB)"
+	@echo "     Runtime: ~10 min      → Creates .venv/ (~2GB), .julia/ (~500MB)"
 	@echo ""
 	@echo "  2. make verify           → Quick smoke test"
 	@echo "     Runtime: ~1 min       → Checks environment, packages, data"
