@@ -804,17 +804,27 @@ help:
 	@echo "  make update-environment Update repro-tools AND reinstall environment"
 	@echo ""
 
+# Read from pyproject.toml, never restated.
+#
+# This line used to be a literal `@echo "  Version: 2.0.2"`, and by 2026-08-19
+# pyproject.toml, _version.py and CITATION.cff all said 2.2.0 while `make info`
+# still said 2.0.2. scripts/bump_version.py updates those three and the
+# CHANGELOG; it never knew about this one, so every release silently widened the
+# gap. sed rather than python so `make info` works before `make environment`.
+TEMPLATE_VERSION := $(shell sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
+
 .PHONY: info
 info:
 	@echo "=============================================================================="
 	@echo "  Reproducible Research Template - Project Information"
-	@echo "  Version: 2.0.2"
+	@echo "  Version: $(TEMPLATE_VERSION)"
 	@echo "=============================================================================="
 	@echo ""
 	@echo "PROJECT STRUCTURE:"
 	@echo "  env/                     Software environments (Python/Julia/Stata)"
 	@echo "  data/                    Input datasets (CSV files)"
-	@echo "  build_*.py               Analysis scripts (figure + table per script)"
+	@echo "  run_analysis.py          Analysis driver (figure + table + provenance)"
+	@echo "  notebooks/               Notebook analyses, executed via papermill"
 	@echo "  output/                  Build outputs (ephemeral, can be rebuilt)"
 	@echo "    ├─ figures/            Generated PDFs"
 	@echo "    ├─ tables/             Generated LaTeX tables"
