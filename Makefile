@@ -410,7 +410,12 @@ $(OUT_FIG_DIR) $(OUT_TBL_DIR) $(OUT_PROV_DIR) $(OUT_LOG_DIR) $(OUT_EXEC_NB_DIR):
 .PHONY: remove-analysis
 remove-analysis:
 	@test -n "$(NAME)" || { echo "Usage: make remove-analysis NAME=<analysis> [APPLY=1]"; exit 1; }
-	@python3 scripts/remove_analysis.py "$(NAME)" $(if $(APPLY),--apply,)
+	@# $(PYTHON), not bare python3: the house rule is that interpreters are
+	@# reached through env/scripts/runpython so PYTHONPATH, DATA_DIR and the
+	@# Julia bridge are set. This script edits config.py and the Makefile, so a
+	@# different interpreter reading a different environment is exactly the kind
+	@# of surprise the rule exists to prevent.
+	@$(PYTHON) scripts/remove_analysis.py "$(NAME)" $(if $(APPLY),--apply,)
 
 # ==============================================================================
 # Data checksums
