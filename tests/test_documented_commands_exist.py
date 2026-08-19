@@ -160,6 +160,30 @@ def documentation_files() -> list[Path]:
     return [f for f in files if f.name not in NOT_INSTRUCTIONS]
 
 
+# Enforced only in the full variant.
+#
+# bootstrap.py prunes code, Makefile targets and tests for a removed language --
+# but NOT the documentation. A `--python-only` project therefore ships docs
+# telling the reader to run `make sample-julia` and `make -C env julia-check`,
+# neither of which exists there. That is a real gap in bootstrap rather than in
+# these documents, and it is recorded in notes/bootstrap-doc-pruning.md; pruning
+# prose is a much larger job than deleting a target, since most of these files
+# discuss all three languages in the same paragraph.
+#
+# Skipping here rather than exempting the affected commands, because in the full
+# variant they are all correct and the sweep should keep checking them.
+_pruned = (
+    not (REPO_ROOT / "env" / "Project.toml").is_file()
+    or not (REPO_ROOT / "env" / "stata-packages.txt").is_file()
+)
+
+pytestmark = pytest.mark.skipif(
+    _pruned,
+    reason="a language was pruned; bootstrap does not prune docs (see "
+    "notes/bootstrap-doc-pruning.md)",
+)
+
+
 def test_the_sweep_finds_commands():
     """Guard the guard: a parser finding nothing would pass everything."""
     total = sum(len(commands_in(f)) for f in documentation_files())
