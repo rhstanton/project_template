@@ -8,9 +8,9 @@ Tests that defaults are resolved in the correct priority:
 """
 
 import subprocess
+from pathlib import Path
 
 import pytest
-from pathlib import Path
 
 
 class TestDefaultsPriority:
