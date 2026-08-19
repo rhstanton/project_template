@@ -51,6 +51,50 @@ def strip_comments(text: str) -> str:
     )
 
 
+def executable_source(text: str) -> str:
+    """Drop comments AND string literals, leaving only code that executes.
+
+    strip_comments() above handles `#` lines, which was enough until a docstring
+    broke it. install_julia.py gained a comment block explaining what juliapkg
+    does during bootstrap:
+
+        Pkg.Registry.update(); Pkg.add(...); Pkg.resolve(); Pkg.precompile()
+
+    That is prose describing another tool's behavior, inside a docstring -- and
+    the test asserting this file never CALLS Pkg.resolve() matched it and failed.
+
+    Third time this exact shape has bitten: a substring search cannot tell a call
+    from a sentence about the call, and the more carefully a file documents a
+    rule, the more likely it is to look like it breaks it. Tokenizing is the
+    cheap fix -- COMMENT and STRING tokens are dropped, so only executable text
+    remains.
+    """
+    import io
+    import tokenize
+
+    # FSTRING_* matters as much as STRING here, and only on 3.12+. Python 3.12
+    # tokenizes f-string contents into FSTRING_START/MIDDLE/END rather than one
+    # STRING token, so dropping STRING alone leaves f-string text in place.
+    # install_julia.py builds Julia programs as f-strings, and one of those
+    # carries a JULIA comment reading "deliberately no Pkg.resolve() before it"
+    # -- prose, inside embedded code, inside an f-string, which still matched a
+    # test asserting this file never calls Pkg.resolve().
+    skip = {tokenize.COMMENT, tokenize.STRING}
+    for name in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):
+        if hasattr(tokenize, name):
+            skip.add(getattr(tokenize, name))
+
+    out = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type in skip:
+                continue
+            out.append(tok.string)
+    except tokenize.TokenError:  # pragma: no cover - malformed source
+        return strip_comments(text)
+    return " ".join(out)
+
+
 def source_env(extra: dict[str, str] | None = None, root: Path | None = None) -> dict:
     """Source env/env.sh in a clean subshell and return the resulting variables.
 
@@ -362,16 +406,19 @@ class TestJuliaPinning:
         # version of this test failed, and how a sibling test failed earlier the
         # same day. Prose about a rule is not a violation of it.
         code = strip_comments(path.read_text())
+        # For the "never calls X" assertions below, comments are not enough:
+        # docstrings mention these calls when explaining why they are absent.
+        runnable = executable_source(path.read_text())
 
         assert "shutil.move(manifest_backup, manifest_path)" in code, (
             "install_julia.py does not restore the manifest it moved aside. "
             "Without the restore, the committed Manifest.toml pins nothing."
         )
-        assert "os.remove(manifest_backup)" not in code, (
+        assert "os.remove ( manifest_backup )" not in runnable, (
             "install_julia.py deletes the manifest backup, which discards the "
             "committed pin and re-resolves from Project.toml's loose bounds."
         )
-        assert "Pkg.resolve()" not in code, (
+        assert "Pkg.resolve ( )" not in runnable and "Pkg.resolve()" not in runnable, (
             "install_julia.py calls Pkg.resolve(), which rewrites Manifest.toml "
             "and re-derives versions from Project.toml -- undoing the restore. "
             "Pkg.instantiate() alone honours an existing manifest and resolves "

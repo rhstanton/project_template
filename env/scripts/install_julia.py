@@ -7,6 +7,7 @@ Julia if not already present. This allows 'make environment' to set up
 the complete environment in one command.
 """
 
+import atexit
 import os
 import shutil
 import subprocess
@@ -68,7 +69,7 @@ print()
 print(f"Julia depot: {julia_depot}")
 print(f"Julia project: {env_dir}")
 print(f"Python executable: {sys.executable}")
-print("(CondaPkg disabled - Julia will use the conda environment Python)")
+print("(CondaPkg disabled - Julia will use this project's .venv Python)")
 print()
 
 want_cuda = os.environ.get("JULIA_ENABLE_CUDA") == "1"
@@ -84,6 +85,26 @@ else:
     print("GPU support not requested (JULIA_ENABLE_CUDA unset/0)")
     print("Julia will use CPU-only backends.")
 
+# Clear JULIA_LOAD_PATH before the juliapkg bootstrap. Ported from fire, where
+# this was diagnosed against a real breakage.
+#
+# env/env.sh exports JULIA_LOAD_PATH="<repo>/env:<repo>/.julia:@stdlib" so both
+# projects are visible at run time, and runpython sources it before this script
+# runs. But JULIA_LOAD_PATH REPLACES the load path wholesale -- it overrides the
+# `--project=<depot>` juliapkg passes when it bootstraps PythonCall, so the
+# bootstrap resolves against env/ first.
+#
+# That is fatal because the two projects are pinned differently on purpose:
+# env/Manifest.toml pins a whole tree, while the juliapkg project re-resolves
+# against the live registry every time. In fire they agreed until the registry
+# moved pixi_jll 0.63.2+0 -> 0.76.2+0 on 2026-08-13, after which a clean clone
+# died with "Package pixi_jll is required but does not seem to be installed".
+# The package WAS installed, at a version the manifest did not name.
+#
+# A time bomb rather than a flake: it passes for as long as the registry happens
+# to still serve the pinned versions, and then breaks every future clone.
+os.environ.pop("JULIA_LOAD_PATH", None)
+
 # Temporarily hide Manifest.toml during juliacall import to avoid
 # chicken-egg problem: Manifest references PythonCall, but depot doesn't have it yet.
 # The Manifest will be properly generated during Pkg.instantiate() below.
@@ -98,9 +119,103 @@ if os.path.exists(manifest_path):
         print(f"⚠ Could not move Manifest.toml: {e}")
         manifest_backup = None
 
+
+def _restore_manifest() -> None:
+    """Put the committed pin back, whatever happened in between.
+
+    Registered with atexit because the window between moving the manifest aside
+    and restoring it is a real hazard: a build interrupted there (Ctrl-C, a
+    crash, a killed CI job) leaves the repository with no Manifest.toml and a
+    stray Manifest.toml.backup. The pin is the file this whole arrangement
+    exists to protect, so losing it to an interrupted build is the worst
+    available outcome.
+
+    The restore on the success path below runs first, leaving this a no-op.
+    """
+    if manifest_backup and os.path.exists(manifest_backup):
+        if not os.path.exists(manifest_path):
+            try:
+                shutil.move(manifest_backup, manifest_path)
+                print("Restored Manifest.toml on exit (the committed pin)")
+            except Exception as exc:  # pragma: no cover - best effort at exit
+                print(
+                    "⚠ Could not restore Manifest.toml: "
+                    f"{exc}\n  Restore it by hand: "
+                    f"mv {manifest_backup} {manifest_path}",
+                    file=sys.stderr,
+                )
+
+
+if manifest_backup:
+    atexit.register(_restore_manifest)
+
+
+def _retry_after_instantiate(err):
+    """Repair a juliapkg bootstrap that resolved a package it did not install.
+
+    Ported from fire, where this was diagnosed on a clean clone. juliapkg
+    bootstraps with one command:
+
+        Pkg.Registry.update(); Pkg.add(...); Pkg.resolve(); Pkg.precompile()
+
+    If the registry moves while that runs, precompile can execute against a
+    dependency recorded in the manifest but not yet installed, and the whole
+    environment build dies. Seen 2026-08-13, when pixi_jll went 0.63.2+0 ->
+    0.76.2+0 between two builds a few hours apart:
+
+        ERROR: Package pixi_jll [4d7b5844-...] is required but does not seem
+        to be installed: Run `Pkg.instantiate()` to install all recorded
+        dependencies.
+
+    Julia's own message names the fix and Pkg.instantiate() is idempotent, so do
+    it here rather than failing and telling someone to re-run `make
+    environment`. Returns True if the repair ran cleanly and a retry is worth
+    attempting.
+    """
+    julia = os.path.join(julia_depot, "pyjuliapkg", "install", "bin", "julia")
+    if not os.path.isfile(julia):
+        # Nothing installed yet, so this is not the failure mode above.
+        return False
+
+    print(f"  juliacall import failed: {err}", file=sys.stderr)
+    print(
+        "  Running Pkg.instantiate() in the juliapkg project and retrying once...",
+        file=sys.stderr,
+    )
+
+    repair_env = dict(os.environ)
+    repair_env["JULIA_DEPOT_PATH"] = julia_depot
+    repair_env["JULIA_CONDAPKG_BACKEND"] = "Null"
+    result = subprocess.run(
+        [
+            julia,
+            f"--project={julia_depot}",
+            "--startup-file=no",
+            "-e",
+            "import Pkg; Pkg.instantiate(); Pkg.precompile()",
+        ],
+        env=repair_env,
+    )
+    if result.returncode != 0:
+        print("  Pkg.instantiate() did not succeed; not retrying.", file=sys.stderr)
+        return False
+
+    # Drop any half-initialized modules so the retry re-executes the import.
+    for mod in [m for m in sys.modules if m.split(".")[0] in ("juliacall", "juliapkg")]:
+        del sys.modules[mod]
+    return True
+
+
 # Import juliacall - this triggers Julia auto-install if needed
 try:
-    from juliacall import Main as jl
+    try:
+        from juliacall import Main as jl
+    except Exception as bootstrap_err:
+        if not _retry_after_instantiate(bootstrap_err):
+            raise
+        from juliacall import Main as jl
+
+        print("✓ recovered after Pkg.instantiate()")
 
     print("✓ juliacall imported successfully")
     print()
@@ -276,12 +391,37 @@ try:
             except Exception as cleanup_err:
                 print(f"  ⚠ Failed to remove compiled cache: {cleanup_err}")
 
+        # Move the manifest aside; do NOT delete it.
+        #
+        # This retry path exists to recover from a corrupt depot, and it used to
+        # `os.remove` the manifest so the retry could resolve afresh. On this
+        # template that is survivable, because env/Manifest.toml is deliberately
+        # untracked here -- but this script is what every GENERATED project
+        # runs, and those commit their manifest. There, a failed package install
+        # silently destroyed the committed pin and rebuilt against whatever the
+        # registry offered that day, which is the exact outcome committing a
+        # manifest exists to prevent.
+        #
+        # The main bootstrap path above was fixed the same way earlier: it also
+        # deleted the manifest, "to let Pkg.instantiate() generate a fresh one".
+        # Moving it keeps the retry working and the pin recoverable, and the
+        # warning says plainly that the result is not a reproduction.
         if os.path.exists(manifest_path):
+            retry_backup = manifest_path + ".before-retry"
             try:
-                os.remove(manifest_path)
-                print(f"  Removed Manifest.toml: {manifest_path}")
+                shutil.move(manifest_path, retry_backup)
+                print()
+                print("  ⚠ MOVED Manifest.toml ASIDE TO RETRY")
+                print(f"    {manifest_path}")
+                print(f"    -> {retry_backup}")
+                print("    The retry will RE-RESOLVE package versions, so the")
+                print("    result does NOT reproduce the committed pin. Restore")
+                print("    it once the environment builds:")
+                print(f"      mv {retry_backup} {manifest_path}")
+                print("      make -C env julia-instantiate")
+                print()
             except Exception as cleanup_err:
-                print(f"  ⚠ Failed to remove Manifest.toml: {cleanup_err}")
+                print(f"  ⚠ Failed to move Manifest.toml aside: {cleanup_err}")
 
         print("Retrying Julia package installation...")
         if not run_julia_install():
