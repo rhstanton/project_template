@@ -24,6 +24,8 @@
 !*.md
 !*.py
 !*.sh
+!.envrc
+!.editorconfig
 !*.toml
 !*.txt
 !*.yml
