@@ -373,18 +373,18 @@ make all
 ### Run Examples
 
 ```bash
-# Python example:
-make -C examples python
+make sample-python      # Python example
+make sample-julia       # Julia example
+make sample-juliacall   # Python -> Julia interop
+make sample-stata       # Stata example (if installed)
 
-# Julia example:
-make -C examples julia
-
-# Python → Julia interop:
-make -C examples juliacall
-
-# Stata example (if installed):
-make -C examples stata
+make examples           # all of the above that apply
 ```
+
+(These read `make -C examples python` and so on until 2026-08-19. There is no
+`examples/` directory and never was -- the scripts live in `env/examples/` and
+are run by the targets above -- so all four commands failed with "No such file
+or directory".)
 
 ---
 

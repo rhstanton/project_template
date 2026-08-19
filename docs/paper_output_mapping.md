@@ -59,25 +59,30 @@ make all              # Build all artifacts (~5 minutes)
 ```
 
 ### Replicate by Category
-```bash
-# If you organize analyses by topic:
-make housing          # All housing analyses
-make mortgage         # All mortgage analyses
-make income           # All income analyses
+
+If you group analyses by topic, add grouping targets to the Makefile and list
+them here. These are ILLUSTRATIVE names, not targets this template ships — a
+reader who copies them gets "No rule to make target":
+
+```
+make <topic>          # e.g. all housing analyses
 ```
 
 ### Replicate Individual Key Exhibits
+
+The two analyses this template ships:
+
 ```bash
-# Main effects
 make price_base       # Figure 1, Table 1
 make remodel_base     # Figure 2, Table 2
+```
 
-# Robustness
-make price_robust     # Robustness checks
-make remodel_robust   # Alternative specifications
+Robustness and heterogeneity variants are analyses *you* add. Once they are in
+`ANALYSES` in the Makefile and in `STUDIES` in `shared/config.py`, they get
+targets of the same name:
 
-# Heterogeneity
-make price_het        # Heterogeneity analysis
+```
+make <your-analysis>  # e.g. price_robust, price_het
 ```
 
 ---
