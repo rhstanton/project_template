@@ -2,6 +2,8 @@
 
 import subprocess
 
+import pytest
+
 from _version import __version__
 
 
@@ -56,6 +58,11 @@ class TestRunAnalysisIntegration:
         assert "Unknown study 'nonexistent_study'" in result.stdout
         assert "Available studies:" in result.stdout
 
+    # Runs a full analysis as a subprocess, which pays juliacall's Julia
+    # startup: ~71 seconds each. These five tests were 355 of the suite's
+    # 400 seconds, so `pytest -m "not slow"` is ~45s and usable while
+    # iterating. CI still runs everything.
+    @pytest.mark.slow
     def test_run_analysis_shows_configuration(self):
         """Test that configuration is displayed before execution."""
         result = subprocess.run(
@@ -71,6 +78,11 @@ class TestRunAnalysisIntegration:
         assert "Y Variable" in result.stdout
         assert "X Variable" in result.stdout
 
+    # Runs a full analysis as a subprocess, which pays juliacall's Julia
+    # startup: ~71 seconds each. These five tests were 355 of the suite's
+    # 400 seconds, so `pytest -m "not slow"` is ~45s and usable while
+    # iterating. CI still runs everything.
+    @pytest.mark.slow
     def test_run_analysis_shows_environment(self):
         """Test that execution environment is displayed."""
         result = subprocess.run(

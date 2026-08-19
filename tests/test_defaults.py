@@ -8,6 +8,8 @@ Tests that defaults are resolved in the correct priority:
 """
 
 import subprocess
+
+import pytest
 from pathlib import Path
 
 
@@ -101,6 +103,11 @@ class TestDefaultsPriority:
 class TestCommandLineOverrides:
     """Test command-line argument overrides."""
 
+    # Runs a full analysis as a subprocess, which pays juliacall's Julia
+    # startup: ~71 seconds each. These five tests were 355 of the suite's
+    # 400 seconds, so `pytest -m "not slow"` is ~45s and usable while
+    # iterating. CI still runs everything.
+    @pytest.mark.slow
     def test_ylabel_override(self):
         """Test that --ylabel overrides config."""
         result = subprocess.run(
@@ -121,6 +128,11 @@ class TestCommandLineOverrides:
         # the label in the output (it would be in the generated figure)
         # For now, just verify it doesn't error
 
+    # Runs a full analysis as a subprocess, which pays juliacall's Julia
+    # startup: ~71 seconds each. These five tests were 355 of the suite's
+    # 400 seconds, so `pytest -m "not slow"` is ~45s and usable while
+    # iterating. CI still runs everything.
+    @pytest.mark.slow
     def test_table_agg_override(self):
         """Test that --table-agg overrides config."""
         result = subprocess.run(
@@ -137,6 +149,11 @@ class TestCommandLineOverrides:
         # Should complete successfully
         assert result.returncode == 0
 
+    # Runs a full analysis as a subprocess, which pays juliacall's Julia
+    # startup: ~71 seconds each. These five tests were 355 of the suite's
+    # 400 seconds, so `pytest -m "not slow"` is ~45s and usable while
+    # iterating. CI still runs everything.
+    @pytest.mark.slow
     def test_multiple_overrides(self):
         """Test multiple command-line overrides at once."""
         result = subprocess.run(
