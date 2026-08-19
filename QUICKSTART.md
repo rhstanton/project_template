@@ -22,8 +22,7 @@ make environment
 # Installs:
 #   - Git submodules (repro-tools automatically)
 #   - Python 3.12 uv virtualenv (.venv/)
-#   - Julia via juliacall (.julia/)
-#   - Stata packages if Stata installed (.stata/)
+#   - any extra language toolchains the project uses (.julia/, .stata/)
 
 # 3. Verify setup
 make verify
@@ -222,8 +221,10 @@ Published artifacts to `paper/` directory:
 
 - ✅ **uv** - Auto-installs uv if not found
 - ✅ **Python 3.12** - Installed via uv
+<!-- julia:start -->
 - ✅ **Julia** - Auto-downloaded by juliacall
-- ✅ **Python/Julia packages** - From `pyproject.toml` (pinned in `uv.lock`) and `env/Project.toml`
+<!-- julia:end -->
+- ✅ **Python packages** - From `pyproject.toml`, pinned in `uv.lock`
 
 **Only required pre-installed tool:**
 
@@ -374,10 +375,19 @@ make all
 
 ```bash
 make sample-python      # Python example
+```
+<!-- julia:start -->
+```bash
 make sample-julia       # Julia example
 make sample-juliacall   # Python -> Julia interop
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```bash
 make sample-stata       # Stata example (if installed)
-
+```
+<!-- stata:end -->
+```bash
 make examples           # all of the above that apply
 ```
 
@@ -530,6 +540,7 @@ make environment  # Install
 source .venv/bin/activate  # Activate
 ```
 
+<!-- julia:start -->
 ### "Julia not found"
 
 **Cause**: Julia not installed yet
@@ -544,6 +555,8 @@ source .venv/bin/activate  # Activate
 ```bash
 make -C env julia-install-via-python
 ```
+
+<!-- julia:end -->
 
 ### Git safety check failures
 
@@ -585,7 +598,9 @@ make publish
 1. **Update `data/`**: Replace with your data files
 2. **Add a study**: Add an entry to the `STUDIES` dict in `shared/config.py`
 3. **Update `pyproject.toml`**: Add your Python dependencies (then run `uv sync` or `make environment`)
+<!-- julia:start -->
 4. **Update `env/Project.toml`**: Add your Julia dependencies
+<!-- julia:end -->
 5. **Update Makefile**: Add the study name to the `ANALYSES` variable (and a pattern block)
 
 ### Set Up Paper Repository

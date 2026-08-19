@@ -55,8 +55,18 @@ At the top of your Makefile, after defining `PYTHON`:
 ```makefile
 # Environment script paths
 PYTHON := env/scripts/runpython
+```
+<!-- julia:start -->
+```makefile
 JULIA  := env/scripts/runjulia
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```makefile
 STATA  := env/scripts/runstata
+```
+<!-- stata:end -->
+```makefile
 
 # repro-tools CLI commands (via Python module for portability)
 REPRO_CHECK   := $(PYTHON) -m repro_tools.cli check

@@ -18,16 +18,22 @@ These are minimal examples for testing and learning. For complete analyses, see 
 ```bash
 # Python example
 env/scripts/runpython env/examples/sample_python.py
-pure Julia)
+```
+<!-- julia:start -->
+```bash
+# Pure Julia example
 env/scripts/runjulia env/examples/sample_julia.jl
 
-# Python/Julia interop example
-# Julia example (via juliacall from Python)
+# Python/Julia interop example (Julia called from Python via juliacall)
 env/scripts/runpython env/examples/sample_juliacall.py
-
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```bash
 # Stata example (if Stata installed)
 env/scripts/runstata env/examples/sample_stata.do
 ```
+<!-- stata:end -->
 
 Or run all at once:
 

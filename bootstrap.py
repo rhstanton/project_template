@@ -47,6 +47,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from pathlib import PurePath as pathlib_PurePath
 
 # Example analyses whose backend is a specific language. Dropping the language
 # must also drop these, or `make all` will try to build an analysis whose runtime
@@ -75,24 +76,53 @@ def remove_language_analyses(repo_root: Path, names: tuple[str, ...]) -> None:
         if name in present:
             remove_analysis(name, root=repo_root, apply=True)
 
+    # The docs name these analyses too -- in directory diagrams and in the
+    # example `ANALYSES :=` lines. Removing the build entry and leaving those
+    # is the same defect this whole pass exists to fix.
+    remove_analysis_doc_mentions(repo_root, names)
+
+
+# What removing a language deletes. Module constants because two things consume
+# them: the unlink loop below, and remove_tree_lines(), which prunes the same
+# names out of the directory diagrams in the docs. A second hand-maintained list
+# would drift, and the drift would be invisible -- a tree diagram naming a file
+# that bootstrap deleted still renders perfectly.
+JULIA_FILES = [
+    "env/Project.toml",
+    # The two pins that go with Project.toml. Leaving them behind would give
+    # a Python-only project a committed Julia manifest and a pinned Julia
+    # binary version for a language it does not have -- files that look
+    # authoritative and describe nothing.
+    "env/Manifest.toml",
+    "env/juliapkg.json",
+    "env/scripts/runjulia",
+    "env/scripts/install_julia.py",
+    "env/examples/sample_julia.jl",
+    "env/examples/sample_juliacall.py",
+    # Wholly about Julia from its title down, so there is nothing in it to
+    # keep. Marking it section by section would leave an empty file whose
+    # name still promises content.
+    "docs/julia_python_integration.md",
+]
+
+STATA_FILES = [
+    "env/stata-packages.txt",
+    # The pin record that goes with the vendored packages. Leaving it would
+    # give a project a checkable version manifest for a language it does not
+    # have -- and `make stata-check` would then fail on a tree that was
+    # correctly removed.
+    "env/stata-requirements.txt",
+    "env/scripts/runstata",
+    "env/scripts/execute.ado",
+    "env/examples/sample_stata.do",
+]
+
 
 def remove_julia_files(repo_root: Path) -> None:
     """Remove Julia-specific files from the project."""
     print("\n🗑️  Removing Julia files...")
 
-    files_to_remove = [
-        "env/Project.toml",
-        # The two pins that go with Project.toml. Leaving them behind would give
-        # a Python-only project a committed Julia manifest and a pinned Julia
-        # binary version for a language it does not have -- files that look
-        # authoritative and describe nothing.
-        "env/Manifest.toml",
-        "env/juliapkg.json",
-        "env/scripts/runjulia",
-        "env/scripts/install_julia.py",
-        "env/examples/sample_julia.jl",
-        "env/examples/sample_juliacall.py",
-    ]
+    files_to_remove = JULIA_FILES
 
     for file_path in files_to_remove:
         full_path = repo_root / file_path
@@ -102,22 +132,21 @@ def remove_julia_files(repo_root: Path) -> None:
         else:
             print(f"  ⚠ Not found: {file_path}")
 
+    # Documentation too. Removing the targets and leaving the docs that tell
+    # people to run them is how a generated project ended up instructing its
+    # reader to `make sample-julia`.
+    remove_language_doc_sections(repo_root, "julia")
+    # ".julia" is the depot directory: not in JULIA_FILES because bootstrap does
+    # not delete it (a fresh clone has none), but it must still go from the
+    # diagrams -- same reasoning as ".stata" below.
+    remove_language_tree_lines(repo_root, JULIA_FILES + [".julia"])
+
 
 def remove_stata_files(repo_root: Path) -> None:
     """Remove Stata-specific files from the project."""
     print("\n🗑️  Removing Stata files...")
 
-    files_to_remove = [
-        "env/stata-packages.txt",
-        # The pin record that goes with the vendored packages. Leaving it would
-        # give a project a checkable version manifest for a language it does not
-        # have -- and `make stata-check` would then fail on a tree that was
-        # correctly removed.
-        "env/stata-requirements.txt",
-        "env/scripts/runstata",
-        "env/scripts/execute.ado",
-        "env/examples/sample_stata.do",
-    ]
+    files_to_remove = STATA_FILES
 
     for file_path in files_to_remove:
         full_path = repo_root / file_path
@@ -136,6 +165,9 @@ def remove_stata_files(repo_root: Path) -> None:
         n = sum(1 for _ in vendored.rglob("*") if _.is_file())
         shutil.rmtree(vendored)
         print(f"  ✓ Removed .stata/ (vendored packages, {n} files)")
+
+    remove_language_doc_sections(repo_root, "stata")
+    remove_language_tree_lines(repo_root, STATA_FILES + [".stata"])
 
 
 def update_pyproject(repo_root: Path, remove_julia: bool) -> None:
@@ -323,6 +355,300 @@ def strip_marked_section(content: str, name: str) -> str:
             "rules behind, referencing variables that had just been deleted."
         )
     return content[:i] + content[j + len(end) :].lstrip("\n")
+
+
+# Markdown that bootstrap prunes: every .md in the repo except those living in a
+# generated, vendored or environment directory.
+#
+# Ignored-*directory* is the test, not ignored-file, and the distinction is
+# load-bearing. replication-package/ is a whole generated copy of the repo and
+# paper/ is build output -- both gitignored, both would be pruned pointlessly and
+# then overwritten by the next `make`. But AGENTS.md and CLAUDE.md are gitignored
+# *files* in a tracked directory, and they are exactly the documentation an agent
+# reads before touching the project. A "tracked files only" rule would skip them.
+NEVER_WALK = {".git", ".venv", ".julia", ".stata", "__pycache__", "node_modules"}
+
+# Excluded by name rather than by git, because they are tracked and must still
+# not be edited:
+#   lib/    -- submodule content; not ours to rewrite (and asking git about a
+#              path inside a submodule makes check-ignore exit 128)
+#   notes/  -- institutional memory. A design note quoting `make sample-julia`
+#              is describing the template, not instructing the reader.
+DOC_PRUNE_SKIP_DIRS = {"lib", "notes"}
+# A historical record: pruning it would rewrite what past releases contained.
+DOC_PRUNE_SKIP_FILES = {"CHANGELOG.md"}
+
+
+def _ignored_dirs(repo_root: Path, dirs: list) -> set:
+    """Ask git which of these directories are ignored.
+
+    Returns an empty set when this is not a git checkout -- name-based skipping
+    then carries the whole load. Any *other* git failure raises: an earlier
+    version returned an empty set on error, so a single unqueryable path (one
+    inside a submodule, which makes check-ignore exit 128) silently turned the
+    directory filter off and pruned generated copies of the repo.
+    """
+    if not dirs:
+        return set()
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), "check-ignore", "--stdin"],
+            input="\n".join(dirs),
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return set()  # no git installed
+    if proc.returncode == 128 and "not a git repository" in proc.stderr:
+        return set()
+    # check-ignore exits 1 when nothing matches, which is not an error.
+    if proc.returncode not in (0, 1):
+        raise RuntimeError(
+            f"git check-ignore failed (exit {proc.returncode}): {proc.stderr.strip()}"
+        )
+    return {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+
+
+def prunable_docs(repo_root: Path) -> list:
+    """Every Markdown file bootstrap is allowed to prune."""
+    found = []
+    for md in sorted(repo_root.rglob("*.md")):
+        rel = md.relative_to(repo_root)
+        parts = set(rel.parts[:-1])
+        if parts & NEVER_WALK or parts & DOC_PRUNE_SKIP_DIRS:
+            continue
+        if rel.name in DOC_PRUNE_SKIP_FILES:
+            continue
+        if md.is_file():
+            found.append((md, rel))
+
+    dirs = sorted({str(rel.parent) for _, rel in found if str(rel.parent) != "."})
+    ignored = _ignored_dirs(repo_root, dirs)
+
+    out = []
+    seen = set()
+    root = repo_root.resolve()
+    for md, rel in found:
+        ancestors = {
+            str(pathlib_PurePath(*rel.parts[:k])) for k in range(1, len(rel.parts))
+        }
+        if ancestors & ignored:
+            continue
+        # AGENTS.md, CLAUDE.md and .github/copilot-instructions.md are three
+        # symlinks to ONE file in the private/ maintainer overlay. Rewriting the
+        # same file once per link applies each edit three times, and private/ is
+        # deliberately outside the project. Resolve, skip anything landing
+        # outside the repo, and visit each real file once.
+        target = md.resolve()
+        try:
+            target.relative_to(root)
+        except ValueError:
+            continue
+        if target in seen:
+            continue
+        seen.add(target)
+        out.append(md)
+    return out
+
+
+def strip_marked_doc_sections(content: str, name: str, source: str = "") -> str:
+    """Remove `<!-- NAME:start -->` ... `<!-- NAME:end -->` blocks from Markdown.
+
+    The documentation analogue of strip_marked_section() above, and it follows
+    the same rule for the same reason: BOTH markers are explicit, and an
+    unbalanced pair is an error rather than a best guess.
+
+    WHY THIS EXISTS
+
+    bootstrap removed a language's scripts, Makefile targets, environment files
+    and tests, and left docs/ untouched. A generated `--python-only` project
+    therefore shipped documentation telling the reader to run `make
+    sample-julia` and `make -C env julia-check`, neither of which existed there.
+    Seven files were affected. Found 2026-08-19 when fire's documented-command
+    sweep was ported here: it passed on the template and failed on every pruned
+    variant in CI.
+
+    WHY MARKERS RATHER THAN PATTERN MATCHING
+
+    Deleting a Makefile target is one line; pruning prose is not. Most of these
+    files discuss all three languages in the same paragraph, and several explain
+    the Python/Julia bridge as a way of explaining the environment as a whole. A
+    heuristic that stripped paragraphs mentioning "julia" would leave dangling
+    references and half-sentences -- worse than a command that does not exist.
+    An author marks what is genuinely language-specific, and the marks document
+    that fact even when nothing is pruned.
+
+    HTML comments are used because they are invisible in rendered Markdown, so
+    the full template's documentation reads normally.
+    """
+    start = f"<!-- {name}:start -->"
+    end = f"<!-- {name}:end -->"
+
+    while True:
+        i = content.find(start)
+        if i == -1:
+            break
+        j = content.find(end, i)
+        if j == -1:
+            where = f" in {source}" if source else ""
+            raise RuntimeError(
+                f"found '{start}'{where} with no matching '{end}'. Refusing to "
+                f"guess where the section ends -- guessing is what silently left "
+                f"half a section behind when this was done for Makefiles."
+            )
+        # Take the whole lines the markers sit on, so no blank marker line is
+        # left behind, and collapse the blank run that would otherwise double up.
+        line_start = content.rfind("\n", 0, i) + 1
+        line_end = content.find("\n", j)
+        line_end = len(content) if line_end == -1 else line_end + 1
+        content = content[:line_start] + content[line_end:]
+        content = content.replace("\n\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+
+    stray = content.find(end)
+    if stray != -1:
+        where = f" in {source}" if source else ""
+        raise RuntimeError(
+            f"found '{end}'{where} with no matching '{start}'. An end marker "
+            f"alone means a section boundary was lost."
+        )
+    return content
+
+
+TREE_CONNECTORS = ("├── ", "└── ")
+
+
+def prune_tree_lines(content: str, basenames: set) -> str:
+    """Drop directory-diagram lines naming a file that no longer exists.
+
+    The block markers used elsewhere in this module are HTML comments, which
+    render as literal text inside a fenced code block -- so they cannot reach
+    individual lines of the directory trees in README.md and QUICKSTART.md.
+    Splitting a tree into one fence per language would shred the drawing.
+
+    This does not pattern-match prose. It matches the *exact basenames* that
+    bootstrap just deleted (JULIA_FILES / STATA_FILES), and only on lines that
+    are unambiguously tree rows -- ones carrying a `├── ` or `└── ` connector.
+    A tree row is the one place in Markdown where a bare filename is the whole
+    content of the line, so an exact-name match there is not a guess.
+
+    The connector on the final child of a directory is then repaired: removing
+    a `└── ` row would otherwise leave the tree with a dangling `├── ` and no
+    terminator. A row is last when no later row shares its exact indent before
+    the tree returns to a shallower one.
+
+    Known limitation: a basename that is also the name of a *kept* file
+    elsewhere in the tree would be dropped from both. Nothing in the current
+    lists collides, and the lists are short enough to check by eye when they
+    change.
+    """
+    lines = content.split("\n")
+    kept = []
+    for line in lines:
+        conn = next((c for c in TREE_CONNECTORS if c in line), None)
+        if conn is None:
+            kept.append(line)
+            continue
+        entry = line.split(conn, 1)[1]
+        # Strip the trailing "# comment" column and any directory slash.
+        name = entry.split("#", 1)[0].strip().rstrip("/")
+        if name in basenames:
+            continue
+        kept.append(line)
+
+    # Repair terminators: walk each row and decide whether it is now last.
+    indents = []
+    for line in kept:
+        conn = next((c for c in TREE_CONNECTORS if c in line), None)
+        indents.append(len(line.split(conn)[0]) if conn else None)
+
+    for i, line in enumerate(kept):
+        if indents[i] is None:
+            continue
+        conn = next(c for c in TREE_CONNECTORS if c in line)
+        is_last = True
+        for j in range(i + 1, len(kept)):
+            if indents[j] is None:
+                # Blank lines and pure box-drawing continuations (`│`, `│   │`)
+                # sit *between* siblings and must not end the run. Anything
+                # else -- prose, a closing fence -- ends the tree.
+                if set(kept[j]) <= {"│", " ", "\t"}:
+                    continue
+                break
+            if indents[j] < indents[i]:
+                break
+            if indents[j] == indents[i]:
+                is_last = False
+                break
+        want = "└── " if is_last else "├── "
+        if conn != want:
+            kept[i] = line.replace(conn, want, 1)
+
+    return "\n".join(kept)
+
+
+def prune_analysis_names(content: str, names) -> str:
+    """Drop a removed analysis from the illustrative `ANALYSES :=` lines in docs.
+
+    Same reasoning as prune_tree_lines: these sit inside fenced code blocks
+    where an HTML marker would render literally, and the match is on the exact
+    analysis name bootstrap just removed, on a line that declares the Makefile
+    variable -- not on prose.
+    """
+    out = []
+    for line in content.split("\n"):
+        if "ANALYSES" in line and ":=" in line:
+            head, _, tail = line.partition(":=")
+            kept = [t for t in tail.split() if t not in names]
+            if len(kept) != len(tail.split()):
+                line = f"{head}:= " + " ".join(kept)
+        out.append(line)
+    return "\n".join(out)
+
+
+def remove_analysis_doc_mentions(repo_root: Path, names) -> None:
+    """Prune removed analyses from tree diagrams and ANALYSES lines in the docs."""
+    names = set(names)
+    remove_language_tree_lines(
+        repo_root, [f"{n}.ipynb" for n in names] + [f"{n}.py" for n in names]
+    )
+    targets = prunable_docs(repo_root)
+    for md in targets:
+        if not md.is_file():
+            continue
+        before = md.read_text()
+        after = prune_analysis_names(before, names)
+        if after != before:
+            md.write_text(after)
+            print(f"  ✓ Pruned analysis names from {md.relative_to(repo_root)}")
+
+
+def remove_language_tree_lines(repo_root: Path, paths: list) -> None:
+    """Apply prune_tree_lines to every Markdown file in the project."""
+    basenames = {Path(p).name for p in paths}
+    targets = prunable_docs(repo_root)
+    for md in targets:
+        if not md.is_file():
+            continue
+        before = md.read_text()
+        after = prune_tree_lines(before, basenames)
+        if after != before:
+            md.write_text(after)
+            n = len(before.split("\n")) - len(after.split("\n"))
+            print(f"  ✓ Pruned {n} tree line(s) from {md.relative_to(repo_root)}")
+
+
+def remove_language_doc_sections(repo_root: Path, name: str) -> None:
+    """Strip `name`-marked sections from every Markdown file in the project."""
+    targets = prunable_docs(repo_root)
+    changed = []
+    for path in targets:
+        original = path.read_text(encoding="utf-8")
+        stripped = strip_marked_doc_sections(original, name, source=path.name)
+        if stripped != original:
+            path.write_text(stripped, encoding="utf-8")
+            changed.append(path.name)
+    if changed:
+        print(f"  Removed {name} sections from: {', '.join(changed)}")
 
 
 def strip_make_prereq(content: str, name: str) -> str:

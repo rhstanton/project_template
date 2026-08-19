@@ -17,14 +17,21 @@ ls -d .venv
 .venv/bin/python --version
 # Should be 3.12.x
 
+# Package verification
+.venv/bin/python -c "import pandas, matplotlib; print('OK')"
+# Should print: OK
+```
+<!-- julia:start -->
+```bash
 # Julia check (if installed)
 ls -la .julia/pyjuliapkg/install/bin/julia
 # Should exist
 
-# Package verification
-.venv/bin/python -c "import pandas, matplotlib, juliacall; print('OK')"
+# The Julia bridge
+.venv/bin/python -c "import juliacall; print('OK')"
 # Should print: OK
 ```
+<!-- julia:end -->
 
 ### Check Build Outputs
 
@@ -193,6 +200,7 @@ git pull
 make environment
 ```
 
+<!-- julia:start -->
 #### "No module named 'juliacall'"
 
 **Cause**: Python environment not installed
@@ -257,6 +265,7 @@ make -C env julia-install-via-python
 ```
 
 ---
+<!-- julia:end -->
 
 ### Build Errors
 
@@ -389,6 +398,7 @@ make publish REQUIRE_CURRENT_HEAD=0
 
 ---
 
+<!-- julia:start -->
 ### Julia/Python Integration Issues
 
 #### "CondaPkg is trying to install packages"
@@ -492,6 +502,7 @@ make -C env julia-install-via-python
 ```
 
 ---
+<!-- julia:end -->
 
 ### Platform-Specific Issues
 
@@ -585,6 +596,7 @@ make -j4 all  # 4 parallel jobs
 
 **Note**: Only helps for independent targets
 
+<!-- julia:start -->
 ### Julia compilation is slow on first run
 
 **Expected**: Julia uses Just-In-Time compilation
@@ -596,6 +608,7 @@ make -j4 all  # 4 parallel jobs
 ```bash
 env/scripts/runjulia -e 'using Pkg; Pkg.precompile()'
 ```
+<!-- julia:end -->
 
 ### Disk space warnings
 
@@ -631,8 +644,14 @@ env/scripts/runpython -v run_analysis.py price_base
 ### Check environment variables
 
 ```bash
-env/scripts/runpython -c 'import os; print("\\n".join(f"{k}={v}" for k,v in sorted(os.environ.items()) if "JULIA" in k or "PYTHON" in k))'
+env/scripts/runpython -c 'import os; print("\\n".join(f"{k}={v}" for k,v in sorted(os.environ.items()) if "PYTHON" in k))'
 ```
+<!-- julia:start -->
+```bash
+# Julia bridge variables:
+env/scripts/runpython -c 'import os; print("\\n".join(f"{k}={v}" for k,v in sorted(os.environ.items()) if "JULIA" in k))'
+```
+<!-- julia:end -->
 
 ### Test Python imports
 
@@ -654,6 +673,7 @@ print('Julia version:', jl.VERSION)
 "
 ```
 
+<!-- julia:start -->
 ### Test Julia environment
 
 ```bash
@@ -664,6 +684,7 @@ println("Project: ", Base.active_project())
 Pkg.status()
 '
 ```
+<!-- julia:end -->
 
 ### Verify provenance records
 

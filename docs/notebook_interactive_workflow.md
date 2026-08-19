@@ -10,7 +10,9 @@ Complete guide to developing, running, and integrating Jupyter notebooks in this
 2. [Interactive Development Workflow](#interactive-development-workflow)
 3. [Creating Notebooks](#creating-notebooks)
 4. [Editing Notebooks](#editing-notebooks)
+<!-- julia:start -->
 5. [Julia Integration](#julia-integration)
+<!-- julia:end -->
 6. [Converting to Reproducible Build](#converting-to-reproducible-build)
 7. [Best Practices](#best-practices)
 8. [Complete Examples](#complete-examples)
@@ -283,6 +285,7 @@ EOF
 
 ---
 
+<!-- julia:start -->
 ## Julia Integration
 
 ### Option 1: Julia via juliacall (Recommended)
@@ -405,6 +408,7 @@ model = lm(@formula(y ~ x1 + x2), df)
 **Recommendation:** Use Option 1 (Python + juliacall) for reproducible builds. Use Option 2 for exploration only.
 
 ---
+<!-- julia:end -->
 
 ## Converting to Reproducible Build
 
@@ -563,7 +567,9 @@ notebooks/
 ### Performance Tips
 
 **For large computations:**
+<!-- julia:start -->
 - Use Julia via juliacall for numerical work
+<!-- julia:end -->
 - Use pandas for data manipulation
 - Use numpy arrays for array operations
 - Profile code to find bottlenecks
@@ -602,6 +608,7 @@ make correlation
 - `output/provenance/correlation.yml` - Build record
 - `output/executed_notebooks/correlation_analysis_executed.ipynb` - Executed version
 
+<!-- julia:start -->
 ### Example 2: Julia Integration (Python + juliacall)
 
 See `notebooks/julia_demo.ipynb`
@@ -627,6 +634,7 @@ make julia_demo
 - Using Julia's Statistics package
 - Converting between Python and Julia data structures
 - Mixing Python I/O with Julia computation
+<!-- julia:end -->
 
 ### Example 3: Creating from Scratch
 
@@ -764,6 +772,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path.cwd()))
 ```
 
+<!-- julia:start -->
 ### Issue: Julia functions not found (e.g., `mean` not defined)
 
 **Cause:** Statistics package not loaded in Julia
@@ -773,6 +782,7 @@ sys.path.insert(0, str(Path.cwd()))
 from juliacall import Main as jl
 jl.seval("using Statistics")  # Load Statistics into Main
 ```
+<!-- julia:end -->
 
 ### Issue: Notebook runs in Jupyter but fails with `make`
 
@@ -847,6 +857,7 @@ except ImportError:
 
 Better: Add to `pyproject.toml` and run `uv sync` (or `make environment`)
 
+<!-- julia:start -->
 ### Mixing Julia and Python Visualizations
 
 ```python
@@ -864,17 +875,22 @@ fig.savefig(out_fig)
 ```
 
 ---
+<!-- julia:end -->
 
 ## See Also
 
 - [notebook_support.md](notebook_support.md) - Notebook integration overview
 - [provenance.md](provenance.md) - Provenance tracking details
+<!-- julia:start -->
 - [julia_python_integration.md](julia_python_integration.md) - Julia/Python bridge
+<!-- julia:end -->
 - [vscode_integration.md](vscode_integration.md) - VS Code notebook support
 - [Jupyter documentation](https://jupyter.org/documentation)
 - [Papermill documentation](https://papermill.readthedocs.io/)
 - [nbformat documentation](https://nbformat.readthedocs.io/)
+<!-- julia:start -->
 - [juliacall documentation](https://juliapy.github.io/PythonCall.jl/)
+<!-- julia:end -->
 
 ---
 

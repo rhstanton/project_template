@@ -97,6 +97,7 @@ make environment
 This is the right setup on any machine without an NVIDIA GPU, including Apple
 Silicon Macs.
 
+<!-- julia:start -->
 ### Enabling GPU Support (Julia / CUDA)
 
 GPU acceleration is available for the Julia regression backend
@@ -165,6 +166,7 @@ works (`nvidia-smi`), then rebuild the GPU environment from scratch:
 rm -rf .julia/gpu-env .julia/compiled
 JULIA_ENABLE_CUDA=1 make environment
 ```
+<!-- julia:end -->
 
 ## Cross-Platform File Sharing
 
@@ -214,6 +216,7 @@ data_file = Path("data") / "housing_panel.csv"
 data_file = "data/housing_panel.csv"
 ```
 
+<!-- julia:start -->
 ### Manifest.toml Handling
 
 **Problem**: Julia's `Manifest.toml` is platform-specific (includes binary artifact hashes)
@@ -240,6 +243,7 @@ make -C env julia-install-via-python
 
 - Slightly different dependency resolution
 - Must regenerate on new platform
+<!-- julia:end -->
 
 ### Python Environment Portability
 
@@ -258,6 +262,7 @@ dependencies = [
 
 `uv.lock` records exact versions and hashes; `uv sync` reproduces the same environment on any supported platform.
 
+<!-- julia:start -->
 ## Julia Precompilation Issues
 
 ### Error: "Cannot execute native code"
@@ -293,6 +298,7 @@ Or precompile packages:
 ```bash
 env/scripts/runjulia -e 'using Pkg; Pkg.precompile()'
 ```
+<!-- julia:end -->
 
 ## System Requirements Summary
 
@@ -342,13 +348,19 @@ make price_base
 ```bash
 # Python:
 env/scripts/runpython my_script.py
-
+```
+<!-- julia:start -->
+```bash
 # Julia:
 env/scripts/runjulia my_script.jl
-
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```bash
 # Stata (if installed):
 env/scripts/runstata my_script.do
 ```
+<!-- stata:end -->
 
 ## Clock Skew Warnings
 
@@ -385,29 +397,36 @@ ls -d .venv
 .venv/bin/python --version
 ```
 
+<!-- julia:start -->
 ### Check Julia installation
 
 ```bash
 ls -la .julia/pyjuliapkg/install/bin/julia
 # Should exist if environment installed
 ```
+<!-- julia:end -->
 
+<!-- julia:start -->
 ### Check environment variables
 
 ```bash
 env/scripts/runpython -c 'import os; print(os.environ["JULIA_CONDAPKG_BACKEND"])'
 # Should print: Null
 ```
+<!-- julia:end -->
 
 ### Verify package installation
 
 ```bash
 # Python packages:
 uv pip list
-
+```
+<!-- julia:start -->
+```bash
 # Julia packages:
 env/scripts/runjulia -e 'using Pkg; Pkg.status()'
 ```
+<!-- julia:end -->
 
 ## CI/CD Considerations
 
@@ -485,7 +504,9 @@ make -j4 all  # Use 4 cores
 
 ### Compilation Caching
 
+<!-- julia:start -->
 Julia caches compiled code in `.julia/compiled/`. Do NOT delete unless troubleshooting.
+<!-- julia:end -->
 
 Python uses `__pycache__/`. Safe to delete but will slow down subsequent runs.
 
@@ -495,12 +516,16 @@ The environment requires ~2GB. To reduce:
 
 1. **Remove unused packages** from `pyproject.toml` (then `uv sync`)
 2. **Clean uv cache**: `uv cache clean`
+<!-- julia:start -->
 3. **Remove old Julia depot**: `rm -rf ~/.julia` (if you use local depot)
+<!-- julia:end -->
 
 ---
 
 **See also**:
 
 - [docs/environment.md](environment.md) for installation details
+<!-- julia:start -->
 - [docs/julia_python_integration.md](julia_python_integration.md) for Julia/Python bridge
+<!-- julia:end -->
 - [README.md](../README.md) for quick start

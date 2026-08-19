@@ -82,9 +82,11 @@ Comprehensive tests for Jupyter notebook integration:
 
 - **TestJuliaIntegration** (4 tests): Julia via juliacall
   - juliacall imports successfully
+<!-- julia:start -->
   - Julia Statistics package loads
   - Julia functions callable from Python
   - julia_demo notebook uses juliacall
+<!-- julia:end -->
 
 - **TestNotebookOutputs** (5 tests): Output verification
   - Executed notebooks saved with cell outputs
@@ -143,7 +145,7 @@ Tests for environment setup and configuration:
   - CondaPkg disabled verification
 
 - **TestEnvironmentWrappers**: Environment wrapper scripts
-  - runpython/runjulia/runstata existence and executability
+  - wrapper existence and executability
   - PYTHONPATH configuration
   - repro_tools import capability
 

@@ -2,7 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+<!-- julia:start -->
 [![Julia 1.12](https://img.shields.io/badge/julia-1.12-purple.svg)](https://julialang.org/)
+<!-- julia:end -->
 [![GNU Make 4.3+](https://img.shields.io/badge/GNU%20Make-4.3+-red.svg)](https://www.gnu.org/software/make/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 
@@ -138,7 +140,9 @@ All Make commands are available as VS Code tasks - you can work entirely in the 
 - **Provenance tracking**: Full git state + input/output SHA256 hashes
 - **Build/publish separation**: Build in `output/`, publish to `paper/`
 - **Multi-language support**: Python, Julia, Stata — keep all three or drop any with `bootstrap.py` (Python is always kept)
+<!-- julia:start -->
 - **Julia two ways**: run Julia standalone (`runjulia script.jl`) *or* call it from Python via `juliacall` — both are wired up out of the box (the `julia_demo` notebook calls Julia from Python; `run_did.py` runs its regression in Julia with a Python fallback)
+<!-- julia:end -->
 - **Jupyter Notebook support**: Parameterized notebooks via papermill with full provenance
 - **VS Code integration**: Complete workflow via GUI (see [docs/vscode_integration.md](docs/vscode_integration.md))
 - **Code quality tools**: Integrated linting (ruff), formatting (ruff), and type checking (mypy)
@@ -312,10 +316,10 @@ See `JOURNAL_EXCLUDE` for complete list and [`docs/journal_editor_readme.md`](do
 
 ## 🐍 Python Environment
 
-Managed via uv with automatic Julia integration:
+Managed via uv:
 
 ```bash
-# Environment wrapper with Julia bridge
+# Environment wrapper
 env/scripts/runpython script.py
 
 # Direct activation (alternative)
@@ -326,9 +330,12 @@ python script.py
 **Packages** (see `pyproject.toml`; exact versions pinned in `uv.lock`):
 - pandas, matplotlib, numpy
 - pyyaml (for provenance)
+<!-- julia:start -->
 - juliacall (Python/Julia interop)
+<!-- julia:end -->
 - jinja2 (for pandas LaTeX export)
 
+<!-- julia:start -->
 ---
 
 ## 📚 Julia Environment
@@ -352,7 +359,9 @@ df = jl.DataFrame(x=[1,2,3], y=[4,5,6])
 - DataFrames
 
 Julia is auto-installed to `.julia/pyjuliapkg/` via juliacall.
+<!-- julia:end -->
 
+<!-- stata:start -->
 ---
 
 ## 📊 Stata Environment (Optional)
@@ -365,6 +374,7 @@ env/scripts/runstata script.do
 - reghdfe, ftools, estout
 
 Installed to `.stata/ado/plus/` (local to project).
+<!-- stata:end -->
 
 ---
 
@@ -375,10 +385,18 @@ Test your setup:
 ```bash
 make examples          # Run all examples
 make sample-python     # Python example
+```
+<!-- julia:start -->
+```bash
 make sample-julia      # Pure Julia example
 make sample-juliacall  # Python/Julia interop
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```bash
 make sample-stata      # Stata example (if installed)
 ```
+<!-- stata:end -->
 
 See `env/examples/README.md` for details.
 
@@ -431,7 +449,9 @@ make clean            # Remove all outputs
 - [docs/publishing.md](docs/publishing.md) - Publishing workflow and safety checks
 - [docs/vscode_integration.md](docs/vscode_integration.md) - Working entirely in VS Code
 - [docs/directory_structure.md](docs/directory_structure.md) - Project organization
+<!-- julia:start -->
 - [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge configuration
+<!-- julia:end -->
 - [docs/platform_compatibility.md](docs/platform_compatibility.md) - System requirements and GPU support
 - [docs/troubleshooting.md](docs/troubleshooting.md) - Common issues and solutions
 
@@ -442,7 +462,7 @@ make clean            # Remove all outputs
 - [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md) - Data access documentation
 
 ### Examples
-See [env/examples/](env/examples/) directory for sample scripts in Python, Julia, and Stata.
+See [env/examples/](env/examples/) for a sample script in each language the project uses.
 
 ---
 

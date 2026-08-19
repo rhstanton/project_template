@@ -116,6 +116,7 @@ dependencies = [
 ]
 ```
 
+<!-- julia:start -->
 **env/Project.toml** (Julia):
 ```toml
 [deps]
@@ -131,7 +132,9 @@ PythonCall = "0.9"
 DataFrames = "1"
 # Add version constraints for new packages
 ```
+<!-- julia:end -->
 
+<!-- stata:start -->
 **env/stata-packages.txt** (if using Stata):
 ```text
 estout
@@ -140,6 +143,7 @@ estout
 # ftools
 # gtools
 ```
+<!-- stata:end -->
 
 ### 3. Add Your Data
 

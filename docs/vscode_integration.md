@@ -180,7 +180,9 @@ Use the generic script runners:
 2. **Ctrl+Shift+P** → `Tasks: Run Task`
 3. Choose:
    - `Run Python script with environment` (uses `env/scripts/runpython`)
+<!-- julia:start -->
    - `Run Julia script with environment` (uses `env/scripts/runjulia`)
+<!-- julia:end -->
 
 ### Via Integrated Terminal
 
@@ -189,10 +191,12 @@ Use the generic script runners:
 env/scripts/runpython your_script.py
 ```
 
+<!-- julia:start -->
 **Julia:**
 ```bash
 env/scripts/runjulia your_script.jl
 ```
+<!-- julia:end -->
 
 **Or activate the virtualenv:**
 ```bash
@@ -335,6 +339,7 @@ print(df)
 - Automatically includes workspace root
 - Allows `from scripts import ...` imports
 
+<!-- julia:start -->
 ### Julia Configuration
 
 Julia extension is **intentionally disabled** for this workspace because:
@@ -345,6 +350,7 @@ Julia extension is **intentionally disabled** for this workspace because:
 To run pure Julia scripts:
 - Use task: `Run Julia script with environment`
 - Or terminal: `env/scripts/runjulia script.jl`
+<!-- julia:end -->
 
 ### Environment Variables
 
@@ -362,7 +368,7 @@ You don't need to set them manually!
 ### Excluded from Watcher
 
 To improve performance, VS Code ignores changes in:
-- `.venv/`, `.julia/`, `.stata/` (environments)
+- the environment directories (`.venv/` and any language depots)
 - `output/`, `paper/` (build outputs)
 - `__pycache__/`, `.pytest_cache/` (caches)
 

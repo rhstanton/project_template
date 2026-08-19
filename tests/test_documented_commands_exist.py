@@ -21,6 +21,7 @@ because a real line in real documentation defeated the previous version.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -157,31 +158,35 @@ def commands_in(path: Path) -> set[str]:
 
 def documentation_files() -> list[Path]:
     files = sorted(REPO_ROOT.glob("*.md")) + sorted((REPO_ROOT / "docs").glob("*.md"))
-    return [f for f in files if f.name not in NOT_INSTRUCTIONS]
+    files = [f for f in files if f.name not in NOT_INSTRUCTIONS]
+    # Skip what cannot be read. AGENTS.md, CLAUDE.md and COAUTHOR_SETUP.md are
+    # symlinks into the private/ maintainer overlay, which is gitignored: a fresh
+    # clone has neither the links nor the target, but a COPIED working tree
+    # (rsync, cp -r, or the way fire itself was created) keeps the links and
+    # loses the target, leaving them dangling.
+    #
+    # Measured 2026-08-19 in a generated project: `read_text()` on a dangling
+    # symlink raised FileNotFoundError from inside pathlib, so four tests failed
+    # with a traceback that named neither the file nor the reason. A missing
+    # document is not a broken command, and this sweep should say so rather than
+    # crash.
+    return [f for f in files if f.exists()]
 
 
 # Enforced only in the full variant.
 #
-# bootstrap.py prunes code, Makefile targets and tests for a removed language --
-# but NOT the documentation. A `--python-only` project therefore ships docs
-# telling the reader to run `make sample-julia` and `make -C env julia-check`,
-# neither of which exists there. That is a real gap in bootstrap rather than in
-# these documents, and it is recorded in notes/bootstrap-doc-pruning.md; pruning
-# prose is a much larger job than deleting a target, since most of these files
-# discuss all three languages in the same paragraph.
+# This sweep runs in a pruned project too, and that is the point.
 #
-# Skipping here rather than exempting the affected commands, because in the full
-# variant they are all correct and the sweep should keep checking them.
-_pruned = (
-    not (REPO_ROOT / "env" / "Project.toml").is_file()
-    or not (REPO_ROOT / "env" / "stata-packages.txt").is_file()
-)
-
-pytestmark = pytest.mark.skipif(
-    _pruned,
-    reason="a language was pruned; bootstrap does not prune docs (see "
-    "notes/bootstrap-doc-pruning.md)",
-)
+# It used to skip itself there: bootstrap removed a language's code, targets and
+# tests but left the documentation, so a `--python-only` project shipped docs
+# telling its reader to run `make sample-julia`. Skipping made the suite green
+# on exactly the projects where the docs were wrong.
+#
+# bootstrap now prunes the docs as well, via `<!-- julia:start -->` /
+# `<!-- julia:end -->` markers (and the exact-name passes for tree diagrams and
+# `ANALYSES :=` lines, where an HTML comment inside a code fence would render as
+# literal text). So the sweep must NOT skip: it is what catches a marker that
+# was never placed around a newly documented Julia command.
 
 
 def test_the_sweep_finds_commands():
@@ -260,3 +265,23 @@ def test_known_stale_names_really_are_undefined():
         f"these are exempted but now resolve, so remove them from "
         f"KNOWN_STALE_ANALYSIS_NAMES: {fixed}"
     )
+
+
+def test_unreadable_documents_are_skipped_not_crashed_on(tmp_path, monkeypatch):
+    """A dangling symlink must not take the sweep down.
+
+    AGENTS.md and friends are symlinks into the gitignored private/ overlay. A
+    copied working tree keeps the link and loses the target; before this guard
+    that produced a pathlib traceback naming neither file nor cause.
+    """
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "real.md").write_text("make test\n")
+    (tmp_path / "dangling.md").symlink_to(tmp_path / "nonexistent" / "x.md")
+
+    monkeypatch.setattr(sys.modules[__name__], "REPO_ROOT", tmp_path, raising=True)
+    found = documentation_files()
+    names = {f.name for f in found}
+    assert "real.md" in names
+    assert "dangling.md" not in names
+    # And the sweep itself must run over what remains without raising.
+    assert commands_in(tmp_path / "real.md")

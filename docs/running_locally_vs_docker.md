@@ -18,7 +18,9 @@ Both build from the **same sources** — `pyproject.toml` + `uv.lock` (Python), 
 | Speed | Fast (native) | Slower on macOS (Linux VM) |
 | Isolation | Runs on your host | Fully isolated container |
 | Reproducibility | High (uv.lock) | Highest (OS + libs pinned by digest) |
+<!-- stata:start -->
 | Stata | ✅ if installed | ❌ omitted (commercial license) |
+<!-- stata:end -->
 | Best for | Developing & iterating | Replication, sandboxing, CI parity |
 
 ---
@@ -30,7 +32,9 @@ Both build from the **same sources** — `pyproject.toml` + `uv.lock` (Python), 
 - **GNU Make 4.3+** — *required*. macOS ships 3.81; install a modern Make with `brew install make` and use `gmake`. Most Linux distros already have ≥4.3.
 - **git** — for cloning and provenance.
 - **uv**, **Julia**, and all packages are **auto‑installed** by `make environment` (uv via `env/scripts/install_uv.sh`; Julia via juliacall).
+<!-- stata:start -->
 - **Stata** (optional) — only if you use the Stata example; it's commercial and not auto‑installed.
+<!-- stata:end -->
 
 **Commands:**
 
@@ -44,7 +48,7 @@ make publish        # copy output/ -> paper/ with provenance (see publishing.md)
 
 **Where things live:** the Python env is `.venv/`, the Julia depot is `.julia/`, and build outputs go to `output/` — all inside the repo, none global. (All are git‑ignored and rebuilt per machine.)
 
-Use the wrappers (`env/scripts/runpython`, `runjulia`, `runnotebook`) — not bare `python`/`julia` — so the Julia bridge and `PYTHONPATH` are set correctly. See [environment.md](environment.md).
+Use the wrappers (`env/scripts/runpython`, `runnotebook`) — not bare `python`/`julia` — so the Julia bridge and `PYTHONPATH` are set correctly. See [environment.md](environment.md).
 
 ---
 
@@ -206,7 +210,9 @@ All three keep the slow env build cached or baked, so your feedback loop is the 
 
 - Developing and iterating — far faster feedback (no container build, native I/O).
 - Debugging (breakpoints, REPL, editor integration).
+<!-- stata:start -->
 - Using **Stata** (only available on the host).
+<!-- stata:end -->
 - On a machine you trust and where toolchain footprint isn't a concern.
 
 **Use Docker when you want:**
@@ -250,7 +256,9 @@ The environment is **baked into the image** during `docker build`, so at run tim
 The three layers and what invalidates each:
 
 1. **Python env** — `COPY pyproject.toml uv.lock` + `lib/repro-tools`, then `uv sync`. Rebuilds only when **dependencies** change.
+<!-- julia:start -->
 2. **Julia depot** — `COPY env`, then `make -C env julia-install-via-python`. Rebuilds only when **`env/`** changes (e.g. `env/Project.toml`).
+<!-- julia:end -->
 3. **Analysis source** — `COPY . .`. Editing `run_analysis.py`, `shared/config.py`, a notebook, etc. rebuilds **only this** layer (seconds), reusing the cached env.
 
 **Trade-off:** a slightly longer Dockerfile vs. a flat one — worth it because we may iterate under Docker. For a strictly build-once replication image, a flat `COPY . . && make environment` would also have been fine.

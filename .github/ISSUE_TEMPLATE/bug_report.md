@@ -31,7 +31,9 @@ Steps to reproduce the behavior:
 - OS: [e.g., Ubuntu 22.04, macOS 13, Windows 11 + WSL]
 - GNU Make version: [output of `make --version`]
 - Python version: [output of `.venv/bin/python --version`]
+<!-- julia:start -->
 - Julia version (if relevant): [output of `env/scripts/runjulia --version`]
+<!-- julia:end -->
 - Installation method: [uv/other]
 
 **Environment setup:**

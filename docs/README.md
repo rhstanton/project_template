@@ -25,7 +25,7 @@ Complete guide to the reproducible research template.
   - Python 3.12 uv virtualenv
   - Julia installation via juliacall
   - Stata package setup
-  - Environment wrappers (`runpython`, `runjulia`, `runstata`)
+  - Environment wrappers (`runpython`, `runnotebook`, and one per extra language)
 
 - **[repro_tools_submodule.md](repro_tools_submodule.md)** - Git submodule setup for repro-tools
   - Why use a git submodule

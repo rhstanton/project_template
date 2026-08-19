@@ -200,17 +200,25 @@ env/
 **Environment targets**:
 - `make -C env all-env`: Setup everything
 - `make -C env python-env`: Just Python
+<!-- julia:start -->
 - `make -C env julia-install-via-python`: Just Julia
+<!-- julia:end -->
+<!-- stata:start -->
 - `make -C env stata-env`: Just Stata
+<!-- stata:end -->
 
 **Wrapper scripts** configure environment before execution:
-- `runpython`: Sets PYTHONPATH, Julia bridge, uv virtualenv activation
+- `runpython`: Sets PYTHONPATH, the Julia bridge, uv virtualenv activation
+<!-- julia:start -->
 - `runjulia`: Points to `.julia/pyjuliapkg/install/bin/julia`
+<!-- julia:end -->
+<!-- stata:start -->
 - `runstata`: Sets STATA_PACKAGES, uses execute.ado
+<!-- stata:end -->
 
 ### `env/examples/`
 
-Sample scripts demonstrating all three languages.
+Sample scripts, one per language the project uses.
 
 ```
 env/examples/
@@ -224,9 +232,13 @@ env/examples/
 **Makefile targets**:
 - `make examples`: Run all
 - `make sample-python`: Python only
+<!-- julia:start -->
 - `make sample-julia`: Julia only
 - `make sample-juliacall`: Python/Julia interop
+<!-- julia:end -->
+<!-- stata:start -->
 - `make sample-stata`: Stata only
+<!-- stata:end -->
 
 ## Documentation
 
@@ -258,6 +270,7 @@ uv-managed virtualenv (Python packages).
 
 **Git status**: Ignored (in `.gitignore`)
 
+<!-- julia:start -->
 ### `.julia/`
 
 Julia installation and packages.
@@ -277,6 +290,8 @@ Julia installation and packages.
 
 **Git status**: Ignored
 
+<!-- julia:end -->
+<!-- stata:start -->
 ### `.stata/`
 
 Stata packages (if Stata is installed).
@@ -295,6 +310,7 @@ Stata packages (if Stata is installed).
 **Size**: ~100MB
 
 **Git status**: Ignored
+<!-- stata:end -->
 
 ## Configuration Files
 

@@ -12,8 +12,12 @@ make environment
 
 This creates:
 - `.venv/`: Python 3.12 uv-managed virtualenv
+<!-- julia:start -->
 - `.julia/`: Julia depot with packages via juliacall
+<!-- julia:end -->
+<!-- stata:start -->
 - `.stata/`: Stata packages (reghdfe, ftools, estout) if Stata is installed
+<!-- stata:end -->
 - `lib/repro-tools/`: Git submodule with reproducibility tools (auto-initialized)
 
 **Note:** Git submodules are automatically initialized. The first run downloads repro-tools from GitHub.
@@ -30,7 +34,9 @@ nix develop .#gpu        # GPU-enabled shell (Linux only)
 The Nix shell provides:
 - Julia + uv + GNU tools
 - Isolated environment (doesn't affect system)
+<!-- julia:start -->
 - Automatic `JULIA_PROJECT` and `JULIA_DEPOT_PATH` configuration
+<!-- julia:end -->
 - Optional CUDA toolkit (`.#gpu` shell)
 
 **Note**: Nix shell provides system tools, but you still need to run `make environment` inside the shell to install Python/Julia packages.
@@ -43,7 +49,10 @@ The Nix shell provides:
   - Interactive: ipython, notebook, jupyterlab, ipywidgets
   - Quality: ruff, black, mypy, pytest
   - Type stubs: types-docopt, pandas-stubs, scipy-stubs
+<!-- julia:start -->
   - Bridge: juliacall (Python/Julia interop)
+<!-- julia:end -->
+<!-- julia:start -->
 - `env/Project.toml`: Julia dependencies
   - Core: PythonCall, DataFrames
   - Stats: Distributions, StatsModels, FixedEffectModels
@@ -54,17 +63,30 @@ The Nix shell provides:
   what actually pins.
 - `env/juliapkg.json`: pins the Julia **binary** version, which `Project.toml`
   cannot. Copied into the juliapkg project before install.
+<!-- julia:end -->
+<!-- stata:start -->
 - `env/stata-packages.txt`: Stata package **names only**, no versions — see
   [Stata packages](#stata-packages).
 - `env/stata-requirements.txt`: the version record, generated from what is
   installed and verified by `make stata-check`.
+<!-- stata:end -->
 - `env/env.sh`: **the single source of truth for the environment.** Every wrapper
   and `.envrc` sources it; none declares environment variables of its own.
-- `env/scripts/runpython`, `runjulia`, `runstata`, `runnotebook`: thin wrappers
-  that source `env/env.sh` and exec.
+- `env/scripts/runpython`, `runnotebook`: thin wrappers that source
+  `env/env.sh` and exec.
+<!-- julia:start -->
+- `env/scripts/runjulia`: the same wrapper for Julia.
+<!-- julia:end -->
+<!-- stata:start -->
+- `env/scripts/runstata`: the same wrapper for Stata.
+<!-- stata:end -->
+<!-- stata:start -->
 - `env/scripts/execute.ado`: Stata helper for running .do files with logging
+<!-- stata:end -->
 - `env/scripts/install_uv.sh`: Auto-installs uv if not found
+<!-- julia:start -->
 - `env/scripts/install_julia.py`: Triggers Julia installation via juliacall
+<!-- julia:end -->
 - `lib/repro-tools/`: Git submodule with reproducibility tools (editable install).
   Also holds the **shared half** of the environment,
   `src/repro_tools/lib/env.sh`, so environment fixes reach projects generated
@@ -107,6 +129,7 @@ not neutral — building a fresh clone from a shell that still had another
 checkout's environment loaded silently builds against that other project's Julia
 and reports success, GPU check included.
 
+<!-- julia:start -->
 ## Python/Julia Integration
 
 `env/env.sh` (via the shared toolchain file):
@@ -120,7 +143,9 @@ and reports success, GPU check included.
 - Pins `JULIA_NUM_THREADS=1`: thread count changes floating-point reduction
   order, so it is the only setting that gives the same answer on every machine.
   Override in `env/local.sh` when you want speed more than bit-identity.
+<!-- julia:end -->
 
+<!-- stata:start -->
 <a name="stata-packages"></a>
 ## Stata packages
 
@@ -146,14 +171,19 @@ replaces reviewed, committed versions with whatever SSC serves today. Review
 
 Stata returns exit status 0 even when a do-file aborts, so every rule here
 judges success by the **log**, not by `$?`.
+<!-- stata:end -->
 
 ## Reproducibility
 
 For exact reproducibility:
 - **Python**: `pyproject.toml` declares; `uv.lock` pins the full transitive closure
+<!-- julia:start -->
 - **Julia**: `env/Manifest.toml` pins packages, `env/juliapkg.json` pins the binary
+<!-- julia:end -->
+<!-- stata:start -->
 - **Stata**: the ado files are committed; `env/stata-requirements.txt` records
   their versions and `make stata-check` verifies them
+<!-- stata:end -->
 - All are captured in per-artifact provenance via `repro_tools`
 
 Every one of these is checkable, and there is a test for each:
@@ -211,7 +241,7 @@ Because pixi speaks `pyproject.toml` and uses uv, a *future* uv→pixi move is c
 **Current support**: `flake.nix` provides optional dev shell
 
 **Use case**:
-- Dev shell with system tools (julia, uv, GNU make)
+- Dev shell with the system tools the project's languages need
 - True bit-for-bit reproducibility across platforms
 - Optional, not required
 
@@ -239,8 +269,16 @@ Because pixi speaks `pyproject.toml` and uses uv, a *future* uv→pixi move is c
 Test the environment with sample scripts:
 
 ```bash
-make examples              # Run Python + Julia examples
+make examples              # Run every example that applies
 make sample-python         # Python only
+```
+<!-- julia:start -->
+```bash
 make sample-julia          # Julia only
+```
+<!-- julia:end -->
+<!-- stata:start -->
+```bash
 make sample-stata          # Stata only (if installed)
 ```
+<!-- stata:end -->
