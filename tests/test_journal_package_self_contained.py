@@ -45,11 +45,11 @@ def test_every_submodule_would_be_vendored():
     assert paths, ".gitmodules declares no submodule paths"
     # The rule must not mention any of them by name in the vendoring branch;
     # naming one is how the other got forgotten.
-    vendor_block = MAKEFILE[MAKEFILE.index("Vendor EVERY submodule"):]
+    vendor_block = MAKEFILE[MAKEFILE.index("Vendor EVERY submodule") :]
     vendor_block = vendor_block[: vendor_block.index("Verification:")]
     for p in paths:
         p = p.strip()
-        assert f'cp -r {p} ' not in vendor_block, (
+        assert f"cp -r {p} " not in vendor_block, (
             f"{p} is vendored by name; use the .gitmodules loop so the next "
             "submodule is handled without editing this rule"
         )
