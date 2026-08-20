@@ -849,7 +849,9 @@ sha256sum output/figures/price_base.pdf
 1. [README.md](../README.md) - Project overview
 2. [QUICKSTART.md](../QUICKSTART.md) - Quick start guide
 3. [docs/environment.md](environment.md) - Environment setup
+<!-- julia:start -->
 4. [docs/julia_python_integration.md](julia_python_integration.md) - Julia/Python bridge
+<!-- julia:end -->
 5. [docs/platform_compatibility.md](platform_compatibility.md) - System requirements
 
 ### Search logs

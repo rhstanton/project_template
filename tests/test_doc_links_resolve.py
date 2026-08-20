@@ -27,21 +27,56 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LINK = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
 
 
+SKIP_DIRS = {
+    "lib",
+    ".venv",
+    ".julia",
+    ".git",
+    "__pycache__",
+    "replication-package",
+    "paper",
+    "private",
+    ".pytest_cache",
+    "notes",
+}
+
+
 def tracked_markdown() -> list[Path]:
-    """Tracked .md files, excluding the submodule's own docs."""
+    """The .md files to check.
+
+    Asks git, and FALLS BACK TO WALKING THE TREE when git has nothing to say.
+    The first version returned [] whenever `git ls-files` failed -- the case in a
+    generated instance created by copying a working tree, which is not a
+    repository. pytest then parametrized over an empty list and every case passed,
+    so the local variant gate reported success while checking nothing, while CI
+    (which clones) caught six dead links the same day.
+
+    An empty list is never a pass: test_the_sweep_finds_documents fails on it.
+    """
     out = subprocess.run(
         ["git", "-C", str(REPO_ROOT), "ls-files", "*.md"],
         capture_output=True,
         text=True,
         timeout=60,
     )
-    if out.returncode != 0:
-        return []
+    names = out.stdout.split() if out.returncode == 0 else []
+    if not names:
+        names = [
+            str(q.relative_to(REPO_ROOT))
+            for q in REPO_ROOT.rglob("*.md")
+            if not set(q.relative_to(REPO_ROOT).parts[:-1]) & SKIP_DIRS
+        ]
     return [
         REPO_ROOT / f
-        for f in out.stdout.split()
+        for f in sorted(names)
         if not f.startswith("lib/") and (REPO_ROOT / f).is_file()
     ]
+
+
+def test_the_sweep_finds_documents():
+    """An empty file list would make every case below pass without looking."""
+    docs = tracked_markdown()
+    assert len(docs) >= 5, f"only {len(docs)} markdown files found: {docs}"
 
 
 def prose_lines(text: str):
@@ -68,8 +103,22 @@ def relative_links(path: Path):
             yield text, t
 
 
+# bootstrap deliberately never prunes CHANGELOG.md: it is a historical record,
+# and rewriting it would change what past releases said. So in a GENERATED
+# project it legitimately references documents that existed when the entry was
+# written and were removed by pruning. In the template itself every link is live
+# and is checked.
+IS_GENERATED_PROJECT = (REPO_ROOT / "template-origin.toml").is_file()
+HISTORICAL = {"CHANGELOG.md"}
+
+
 @pytest.mark.parametrize("doc", tracked_markdown(), ids=lambda p: str(p.name))
 def test_relative_links_resolve(doc):
+    if IS_GENERATED_PROJECT and doc.name in HISTORICAL:
+        pytest.skip(
+            f"{doc.name} is a historical record, never pruned; it may name "
+            "documents that pruning removed"
+        )
     missing = [
         f"[{text}]({target})"
         for text, target in relative_links(doc)

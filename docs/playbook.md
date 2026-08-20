@@ -5,7 +5,9 @@ Look up the situation, run the command. Each entry links onward for the *why*.
 Two audiences, and the split matters — see [Which am I?](#which-am-i) if unsure:
 
 - **[In a project](#in-a-project)** — you are doing research in a project made from this template.
+<!-- template-only:start -->
 - **[On the template](#on-the-template)** — you are changing the template itself, or the shared machinery.
+<!-- template-only:end -->
 - **[Propagating changes](#propagating-changes)** — you fixed something in the template and want it in projects that already exist.
 
 ---
@@ -98,6 +100,7 @@ See [bootstrap_and_markers.md](bootstrap_and_markers.md).
 
 ---
 
+<!-- template-only:start -->
 ## On the template
 
 | Situation | Do this |
@@ -112,6 +115,8 @@ See [bootstrap_and_markers.md](bootstrap_and_markers.md).
 | I want to cut a release | `make bump-version VERSION=X.Y.Z`, review `git diff`, commit, then tag `vX.Y.Z`. The bump refuses a version not ahead of existing tags |
 
 ---
+
+<!-- template-only:end -->
 
 ## Propagating changes
 
@@ -178,7 +183,9 @@ Every environment bug found in this template so far has been in the generic half
 ## See also
 
 - [shared_machinery.md](shared_machinery.md) — the four make layers, and adopting them in an existing project
+<!-- template-only:start -->
 - [bootstrap_and_markers.md](bootstrap_and_markers.md) — what bootstrap does, and the doc-marker convention *(deleted in generated projects)*
+<!-- template-only:end -->
 - [troubleshooting.md](troubleshooting.md) — by symptom, plus problems caused by how you obtained the project
 - [publishing.md](publishing.md) · [provenance.md](provenance.md) — the build → publish chain
 - [README.md](README.md) — every document, listed by topic

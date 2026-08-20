@@ -599,7 +599,9 @@ make publish
 - [docs/environment.md](docs/environment.md) - Environment details
 - [docs/provenance.md](docs/provenance.md) - Provenance system
 - [docs/publishing.md](docs/publishing.md) - Publishing workflow
+<!-- julia:start -->
 - [docs/julia_python_integration.md](docs/julia_python_integration.md) - Julia/Python bridge
+<!-- julia:end -->
 - [docs/platform_compatibility.md](docs/platform_compatibility.md) - System configuration
 
 ### Customize Template

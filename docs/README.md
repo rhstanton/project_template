@@ -175,7 +175,9 @@ know which document you want.
 ## 🔧 Technical Guides
 
 ### Multi-Language Integration
+<!-- julia:start -->
 - **[julia_python_integration.md](julia_python_integration.md)** - Julia/Python bridge
+<!-- julia:end -->
   - Julia auto-installation via juliacall
   - CondaPkg configuration (why `JULIA_CONDAPKG_BACKEND=Null`)
   - Environment variables explained
@@ -251,10 +253,14 @@ Each example includes a Makefile target for testing.
 #### Customize template for my project
 1. [TEMPLATE_USAGE.md](../TEMPLATE_USAGE.md) - Complete customization guide
 2. [directory_structure.md](directory_structure.md) - Understand organization
+<!-- julia:start -->
 3. [julia_python_integration.md](julia_python_integration.md) - Configure languages
+<!-- julia:end -->
 
 #### Add Julia/Python analysis
+<!-- julia:start -->
 1. [julia_python_integration.md](julia_python_integration.md) - Usage patterns
+<!-- julia:end -->
 2. [TEMPLATE_USAGE.md](../TEMPLATE_USAGE.md) - Script template
 3. [env/examples/](../env/examples/) - Working examples
 
