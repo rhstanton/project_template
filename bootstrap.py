@@ -403,7 +403,8 @@ def _ignored_dirs(repo_root: Path, dirs: list) -> set:
     try:
         top = subprocess.run(
             ["git", "-C", str(repo_root), "rev-parse", "--show-toplevel"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
     except FileNotFoundError:
         return set()

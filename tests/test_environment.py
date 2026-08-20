@@ -37,6 +37,7 @@ RUNJULIA = REPO_ROOT / "env" / "scripts" / "runjulia"
 # wrapper reports "Python env not found", which reads like a bug in the test.
 pytestmark = pytest.mark.needs_env
 
+
 def run_julia(
     code: str, *, timeout: int = 120, env=None
 ) -> subprocess.CompletedProcess:

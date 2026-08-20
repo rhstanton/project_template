@@ -1704,7 +1704,7 @@ wheels = [
 
 [[package]]
 name = "repro-tools"
-version = "0.2.0"
+version = "0.4.0"
 source = { editable = "lib/repro-tools" }
 dependencies = [
     { name = "docopt" },
@@ -1718,7 +1718,9 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.16.3" },
+    { name = "types-docopt", marker = "extra == 'dev'" },
+    { name = "types-pyyaml", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev"]
 

@@ -47,6 +47,7 @@ pytestmark = pytest.mark.skipif(
 # wrapper reports "Python env not found", which reads like a bug in the test.
 pytestmark = pytest.mark.needs_env
 
+
 def recipe(target: str) -> str:
     text = ENV_MAKEFILE.read_text()
     match = re.search(

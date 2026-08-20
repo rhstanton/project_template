@@ -66,6 +66,7 @@ RUNPYTHON = REPO_ROOT / "env" / "scripts" / "runpython"
 # wrong" rather than "there is no interpreter".
 pytestmark = pytest.mark.needs_env
 
+
 def invocations() -> list[tuple[str, str, str]]:
     """(makefile, variable, folded command line) for each $(REPRO_*) call."""
     found = []
