@@ -58,7 +58,27 @@ ifeq ($(wildcard $(REPRO_TOOLS_MK)),)
   $(info Initializing git submodule lib/repro-tools ...)
   $(shell git submodule update --init --recursive >/dev/null 2>&1)
 endif
+# The advice must differ by audience, because the two cannot act on each other's.
+#
+# In a git checkout the fix is to fetch the submodule. In a REPLICATION PACKAGE
+# there is no submodule and no remote -- `make journal-package` vendors these
+# files as ordinary directories and deletes .gitmodules -- so "git clone
+# --recursive" is an instruction the recipient cannot follow, and this is a hard
+# error, so it would be the last thing they ever saw. .gitmodules is the
+# discriminator, precisely because packaging removes it.
 ifeq ($(wildcard $(REPRO_TOOLS_MK)),)
+ifeq ($(wildcard .gitmodules),)
+  $(error \
+    \
+    ======================================================================== \
+    ERROR: the shared machinery is missing from lib/repro-tools/. \
+    ======================================================================== \
+    This replication package should ship those files vendored, as ordinary \
+    directories -- there is nothing for you to fetch. The package was built \
+    incorrectly; please report it to the authors. \
+    ======================================================================== \
+  )
+else
   $(error \
     \
     ======================================================================== \
@@ -73,6 +93,7 @@ ifeq ($(wildcard $(REPRO_TOOLS_MK)),)
       git clone --recursive <url> \
     ======================================================================== \
   )
+endif
 endif
 
 # ==============================================================================
@@ -602,9 +623,59 @@ journal-package:
 	@rm -rf replication-package
 	@mkdir -p replication-package
 	@git archive --format=tar HEAD | tar -x -C replication-package/
-	@echo "Copying git submodules (repro-tools)..."
-	@mkdir -p replication-package/lib
-	@cp -r lib/repro-tools replication-package/lib/
+	@# Vendor EVERY submodule, read from .gitmodules -- never a hardcoded name,
+	@# and never `cp -r`.
+	@#
+	@# `git archive` writes a gitlink for a submodule rather than its contents, so
+	@# each arrives as an empty directory unless it is vendored back. Naming one
+	@# submodule means the next one added ships empty and silent -- which is
+	@# exactly what happened in fire on 2026-08-19, where the package then told
+	@# its reader to run `git submodule update --init --recursive`. A journal
+	@# editor has an archive, not a clone: no submodule to update, no remote to
+	@# reach.
+	@#
+	@# `git archive` inside each submodule rather than `cp -r`, because a
+	@# recursive copy takes the whole working tree. lib/repro-tools carries a
+	@# 79 MB .venv here, full of absolute symlinks into this machine's home
+	@# directory -- broken on arrival for anyone else.
+	@#
+	@# `CDPATH= cd` because cd PRINTS the resolved directory when it resolves
+	@# through CDPATH, and here that print would go straight down the pipe into
+	@# tar ("This does not look like a tar archive").
+	@set -e; \
+	if [ -f .gitmodules ]; then \
+		git config -f .gitmodules --get-regexp '^submodule\..*\.path$$' \
+		| awk '{print $$2}' \
+		| while read -r sub; do \
+			echo "  • Vendoring $$sub (submodule -> regular files)..."; \
+			if [ ! -d "$$sub" ] || [ -z "$$(ls -A "$$sub" 2>/dev/null)" ]; then \
+				echo "    ✗ $$sub is not checked out; run: git submodule update --init --recursive" >&2; \
+				exit 1; \
+			fi; \
+			rm -rf "replication-package/$$sub"; \
+			mkdir -p "replication-package/$$sub"; \
+			(CDPATH= cd -- "$$sub" && git archive --format=tar HEAD) \
+				| tar -x -C "replication-package/$$sub"; \
+			echo "    ✓ $$sub vendored ($$(find "replication-package/$$sub" -type f | wc -l | tr -d ' ') files)"; \
+		done; \
+		rm -f replication-package/.gitmodules; \
+	fi
+	@# Assert the result rather than assuming it. All three failures are silent.
+	@set -e; \
+	empty="$$(find replication-package/lib -mindepth 1 -maxdepth 1 -type d -empty 2>/dev/null || true)"; \
+	if [ -n "$$empty" ]; then \
+		echo "  ✗ empty directories left in the package (unvendored submodules):" >&2; \
+		echo "$$empty" >&2; exit 1; \
+	fi; \
+	if [ -e replication-package/.gitmodules ]; then \
+		echo "  ✗ .gitmodules survived into the package" >&2; exit 1; \
+	fi; \
+	links="$$(find replication-package -type l 2>/dev/null || true)"; \
+	if [ -n "$$links" ]; then \
+		echo "  ✗ symlinks in the package (not portable to every reviewer):" >&2; \
+		echo "$$links" >&2; exit 1; \
+	fi; \
+	echo "  ✓ package is self-contained: no submodules, no symlinks, no git required"
 	@echo "Removing excluded directories..."
 	@cd replication-package && rm -rf data-construction notes dev-notes paper JOURNAL_EXCLUDE .github .vscode .dir-locals.el .editorconfig .mypy_cache .ruff_cache logs TEMPLATE_USAGE.md COAUTHOR_SETUP.md 2>/dev/null || true
 	@echo "Generating clean Makefile (removing AUTHOR-ONLY sections)..."
@@ -623,7 +694,11 @@ journal-package:
 	@echo ""
 	@echo "Verification:"
 	@test ! -d replication-package/data-construction && test ! -d replication-package/notes && test ! -d replication-package/paper && echo "  ✓ Excluded directories removed" || echo "  ✗ WARNING: Some excluded directories still present"
-	@grep -q "journal-package" replication-package/Makefile && echo "  ✗ WARNING: journal-package target still in Makefile" || echo "  ✓ Clean Makefile for journal editors"
+	@# Anchored to a target definition. Unanchored, this matched the word
+	@# anywhere -- including in a comment -- so it warned on every clean build.
+	@# A check that cries wolf is one people learn to ignore, which costs more
+	@# than the check was ever worth.
+	@grep -qE "^journal-package[a-z-]*:" replication-package/Makefile && echo "  ✗ WARNING: journal-package target still in Makefile" || echo "  ✓ Clean Makefile for journal editors"
 	@echo ""
 	@echo "Next steps:"
 	@echo "  1. Review: cd replication-package && git log -p"
