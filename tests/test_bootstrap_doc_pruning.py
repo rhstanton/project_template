@@ -38,6 +38,26 @@ from bootstrap import (  # noqa: E402
     strip_marked_doc_sections,
 )
 
+# Is this the template itself, or a project generated from it?
+#
+# bootstrap.py writes template-origin.toml into every project it creates and the
+# template has none, so the file's presence is the discriminator — the same role
+# .gitmodules plays for "checkout versus replication package".
+#
+# A few assertions below are about the TEMPLATE's own contents and are false, by
+# design, in a generated project: the instantiation docs are deleted there and
+# the "Use this template" prose is stripped. Those must skip rather than fail,
+# and they must skip narrowly. An earlier blanket skip over this whole module in
+# pruned projects is what let the docs go unpruned for months, so the rule is:
+# skip the tests whose PREMISE is "this is the template", never the ones that
+# check the pruning worked.
+IS_GENERATED_PROJECT = (REPO_ROOT / "template-origin.toml").is_file()
+template_only_check = pytest.mark.skipif(
+    IS_GENERATED_PROJECT,
+    reason="asserts a property of the template itself, not of a generated project",
+)
+
+
 MARKER = re.compile(r"<!--\s*(\w+):(start|end)\s*-->")
 LANGUAGES = ("julia", "stata")
 # Stripped on EVERY bootstrap, not per language: instantiating the template is
@@ -281,6 +301,7 @@ def test_no_document_tells_a_generated_project_to_instantiate_the_template():
     assert not offenders, "template-only prose survives:\n" + "\n".join(offenders)
 
 
+@template_only_check
 def test_the_template_itself_still_explains_how_to_instantiate_it():
     """Guard the guard: marking everything would pass the test above while
     making the template unusable for its actual purpose."""
@@ -289,6 +310,7 @@ def test_the_template_itself_still_explains_how_to_instantiate_it():
     assert "bootstrap.py" in readme
 
 
+@template_only_check
 def test_every_template_only_file_is_actually_deleted():
     """Guard the exemptions above: they only make sense if bootstrap really
     removes these files. An entry naming a file bootstrap keeps would silently
