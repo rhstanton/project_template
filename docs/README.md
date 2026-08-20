@@ -41,6 +41,12 @@ Complete guide to the reproducible research template.
   - Checking your work against a real generated project
 <!-- template-only:end -->
 
+- **[shared_machinery.md](shared_machinery.md)** - What you inherit from repro-tools, and how to adopt the layers in an existing project
+  - The two halves: copied-and-frozen vs referenced-and-updatable
+  - The four make layers and what each requires
+  - Adapting through variables instead of redefining recipes
+  - Checking that adoption actually worked
+
 - **[submodule_cheatsheet.md](submodule_cheatsheet.md)** - Quick reference for submodule workflows
   - Creating new projects from template
   - Editing repro-tools
