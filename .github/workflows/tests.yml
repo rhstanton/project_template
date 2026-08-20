@@ -148,3 +148,82 @@ jobs:
         name: test-results-${{ matrix.os }}
         path: output/
         if-no-files-found: warn
+
+  # THE ARTIFACT SOMEONE OUTSIDE ACTUALLY RECEIVES.
+  #
+  # Every job above checks this repository. A journal editor gets
+  # `make journal-package` instead, and nothing built it automatically until
+  # 2026-08-20 — which is how the rule came to vendor lib/repro-tools with
+  # `cp -r`, sweeping in a 79 MB .venv whose bin/python entries are absolute
+  # symlinks into the author's home directory. Broken on arrival for every
+  # reviewer, and invisible here.
+  #
+  # The rule asserts its own output now. This job makes that assertion run, and
+  # re-checks the result independently afterwards.
+  package:
+    name: replication package
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v8.1.0
+      with:
+        enable-cache: true
+
+    - name: Build the replication package
+      run: make journal-package
+
+    - name: The package must be self-contained
+      run: |
+        set -euo pipefail
+        pkg=replication-package
+        test -d "$pkg" || { echo "::error::$pkg was not created"; exit 1; }
+
+        empty="$(find "$pkg/lib" -mindepth 1 -maxdepth 1 -type d -empty 2>/dev/null || true)"
+        if [ -n "$empty" ]; then
+          echo "::error::unvendored submodules (empty directories):"; echo "$empty"; exit 1
+        fi
+
+        if [ -e "$pkg/.gitmodules" ]; then
+          echo "::error::.gitmodules survived into the package"; exit 1
+        fi
+
+        links="$(find "$pkg" -type l -not -path "$pkg/.git/*" 2>/dev/null || true)"
+        if [ -n "$links" ]; then
+          echo "::error::symlinks in the package:"; echo "$links"; exit 1
+        fi
+
+        if [ -d "$pkg/lib/repro-tools/.venv" ]; then
+          echo "::error::a virtualenv was vendored into the package"; exit 1
+        fi
+
+        n="$(find "$pkg/lib/repro-tools" -type f | wc -l)"
+        test "$n" -gt 0 || { echo "::error::lib/repro-tools vendored 0 files"; exit 1; }
+        echo "  lib/repro-tools: $n files"
+
+    # Does it work for someone with no git at all? Copied without .git, so no
+    # git command can succeed, then asked what it would build.
+    - name: The package must build without git
+      run: |
+        set -euo pipefail
+        rm -rf /tmp/as-editor && mkdir -p /tmp/as-editor
+        tar -c --exclude=.git -C replication-package . | tar -x -C /tmp/as-editor
+        cd /tmp/as-editor
+        test ! -e .git || { echo "::error::.git reached the copy"; exit 1; }
+        plan="$(make -n all 2>&1)"
+        echo "$plan" | head -20
+        if echo "$plan" | grep -qi "submodule"; then
+          echo "::error::the build plan still mentions submodules:"
+          echo "$plan" | grep -i submodule
+          exit 1
+        fi
+
+    - name: Upload the package for inspection
+      uses: actions/upload-artifact@v7
+      with:
+        name: replication-package
+        path: replication-package/
+        if-no-files-found: error
