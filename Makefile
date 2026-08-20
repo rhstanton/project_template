@@ -226,6 +226,47 @@ instance:
 		$(if $(BUILD),--build) \
 		$(if $(FORCE),--force)
 
+# Run the test suite against every bootstrapped variant, locally.
+#
+# This is the gap that let the same class of failure reach CI three times in one
+# day. `make test` here exercises the FULL three-language tree, which no real
+# project is; the pruned variants were only ever built by the Bootstrap variants
+# workflow, so a test whose premise silently depended on being the template
+# passed locally and failed on push.
+#
+# Deliberately does NOT build each variant's environment. That is what makes it
+# fast enough to run before pushing (~1 min against ~10 per variant in CI), and
+# it still catches everything that bit us: doc pruning, documented commands,
+# Makefile parsing, and tests that assume template-only files exist. CI still
+# does the full build; this is the check you can afford to run every time.
+#
+# Uses THIS repo's interpreter against the variant's tree, since the variant has
+# no .venv of its own.
+VARIANTS ?= python-only no-julia no-stata
+.PHONY: test-variants
+test-variants:
+	@set -e; \
+	failed=""; \
+	for v in $(VARIANTS); do \
+	  dest="$(INSTANCE_DIR)/test-$$v"; \
+	  echo ""; \
+	  echo "=== variant: $$v ==="; \
+	  rm -rf "$$dest"; \
+	  ./scripts/make_instance.sh --variant "$$v" --dest "$$dest" --dirty --force >/dev/null 2>&1 \
+	    || { echo "  ✗ could not create the $$v instance"; failed="$$failed $$v"; continue; }; \
+	  (CDPATH= cd -- "$$dest" && $(MAKE) -n all >/dev/null 2>&1) \
+	    || { echo "  ✗ $$v: 'make all' does not parse"; failed="$$failed $$v"; continue; }; \
+	  (CDPATH= cd -- "$$dest" && "$(CURDIR)/.venv/bin/python" -m pytest -q -m "not slow" -p no:cacheprovider) \
+	    || { echo "  ✗ $$v: tests failed"; failed="$$failed $$v"; continue; }; \
+	  echo "  ✓ $$v"; \
+	done; \
+	echo ""; \
+	if [ -n "$$failed" ]; then \
+	  echo "FAILED variants:$$failed"; \
+	  exit 1; \
+	fi; \
+	echo "✓ every variant passes"
+
 .PHONY: instance-list
 instance-list:
 	@if [ -d "$(INSTANCE_DIR)" ]; then \

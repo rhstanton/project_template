@@ -61,6 +61,11 @@ VAR_TO_COMMAND = {
 RUNPYTHON = REPO_ROOT / "env" / "scripts" / "runpython"
 
 
+# Needs a built environment: every case runs the repro_tools CLI to ask whether
+# a flag exists. Without .venv the invocation fails, which reads as "this flag is
+# wrong" rather than "there is no interpreter".
+pytestmark = pytest.mark.needs_env
+
 def invocations() -> list[tuple[str, str, str]]:
     """(makefile, variable, folded command line) for each $(REPRO_*) call."""
     found = []

@@ -496,6 +496,7 @@ class TestStataVendoring:
                 "SSC has no versioned install; the pin is the committed ado files."
             )
 
+    @pytest.mark.needs_own_git_repo
     def test_vendored_packages_are_committed(self):
         plus = REPO_ROOT / ".stata" / "ado" / "plus"
         if not (REPO_ROOT / "env" / "stata-packages.txt").is_file():

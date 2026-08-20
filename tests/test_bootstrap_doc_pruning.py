@@ -20,6 +20,7 @@ Three mechanisms, because Markdown has two kinds of place a language can hide:
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -331,3 +332,27 @@ def test_prose_about_tree_rows_is_not_treated_as_one():
     """
     prose = "A row carrying `├── ` or `└── ` is a tree row.\n"
     assert prune_tree_lines(prose, {"anything"}) == prose
+
+
+def test_gitignore_rules_come_from_this_project_not_a_containing_repo(tmp_path):
+    """A project unpacked inside another checkout must not inherit its rules.
+
+    `git -C <project> check-ignore` answers for whichever repository CONTAINS
+    the path. A generated project placed under one — these test instances land
+    inside ~/01_work/research, whose .gitignore begins `/*` — had every
+    directory reported as ignored, so prunable_docs returned only the root-level
+    files and the docs went unpruned. Nothing errored.
+    """
+    outer = tmp_path / "outer"
+    (outer / "proj" / "docs").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=outer, check=True)
+    (outer / ".gitignore").write_text("/*\n")
+    (outer / "proj" / "README.md").write_text("# p\n")
+    (outer / "proj" / "docs" / "guide.md").write_text("# g\n")
+
+    names = {p.name for p in prunable_docs(outer / "proj")}
+    assert "guide.md" in names, (
+        "a doc was skipped because the CONTAINING repository ignores it; "
+        "gitignore rules must come from the project itself"
+    )
+    assert "README.md" in names

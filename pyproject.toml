@@ -76,6 +76,8 @@ addopts = [
     "--tb=short",
 ]
 markers = [
+    "needs_own_git_repo: asserts what git tracks; needs this tree to be a checkout",
+    "needs_env: shells out through env/scripts/; skipped when .venv is absent",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 filterwarnings = [

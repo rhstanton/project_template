@@ -24,6 +24,11 @@ import yaml
 # ==============================================================================
 
 
+# Every test here shells out through env/scripts/, so it needs a built
+# environment. Marked rather than left to fail: without `make environment` the
+# wrapper reports "Python env not found", which reads like a bug in the test.
+pytestmark = pytest.mark.needs_env
+
 @pytest.fixture
 def repo_root():
     """Get repository root directory."""

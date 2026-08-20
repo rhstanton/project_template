@@ -390,6 +390,28 @@ def _ignored_dirs(repo_root: Path, dirs: list) -> set:
     """
     if not dirs:
         return set()
+
+    # The git repository we find must BE this project, not one containing it.
+    #
+    # A generated project is often unpacked inside another checkout -- these
+    # instances land under ~/01_work/research, which is itself a repo whose
+    # .gitignore starts with `/*`. `git -C <project> check-ignore` then answers
+    # for the PARENT, reported every directory as ignored, and prunable_docs
+    # silently returned only the root-level files. Nothing errored; the docs just
+    # went unpruned. Found 2026-08-20 by running the suite against a real
+    # bootstrapped instance rather than against this repository.
+    try:
+        top = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        return set()
+    if top.returncode != 0:
+        return set()  # not a git checkout at all
+    if Path(top.stdout.strip()).resolve() != repo_root.resolve():
+        return set()  # inside someone else's repository; its rules are not ours
+
     try:
         proc = subprocess.run(
             ["git", "-C", str(repo_root), "check-ignore", "--stdin"],

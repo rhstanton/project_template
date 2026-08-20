@@ -45,6 +45,12 @@ MANIFEST = REPO_ROOT / "env" / "Manifest.toml"
 pytestmark = pytest.mark.julia
 
 
+# Needs a built environment: env/Manifest.toml is produced by `make environment`
+# and is deliberately not committed in this template (a manifest pins only for
+# the Julia it was resolved with, which a template cannot control). Asserting it
+# exists in an unbuilt tree tests the build, not the pin.
+pytestmark = pytest.mark.needs_env
+
 def recipe(target: str) -> str:
     text = ENV_MAKEFILE.read_text()
     match = re.search(
