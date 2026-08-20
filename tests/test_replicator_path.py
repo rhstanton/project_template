@@ -37,15 +37,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_MAKEFILE = REPO_ROOT / "env" / "Makefile"
 REQUIREMENTS = REPO_ROOT / "env" / "requirements" / "base.txt"
 
-pytestmark = pytest.mark.skipif(
-    not ENV_MAKEFILE.is_file(), reason="env/Makefile absent"
-)
-
 
 # Every test here shells out through env/scripts/, so it needs a built
 # environment. Marked rather than left to fail: without `make environment` the
 # wrapper reports "Python env not found", which reads like a bug in the test.
-pytestmark = pytest.mark.needs_env
+# Both conditions, in one list: two separate `pytestmark =` assignments rebind
+# the name rather than combining, so the first is silently lost.
+pytestmark = [
+    pytest.mark.skipif(not ENV_MAKEFILE.is_file(), reason="env/Makefile absent"),
+    pytest.mark.needs_env,
+]
 
 
 def recipe(target: str) -> str:

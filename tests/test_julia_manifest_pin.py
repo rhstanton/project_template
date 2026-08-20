@@ -42,14 +42,22 @@ MANIFEST = REPO_ROOT / "env" / "Manifest.toml"
 # derives "does this project have Julia?" from env/Project.toml and skips marked
 # tests accordingly, which is what bootstrap.py --python-only produces. Three of
 # my new modules reinvented that check before I noticed it existed.
-pytestmark = pytest.mark.julia
 
 
 # Needs a built environment: env/Manifest.toml is produced by `make environment`
 # and is deliberately not committed in this template (a manifest pins only for
 # the Julia it was resolved with, which a template cannot control). Asserting it
 # exists in an unbuilt tree tests the build, not the pin.
-pytestmark = pytest.mark.needs_env
+# BOTH markers, in one list. Two separate `pytestmark =` assignments do not
+# combine -- the second rebinds the name and the first is lost, silently. That
+# happened here on 2026-08-20: adding needs_env erased pytest.mark.julia, so
+# these tests ran in a --python-only project and failed with "no recipe for
+# julia-instantiate", which is correct behavior being reported as a defect.
+#
+# julia is the marker that matters for the variants: conftest skips it when
+# env/Project.toml is absent. needs_env covers the cases that read a built
+# manifest rather than the Makefile.
+pytestmark = [pytest.mark.julia, pytest.mark.needs_env]
 
 
 def recipe(target: str) -> str:
