@@ -4,6 +4,19 @@ Complete guide to the reproducible research template.
 
 ---
 
+## 🧭 Looking up what to do — start here
+
+**[playbook.md](playbook.md) — by situation, with the command to run.**
+"How do I start a new project?", "how do I generate and check figures?", "how do
+I build the replication package?", "I fixed something in the template, how do I
+get it into projects that already exist?" Organized by what you are trying to
+do, split between working *in a project* and working *on the template*.
+
+The rest of this file lists documents by topic, which is the right index once you
+know which document you want.
+
+---
+
 ## 🚀 Getting Started (Start Here!)
 
 1. **[README.md](../README.md)** - Project overview and quick reference

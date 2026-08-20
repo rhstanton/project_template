@@ -109,6 +109,8 @@ python bootstrap.py --remove-stata --rename "Housing Market Analysis"
 
 <!-- template-only:end -->
 
+**Looking for something specific?** [docs/playbook.md](docs/playbook.md) answers by situation — building figures, publishing, replication packages, propagating template fixes.
+
 ## What Success Looks Like
 
 ### After `make environment`

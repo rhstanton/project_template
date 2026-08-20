@@ -100,6 +100,7 @@ docker build -t my-project .
 docker run --rm -v "$PWD/output:/project/output" my-project   # runs `make all` in the container → ./output
 ```
 
+- **What do I do when…?** [docs/playbook.md](docs/playbook.md) — every common task, by situation, with the command
 - **Full 5-minute walkthrough:** [QUICKSTART.md](QUICKSTART.md) · **local vs. Docker:** [docs/running_locally_vs_docker.md](docs/running_locally_vs_docker.md)
 <!-- template-only:start -->
 - **One, two, or three languages?** Python is always included (the harness runs on it); Julia and Stata are optional. Run `bootstrap.py` once, *before* `make environment`, to prune the template to your stack: `--python-only`, or `--remove-julia` / `--remove-stata`, or `--interactive` to choose. It also drops the example analyses that need the removed language (e.g. `julia_demo`, `did_example`), so `make all` still builds cleanly.
