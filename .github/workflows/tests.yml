@@ -173,6 +173,16 @@ jobs:
       with:
         enable-cache: true
 
+    - name: Give git an identity for the package's own commit
+      # `make journal-package` runs `git init` and commits inside the package, so
+      # the archive carries a clean one-commit history for review. A runner has
+      # no identity configured, so that commit fails with "empty ident name" --
+      # a failure of the runner's setup, not of the packaging. A real package is
+      # built by an author with their own identity; this one is only verified.
+      run: |
+        git config --global user.name "CI package build"
+        git config --global user.email "ci@invalid.example"
+
     - name: Build the replication package
       run: make journal-package
 
