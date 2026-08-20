@@ -223,13 +223,35 @@ jobs:
         tar -c --exclude=.git -C replication-package . | tar -x -C /tmp/as-editor
         cd /tmp/as-editor
         test ! -e .git || { echo "::error::.git reached the copy"; exit 1; }
-        plan="$(make -n all 2>&1)"
-        echo "$plan" | head -20
-        if echo "$plan" | grep -qi "submodule"; then
-          echo "::error::the build plan still mentions submodules:"
-          echo "$plan" | grep -i submodule
+        # Parse the Makefile; do not try to plan the whole build.
+        #
+        # `make -n` still EXECUTES any recipe line containing $(MAKE) -- documented
+        # behavior, so recursive dry-runs work -- so `make -n all` recurses into
+        # sub-Makefiles that need input data a runner does not have. And capturing
+        # into a variable under `set -e` aborts before anything is echoed, so the
+        # first version of this step reported a bare "exit code 2" and hid the very
+        # thing it was added to reveal.
+        if ! out="$(make -n help 2>&1)"; then
+          echo "$out"
+          echo "::error::the package's Makefile does not even parse without git"
           exit 1
         fi
+
+        # The actual invariant: the package must not EMIT an instruction to run
+        # git. Checking make's OUTPUT, not the Makefile's text -- the guard that
+        # prints that advice has two branches, and the checkout branch is
+        # deliberately still there, dormant, because .gitmodules is absent here.
+        # Grepping the source flags the dead branch and fails a correct package.
+        # "git submodule" exactly, not the word "submodule" anywhere. `make help`
+        # legitimately lists an update-submodules TARGET, which is a make target
+        # that degrades gracefully; the harmful thing is a GIT COMMAND presented
+        # to someone who has no repository to run it against.
+        if echo "$out" | grep -qi "git submodule"; then
+          echo "::error::the package tells its reader to run a git command:"
+          echo "$out" | grep -i "git submodule"
+          exit 1
+        fi
+        echo "  ✓ parses without git, and asks the reader to run no git commands"
 
     - name: Upload the package for inspection
       uses: actions/upload-artifact@v7
