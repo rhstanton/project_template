@@ -41,7 +41,7 @@ def strip_comments(text: str) -> str:
     Needed more often than it should be. Twice in one day a test here asserted
     that some construct was absent, and matched the comment that explained WHY it
     was absent -- so the file documenting the rule read as breaking it. If a test
-    must look at source rather than behaviour, it should at least look only at
+    must look at source rather than behavior, it should at least look only at
     the source that runs.
     """
     return "\n".join(
@@ -421,7 +421,7 @@ class TestJuliaPinning:
         assert "Pkg.resolve ( )" not in runnable and "Pkg.resolve()" not in runnable, (
             "install_julia.py calls Pkg.resolve(), which rewrites Manifest.toml "
             "and re-derives versions from Project.toml -- undoing the restore. "
-            "Pkg.instantiate() alone honours an existing manifest and resolves "
+            "Pkg.instantiate() alone honors an existing manifest and resolves "
             "from scratch only when none exists."
         )
 

@@ -222,7 +222,7 @@ pytest tests/test_environment_contract.py -v
 
 **Use case**: Projects that need conda-forge binary packages or non-Python (R, system libs) dependencies beyond Julia/Stata.
 
-#### pixi (the conda-world analogue to uv — the main "what if" alternative)
+#### pixi (the conda-world analog to uv — the main "what if" alternative)
 
 **What it is**: A Rust-based environment manager from Prefix.dev — effectively "uv for the conda ecosystem." It installs **conda-forge** packages (so it *can* manage system libraries, R, and even Julia itself, which uv cannot) **and** PyPI packages — and it **uses uv internally** for the PyPI side. It produces a cross-platform `pixi.lock` and has a built-in task runner. In short, it's the *modern* conda option; if we ever needed conda-forge, pixi (not classic conda) is what we'd reach for.
 

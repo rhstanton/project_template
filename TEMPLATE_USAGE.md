@@ -666,7 +666,7 @@ git commit -m "Add your_analysis: description"
 
 **Bump the version** — one command sets it everywhere it appears (`pyproject.toml`, `uv.lock`, `_version.py`, `CITATION.cff` + release date, `README.md`, `QUICKSTART.md`) and rolls the CHANGELOG `[Unreleased]` section into the new release:
 ```bash
-python scripts/bump_version.py 1.1.0   # dry run first — shows the plan, writes nothing
+python lib/repro-tools/scripts/bump_version.py 1.1.0   # dry run first — shows the plan, writes nothing
 make bump-version VERSION=1.1.0        # then apply across all files
 ```
 It reads the version **and package name** from `pyproject.toml`, so it works for your renamed/derived project too; files that don't apply (e.g. you removed QUICKSTART) are skipped, not errored. It deliberately does **not** commit or tag — review `git diff` first, then:

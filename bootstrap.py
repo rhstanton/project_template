@@ -477,7 +477,7 @@ def prunable_docs(repo_root: Path) -> list:
 def strip_marked_doc_sections(content: str, name: str, source: str = "") -> str:
     """Remove `<!-- NAME:start -->` ... `<!-- NAME:end -->` blocks from Markdown.
 
-    The documentation analogue of strip_marked_section() above, and it follows
+    The documentation analog of strip_marked_section() above, and it follows
     the same rule for the same reason: BOTH markers are explicit, and an
     unbalanced pair is an error rather than a best guess.
 

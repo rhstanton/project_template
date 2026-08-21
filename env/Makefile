@@ -110,14 +110,14 @@ julia-instantiate:
 	# Ask git, not the file's own contents.
 	#
 	# Comparing the manifest's julia_version against the running Julia does not
-	# work, because Pkg REWRITES Manifest.toml when it cannot honour it: on a
+	# work, because Pkg REWRITES Manifest.toml when it cannot honor it: on a
 	# runner with Julia 1.11.9 the committed 1.12.4 manifest was silently
 	# replaced by a 1.11.9 one, so by the time anything looked, the two agreed
 	# and the check reported a match. The evidence had been overwritten by the
 	# thing being checked.
 	#
 	# git still knows what was committed. A dirty Manifest.toml after a build IS
-	# the symptom -- the pin was not honoured, it was replaced -- and it detects
+	# the symptom -- the pin was not honored, it was replaced -- and it detects
 	# the case regardless of which Julia is involved.
 	cd $(REPO_ROOT) && if git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
 	   && git ls-files --error-unmatch env/Manifest.toml >/dev/null 2>&1; then

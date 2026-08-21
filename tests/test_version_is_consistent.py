@@ -2,7 +2,7 @@
 
 Found 2026-08-19 while capturing output for a how-to: `make info` printed
 "Version: 2.0.2" while pyproject.toml, _version.py and CITATION.cff all said
-2.2.0. scripts/bump_version.py updates those three plus the CHANGELOG, and never
+2.2.0. lib/repro-tools/scripts/bump_version.py updates those three plus the CHANGELOG, and never
 knew about the Makefile's hardcoded copy — so every release since 2.0.2 widened
 the gap silently, and the one command a user runs to ask "what am I on?" gave
 the wrong answer.

@@ -125,7 +125,7 @@ toolkit / `LD_LIBRARY_PATH` is not required (only a working NVIDIA driver).
 
 `run_did.py` chooses the device with `--use-gpu`:
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
 | `auto` (default) | Use the GPU when CUDA.jl is functional, else fall back to CPU |
 | `1` | Prefer the GPU; warn if unavailable, then use CPU |

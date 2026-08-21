@@ -190,14 +190,16 @@ check-prereq:
 private-init:
 	@./scripts/init-private.sh
 
-# Bump the template version in every place it appears (pyproject.toml,
-# _version.py, CITATION.cff + date, README, QUICKSTART, uv.lock) and roll the
-# CHANGELOG [Unreleased] section into the release. Does NOT commit/tag/publish.
-# Usage: make bump-version VERSION=2.1.0
-.PHONY: bump-version
-bump-version:
-	@test -n "$(VERSION)" || { echo "Usage: make bump-version VERSION=X.Y.Z"; exit 1; }
-	@./scripts/bump_version.py "$(VERSION)" --apply
+# bump-version lives in lib/repro-tools/src/repro_tools/lib/tools.mk, which is
+# included below. A local copy stood here until 2026-08-21 and was dead: tools.mk
+# is included after this point, so make used ITS recipe and printed
+# "warning: overriding recipe for target 'bump-version'" on every invocation --
+# including at the top of `make help`. The shadowed local scripts/bump_version.py
+# went with it; it was the pre-split original, missing the shared copy's refusal
+# to bump to a version that is not ahead of every existing release tag.
+#
+# Usage is unchanged: make bump-version VERSION=2.1.0
+# Override BUMP_SCRIPT before the include if a project keeps its own.
 
 # Materialize a disposable, bootstrapped instantiation of this template into a
 # sibling directory, so a bug reported against "a project made from the template"
@@ -817,6 +819,9 @@ default:
 	@echo "  make help             Show all available commands"
 	@echo "  make info             Show comprehensive project information"
 	@echo "  make list-analyses    List all available analyses"
+	@echo "  make list-analyses-verbose  ...with each one's configuration"
+	@echo "  make remove-analysis NAME=<name>         Preview removing an analysis"
+	@echo "  make remove-analysis NAME=<name> APPLY=1 ...and do it"
 	@echo "  make show-analysis-<name>  Show config for specific analysis"
 	@echo ""
 	@echo "VS CODE USERS:"
@@ -868,6 +873,7 @@ help:
 	@echo ""
 	@echo "VERIFICATION:"
 	@echo "  make check-baseline   Compare tables against env/baseline/published.json"
+	@echo "  make check-baseline-record  Record CURRENT outputs as the baseline (read its warning)"
 	@echo "  make data-checksums-check  Verify data/ against CHECKSUMS.txt"
 	@echo "  make test-outputs     Verify all expected outputs exist"
 	@echo "  make test-fast        Run the suite without the slow tests (~1 min)"
@@ -882,6 +888,9 @@ help:
 	@echo "  make publish PUBLISH_FILES='output/figures/x.pdf output/tables/y.tex'  # Publish specific files"
 	@echo "  make publish REQUIRE_CURRENT_HEAD=1  # Strict mode (require current HEAD)"
 	@echo "  make publish-force    Force re-publish even if up-to-date"
+	@echo "  make publish-figures  Publish figures only"
+	@echo "  make publish-tables   Publish tables only"
+	@echo "  make publish-files    Publish named files (see PUBLISH_FILES above)"
 	@echo ""
 	@echo "TESTING & QUALITY:"
 	@echo "  make test             Run pytest test suite"
@@ -902,6 +911,12 @@ help:
 	@echo "  make journal-package-zip     Create .zip archive"
 	@echo "  make clean-journal           Remove package artifacts"
 	@echo ""
+	@echo "TEMPLATE MAINTENANCE (this repo only, not generated projects):"
+	@echo "  make instance         Bootstrap a disposable instance into a sibling dir"
+	@echo "  make instance-list    List generated instances"
+	@echo "  make instance-clean   Remove every generated instance"
+	@echo "  make test-variants    Run the suite against each pruned variant"
+	@echo ""
 	@echo "CLEANUP:"
 	@echo "  make clean            Remove all outputs"
 	@echo "  make cleanall         Remove outputs + environments"
@@ -913,6 +928,9 @@ help:
 	@echo ""
 	@echo "UTILITY COMMANDS:"
 	@echo "  make list-analyses    List all available analyses"
+	@echo "  make list-analyses-verbose  ...with each one's configuration"
+	@echo "  make remove-analysis NAME=<name>         Preview removing an analysis"
+	@echo "  make remove-analysis NAME=<name> APPLY=1 ...and do it"
 	@echo "  make show-analysis-<name>  Show detailed config for specific analysis"
 	@echo "  make check-deps         Check Python/Julia/data dependencies"
 	@echo "  make dryrun             Show what would be built (without building)"
@@ -924,7 +942,7 @@ help:
 #
 # This line used to be a literal `@echo "  Version: 2.0.2"`, and by 2026-08-19
 # pyproject.toml, _version.py and CITATION.cff all said 2.2.0 while `make info`
-# still said 2.0.2. scripts/bump_version.py updates those three and the
+# still said 2.0.2. lib/repro-tools/scripts/bump_version.py updates those three and the
 # CHANGELOG; it never knew about this one, so every release silently widened the
 # gap. sed rather than python so `make info` works before `make environment`.
 TEMPLATE_VERSION := $(shell sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
